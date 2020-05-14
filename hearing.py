@@ -54,3 +54,17 @@ def get_zip(soup):
     zip_tag = soup.find(string=has_austin)
     zipcode = zip_tag.strip().split()[-1]
     return zipcode
+
+
+def get_hearing_text(soup):
+    def ends_with_hearing(string: str) -> bool:
+        return string.endswith("Hearing")
+
+    hearing_tag = soup.find("b", string=ends_with_hearing)
+    return hearing_tag.next_sibling
+
+
+def get_hearing_officer(soup):
+    hearing_text = get_hearing_text(soup)
+    name = hearing_text.split("Judicial Officer")[1]
+    return name.strip().strip(")")

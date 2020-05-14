@@ -65,3 +65,24 @@ class TestParseHTML:
         soup = hearing.get_test_soup(index)
         number = hearing.get_zip(soup)
         assert number == expected
+
+    @pytest.mark.parametrize(
+        "index, expected", [(0, "(11:00 AM)"), (1, "(11:00 AM)"), (2, "(10:00 AM)")],
+    )
+    def test_get_hearing_text(self, index, expected):
+        soup = hearing.get_test_soup(index)
+        passage = hearing.get_hearing_text(soup)
+        assert expected in passage
+
+    @pytest.mark.parametrize(
+        "index, expected",
+        [
+            (0, "Williams, Yvonne M."),
+            (1, "Slagle, Randall"),
+            (2, "Gonzalez, Raul Arturo"),
+        ],
+    )
+    def test_get_hearing_officer(self, index, expected):
+        soup = hearing.get_test_soup(index)
+        name = hearing.get_hearing_officer(soup)
+        assert name == expected
