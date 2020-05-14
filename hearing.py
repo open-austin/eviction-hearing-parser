@@ -1,4 +1,5 @@
 import os
+import re
 
 from bs4 import BeautifulSoup
 
@@ -44,3 +45,12 @@ def get_case_number(soup):
 def get_style(soup):
     elem = soup.find_all("table")[4].tbody.tr.td
     return elem.text
+
+
+def get_zip(soup):
+    def has_austin(string: str) -> bool:
+        return "austin, tx" in string.lower()
+
+    zip_tag = soup.find(string=has_austin)
+    zipcode = zip_tag.strip().split()[-1]
+    return zipcode

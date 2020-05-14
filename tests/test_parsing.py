@@ -57,3 +57,11 @@ class TestParseHTML:
         soup = hearing.get_test_soup(index)
         number = hearing.get_case_number(soup)
         assert number == expected
+
+    @pytest.mark.parametrize(
+        "index, expected", [(0, "78724"), (1, "78759"), (2, "78741-0000")],
+    )
+    def test_get_zip(self, index, expected):
+        soup = hearing.get_test_soup(index)
+        number = hearing.get_zip(soup)
+        assert number == expected
