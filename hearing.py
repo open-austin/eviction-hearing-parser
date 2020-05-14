@@ -25,3 +25,8 @@ def get_plaintiff(soup):
     name_elem = tag.find_next_sibling("th")
 
     return name_elem.text
+
+
+def get_case_number(soup):
+    elem = soup.find(class_="ssCaseDetailCaseNbr").span
+    return elem.text
