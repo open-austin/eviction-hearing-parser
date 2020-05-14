@@ -70,7 +70,8 @@ def get_hearing_text(soup):
 
 def get_hearing_date(soup):
     hearing_tag = get_hearing_tag(soup)
-    return hearing_tag.find_previous_sibling("th")
+    date_tag = hearing_tag.parent.find_previous_sibling("th")
+    return date_tag.text
 
 
 def get_hearing_time(soup):
