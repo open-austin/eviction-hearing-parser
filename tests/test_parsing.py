@@ -86,3 +86,11 @@ class TestParseHTML:
         soup = hearing.get_test_soup(index)
         name = hearing.get_hearing_officer(soup)
         assert name == expected
+
+    @pytest.mark.parametrize(
+        "index, expected", [(0, "11:00 AM"), (1, "11:00 AM"), (2, "10:00 AM")],
+    )
+    def test_get_hearing_time(self, index, expected):
+        soup = hearing.get_test_soup(index)
+        time = hearing.get_hearing_time(soup)
+        assert expected == time

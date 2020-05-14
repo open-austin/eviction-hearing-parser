@@ -64,6 +64,13 @@ def get_hearing_text(soup):
     return hearing_tag.next_sibling
 
 
+def get_hearing_time(soup):
+    hearing_text = get_hearing_text(soup)
+    up_to_time = hearing_text.split(")")[0]
+    just_time = up_to_time.split("(")[1]
+    return just_time
+
+
 def get_hearing_officer(soup):
     hearing_text = get_hearing_text(soup)
     name = hearing_text.split("Judicial Officer")[1]
