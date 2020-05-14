@@ -38,6 +38,19 @@ class TestParseHTML:
 
     @pytest.mark.parametrize(
         "index, expected",
+        [
+            (0, "XYZ Group LLC vs. John G Doe"),
+            (1, "JOHN MOE vs. Jane Roe,Unnamed Person,Jean Roe"),
+            (2, "UMBRELLA CORPORATION vs. Ann Noe"),
+        ],
+    )
+    def test_get_style(self, index, expected):
+        soup = hearing.get_test_soup(index)
+        style = hearing.get_style(soup)
+        assert style == expected
+
+    @pytest.mark.parametrize(
+        "index, expected",
         [(0, "J1-CV-20-001590"), (1, "J2-CV-20-001839"), (2, "J4-CV-20-000198")],
     )
     def test_get_case_number(self, index, expected):

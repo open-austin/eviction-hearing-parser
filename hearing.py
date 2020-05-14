@@ -39,3 +39,8 @@ def get_defendants(soup):
 def get_case_number(soup):
     elem = soup.find(class_="ssCaseDetailCaseNbr").span
     return elem.text
+
+
+def get_style(soup):
+    elem = soup.find_all("table")[4].tbody.tr.td
+    return elem.text
