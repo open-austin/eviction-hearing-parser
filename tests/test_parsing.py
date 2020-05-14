@@ -67,7 +67,7 @@ class TestParseHTML:
         assert number == expected
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "(11:00 AM)"), (1, "(11:00 AM)"), (2, "(10:00 AM)")],
+        "index, expected", [(0, "(11:00 AM)"), (1, "(11:00 AM)"), (2, "(2:00 PM)")],
     )
     def test_get_hearing_text(self, index, expected):
         soup = hearing.get_test_soup(index)
@@ -88,9 +88,17 @@ class TestParseHTML:
         assert name == expected
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "11:00 AM"), (1, "11:00 AM"), (2, "10:00 AM")],
+        "index, expected", [(0, "11:00 AM"), (1, "11:00 AM"), (2, "2:00 PM")],
     )
     def test_get_hearing_time(self, index, expected):
         soup = hearing.get_test_soup(index)
         time = hearing.get_hearing_time(soup)
         assert expected == time
+
+    @pytest.mark.parametrize(
+        "index, expected", [(0, "05/14/2020"), (1, "05/14/2020"), (2, "06/05/2020")],
+    )
+    def test_get_hearing_date(self, index, expected):
+        soup = hearing.get_test_soup(index)
+        hearing_date = hearing.get_hearing_date(soup)
+        assert expected == hearing_date

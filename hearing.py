@@ -56,12 +56,21 @@ def get_zip(soup):
     return zipcode
 
 
-def get_hearing_text(soup):
+def get_hearing_tag(soup):
     def ends_with_hearing(string: str) -> bool:
         return string.endswith("Hearing")
 
-    hearing_tag = soup.find("b", string=ends_with_hearing)
+    return soup.find_all("b", string=ends_with_hearing)[-1]
+
+
+def get_hearing_text(soup):
+    hearing_tag = get_hearing_tag(soup)
     return hearing_tag.next_sibling
+
+
+def get_hearing_date(soup):
+    hearing_tag = get_hearing_tag(soup)
+    return hearing_tag.find_previous_sibling("th")
 
 
 def get_hearing_time(soup):
