@@ -1,5 +1,5 @@
 import os
-import re
+from typing import Dict
 
 from bs4 import BeautifulSoup
 
@@ -85,3 +85,16 @@ def get_hearing_officer(soup):
     hearing_text = get_hearing_text(soup)
     name = hearing_text.split("Judicial Officer")[1]
     return name.strip().strip(")")
+
+
+def make_parsed_hearing(soup) -> Dict[str, str]:
+    return {
+        "style": get_style(soup),
+        "plaintiff": get_plaintiff(soup),
+        "defendants": get_defendants(soup),
+        "case_number": get_case_number(soup),
+        "zip": get_zip(soup),
+        "hearing_date": get_hearing_date(soup),
+        "hearing_time": get_hearing_time(soup),
+        "hearing_officer": get_hearing_officer(soup),
+    }
