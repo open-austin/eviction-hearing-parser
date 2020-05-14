@@ -1,6 +1,6 @@
 # eviction-hearing-parser
 
-parse registers of actions for eviction hearings
+Parse registers of actions for Travis County eviction hearings
 
 This command line utility takes a register of actions in the HTML format [published by Travis County](odysseypa.traviscountytx.gov), and extracts information about the last scheduled hearing in the register (regardless of whether the hearing is in the past or future). It can output a CSV collecting this information from many HTML files.
 
