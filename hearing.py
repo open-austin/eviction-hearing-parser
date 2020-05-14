@@ -27,6 +27,15 @@ def get_plaintiff(soup):
     return name_elem.text
 
 
+def get_defendants(soup):
+    defendants = []
+    for tag in soup.find_all(text="Defendant"):
+        name_elem = tag.parent.find_next_sibling("th")
+        defendants.append(name_elem.text)
+    together = "; ".join(defendants)
+    return together
+
+
 def get_case_number(soup):
     elem = soup.find(class_="ssCaseDetailCaseNbr").span
     return elem.text
