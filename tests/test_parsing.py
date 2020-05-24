@@ -102,3 +102,19 @@ class TestParseHTML:
         soup = hearing.get_test_soup(index)
         hearing_date = hearing.get_hearing_date(soup)
         assert expected == hearing_date
+
+    @pytest.mark.parametrize(
+        "index, expected", [(0, "05/14/2020"), (1, "05/14/2020"), (2, "06/05/2020")],
+    )
+    def test_get_hearing_date(self, index, expected):
+        soup = hearing.get_test_soup(index)
+        hearing_date = hearing.get_hearing_date(soup)
+        assert expected == hearing_date
+
+    @pytest.mark.parametrize(
+        "index, expected", [(0, 1), (1, 2), (2, 4)],
+    )
+    def test_get_precinct_number(self, index, expected):
+        soup = hearing.get_test_soup(index)
+        precinct_number = hearing.get_precinct_number(soup)
+        assert expected == precinct_number

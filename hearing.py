@@ -87,6 +87,16 @@ def get_hearing_officer(soup):
     return name.strip().strip(")")
 
 
+def get_precinct_number(soup):
+    word_to_number = {"One": 1, "Two": 2, "Three": 3, "Four": 4, "Five": 5}
+
+    location_heading = soup.find(text="Location:").parent
+    precinct_name = location_heading.find_next_sibling("td").text
+    precinct_number = precinct_name.split("Precinct ")[1]
+
+    return word_to_number[precinct_number]
+
+
 def make_parsed_hearing(soup) -> Dict[str, str]:
     return {
         "style": get_style(soup),
