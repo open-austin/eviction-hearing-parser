@@ -1,7 +1,7 @@
 import os
 import re
 
-from typing import Dict
+from typing import Dict, List
 
 from bs4 import BeautifulSoup
 
@@ -126,14 +126,24 @@ def did_defendant_appear(soup) -> bool:
     return appeared_tag is not None
 
 
-def was_defendant_served(soup) -> bool:
-    served_tag = soup.find_all(text="Served")
-    return served_tag is not None
+def was_defendant_served(soup) -> List[str]:
+    dates_of_service = []
+    served_tags = soup.find_all(text="Served")
+    for service_tag in served_tags:
+        date_tag = service_tag.parent.find_next_sibling("td")
+        dates_of_service.append(date_tag.text)
+
+    return dates_of_service
 
 
-def was_defendant_alternative_served(soup) -> bool:
-    served_tag = soup.find(text="Order Granting Alternative Service")
-    return served_tag is not None
+def was_defendant_alternative_served(soup) -> List[str]:
+    dates_of_service = []
+    served_tags = soup.find_all(text="Order Granting Alternative Service")
+    for service_tag in served_tags:
+        date_tag = service_tag.parent.parent.find_previous_sibling("th")
+        dates_of_service.append(date_tag.text)
+
+    return dates_of_service
 
 
 def make_parsed_hearing(soup) -> Dict[str, str]:

@@ -120,15 +120,15 @@ class TestParseHTML:
         assert expected == appeared
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, True), (1, True), (2, True)],
+        "index, expected", [(0, "05/01/2020"), (1, "05/06/2020"), (2, "01/22/2020")],
     )
     def test_defendant_served(self, index, expected):
         soup = hearing.get_test_soup(index)
         served = hearing.was_defendant_served(soup)
-        assert expected == served
+        assert expected == served[0]
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, False), (1, True), (2, True)],
+        "index, expected", [(0, []), (1, ["05/05/2020"]), (2, ["01/22/2020"])],
     )
     def test_alternative_service(self, index, expected):
         soup = hearing.get_test_soup(index)
