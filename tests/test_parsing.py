@@ -110,3 +110,27 @@ class TestParseHTML:
         soup = hearing.get_test_soup(index)
         precinct_number = hearing.get_precinct_number(soup)
         assert expected == precinct_number
+
+    @pytest.mark.parametrize(
+        "index, expected", [(0, False), (1, False), (2, True)],
+    )
+    def test_defendant_appeared(self, index, expected):
+        soup = hearing.get_test_soup(index)
+        appeared = hearing.did_defendant_appear(soup)
+        assert expected == appeared
+
+    @pytest.mark.parametrize(
+        "index, expected", [(0, True), (1, True), (2, True)],
+    )
+    def test_defendant_served(self, index, expected):
+        soup = hearing.get_test_soup(index)
+        served = hearing.was_defendant_served(soup)
+        assert expected == served
+
+    @pytest.mark.parametrize(
+        "index, expected", [(0, False), (1, True), (2, True)],
+    )
+    def test_alternative_service(self, index, expected):
+        soup = hearing.get_test_soup(index)
+        served = hearing.was_defendant_alternative_served(soup)
+        assert expected == served

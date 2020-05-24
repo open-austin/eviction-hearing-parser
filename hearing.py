@@ -1,4 +1,6 @@
 import os
+import re
+
 from typing import Dict
 
 from bs4 import BeautifulSoup
@@ -73,26 +75,26 @@ def get_hearing_text(soup):
     return hearing_tag.next_sibling
 
 
-def get_hearing_date(soup):
+def get_hearing_date(soup) -> str:
     hearing_tag = get_hearing_tag(soup)
     date_tag = hearing_tag.parent.find_previous_sibling("th")
     return date_tag.text
 
 
-def get_hearing_time(soup):
+def get_hearing_time(soup) -> str:
     hearing_text = get_hearing_text(soup)
     up_to_time = hearing_text.split(")")[0]
     just_time = up_to_time.split("(")[1]
     return just_time
 
 
-def get_hearing_officer(soup):
+def get_hearing_officer(soup) -> str:
     hearing_text = get_hearing_text(soup)
     name = hearing_text.split("Judicial Officer")[1]
     return name.strip().strip(")")
 
 
-def get_precinct_number(soup):
+def get_precinct_number(soup) -> int:
     word_to_number = {"One": 1, "Two": 2, "Three": 3, "Four": 4, "Five": 5}
 
     location_heading = soup.find(text="Location:").parent
@@ -102,16 +104,36 @@ def get_precinct_number(soup):
     return word_to_number[precinct_number]
 
 
-def get_status(status_soup):
+def get_status(status_soup) -> str:
     eviction_tag = status_soup.find(text="Eviction")
     status_tag = eviction_tag.parent.find_next_sibling("div")
     return status_tag.text
 
 
-def get_register_url(status_soup):
+def get_register_url(status_soup) -> str:
     link_tag = status_soup.find(style="color: blue")
     relative_link = link_tag.get("href")
     return "https://odysseypa.traviscountytx.gov/JPPublicAccess/" + relative_link
+
+
+def did_defendant_appear(soup) -> bool:
+    """If and only if "appeared" appears, infer defendant apparently appeared."""
+
+    def appeared_in_text(text):
+        return text and re.compile("[aA]ppeared").search(text)
+
+    appeared_tag = soup.find(text=appeared_in_text)
+    return appeared_tag is not None
+
+
+def was_defendant_served(soup) -> bool:
+    served_tag = soup.find_all(text="Served")
+    return served_tag is not None
+
+
+def was_defendant_alternative_served(soup) -> bool:
+    served_tag = soup.find(text="Order Granting Alternative Service")
+    return served_tag is not None
 
 
 def make_parsed_hearing(soup) -> Dict[str, str]:
@@ -125,4 +147,5 @@ def make_parsed_hearing(soup) -> Dict[str, str]:
         "hearing_date": get_hearing_date(soup),
         "hearing_time": get_hearing_time(soup),
         "hearing_officer": get_hearing_officer(soup),
+        "appeared": did_defendant_appear(soup),
     }
