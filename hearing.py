@@ -108,6 +108,12 @@ def get_status(status_soup):
     return status_tag.text
 
 
+def get_register_url(status_soup):
+    link_tag = status_soup.find(style="color: blue")
+    relative_link = link_tag.get("href")
+    return "https://odysseypa.traviscountytx.gov/JPPublicAccess/" + relative_link
+
+
 def make_parsed_hearing(soup) -> Dict[str, str]:
     return {
         "precinct_number": get_precinct_number(soup),
