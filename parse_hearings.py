@@ -1,32 +1,35 @@
 import csv
+import json
 import os
+from typing import List
 
 import click
 
 import hearing
 
 
+def get_ids_to_parse(filename: str) -> List[str]:
+    ids = []
+    with open(filename, newline="") as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            ids.append(row[0])
+    return ids
+
+
 @click.command()
 @click.argument(
-    "folder",
-    type=click.Path(exists=True, file_okay=False, dir_okay=True, readable=True),
+    "infile",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
 )
-@click.argument("outfile", type=click.File(mode="w"))
-def parse_all(folder, outfile):
+@click.argument("outfile", type=click.File(mode="w"), default="result.json")
+def parse_all(infile, outfile):
     parsed_hearings = []
-    if not any(filename.endswith(".html") for filename in os.listdir(folder)):
-        raise ValueError(f"No HTML files found to parse in {folder}")
-    for filename in os.listdir(folder):
-        if filename.endswith(".html"):
-            filepath = os.path.join(folder, filename)
-            soup = hearing.load_soup_from_filepath(filepath)
-            new_hearing = hearing.make_parsed_hearing(soup)
-            parsed_hearings.append(new_hearing)
-    fieldnames = parsed_hearings[0].keys()
-    writer = csv.DictWriter(outfile, fieldnames=fieldnames)
-    writer.writeheader()
-    for parsed_hearing in parsed_hearings:
-        writer.writerow(parsed_hearing)
+    ids_to_parse = get_ids_to_parse(infile)
+    for id_to_parse in ids_to_parse:
+        new_hearing = hearing.fetch_parsed_hearing(id_to_parse)
+        parsed_hearings.append(new_hearing)
+    json.dump(parsed_hearings, outfile)
 
 
 if __name__ == "__main__":

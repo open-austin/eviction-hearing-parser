@@ -58,4 +58,6 @@ def query_case_id(case_id: str):
             EC.presence_of_element_located((By.ID, "PIr11"))
         )
     finally:
-        return search_page_content, search_page.page_source
+        register_page_content = search_page.page_source
+        search_page.close()
+        return search_page_content, register_page_content

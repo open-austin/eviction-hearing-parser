@@ -22,18 +22,14 @@ Install the required libraries with:
 
 `pip install -r requirements.txt`
 
+Install Firefox with [geckodriver](https://github.com/mozilla/geckodriver/releases) as described in the [Selenium documentation](https://selenium-python.readthedocs.io/installation.html).
+
 Then execute the command line utility with a command in this format:
 
 `python parse_hearings.py [your input directory] [name of new output file]`
 
-For instance, if you use the following command:
+For instance, if you use the following command to scrape the three Case IDs included in `test_input.csv`:
 
-`python parse_hearings.py test_pages result.csv`
+`python parse_hearings.py test_input.csv result.json`
 
-...then you'll create a new file called `result.csv` with the following contents:
-
-| style                                           | plaintiff            | defendants                              | case_number     | zip        | hearing_date | hearing_time | hearing_officer         |
-| ----------------------------------------------- | -------------------- | --------------------------------------- | --------------- | ---------- | ------------ | ------------ | ----------------------- |
-| "JOHN MOE vs. Jane Roe,Unnamed Person,Jean Roe" | "MOE, JOHN"          | "Person, Unnamed; Roe, Jane; Roe, Jean" | J2-CV-20-001839 | 78759      | 05/14/2020   | 11:00 AM     | "Slagle, Randall"       |
-| XYZ Group LLC vs. John G Doe                    | XYZ Group LLC        | "Doe, John G."                          | J1-CV-20-001590 | 78724      | 05/14/2020   | 11:00 AM     | "Williams, Yvonne M."   |
-| UMBRELLA CORPORATION vs. Ann Noe                | UMBRELLA CORPORATION | "Noe, Ann"                              | J4-CV-20-000198 | 78741-0000 | 06/05/2020   | 2:00 PM      | "Gonzalez, Raul Arturo" |
+...then you'll create a new file called `result.json` with scraped data from those three cases.
