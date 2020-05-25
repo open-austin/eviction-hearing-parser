@@ -2,11 +2,9 @@
 
 Parse registers of actions for Travis County eviction hearings
 
-This command line utility takes a register of actions in the HTML format [published by Travis County](odysseypa.traviscountytx.gov), and extracts information about the last scheduled hearing in the register (regardless of whether the hearing is in the past or future). It can output a CSV collecting this information from many HTML files.
+To use this command line utility, feed in a "CSV" file containing a series of case ID numbers on separate lines. The scraper will fetch the register of actions for each case from the database [published by Travis County](odysseypa.traviscountytx.gov). Then it extracts information about the last scheduled hearing in the register (regardless of whether the hearing is in the past or future). It will output a JSON file collecting this information for each of the case IDs.
 
-To use `eviction-hearing-parser`, download the HTML records that interest you from the county website, and collect them in a folder. (A script to help you do this has not yet been written).
-
-Then, install Python on your computer. Python version 3.8 is suggested.
+To use `eviction-hearing-parser`, install Python on your computer. Python version 3.8 is suggested.
 
 Make a copy of the `eviction-hearing-parser` repository and navigate to it using the command line.
 
@@ -24,11 +22,13 @@ Install the required libraries with:
 
 Install Firefox with [geckodriver](https://github.com/mozilla/geckodriver/releases) as described in the [Selenium documentation](https://selenium-python.readthedocs.io/installation.html).
 
+Create a CSV file with a list of case IDs that you want to query (check out `test_input.csv` in this repo for an example of how this file should look).
+
 Then execute the command line utility with a command in this format:
 
-`python parse_hearings.py [your input directory] [name of new output file]`
+`python parse_hearings.py [your input CSV file] [name of new output file]`
 
-For instance, if you use the following command to scrape the three Case IDs included in `test_input.csv`:
+For instance, if you use the following command to scrape the three case IDs included in `test_input.csv`:
 
 `python parse_hearings.py test_input.csv result.json`
 
