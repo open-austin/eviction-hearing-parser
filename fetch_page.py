@@ -1,9 +1,12 @@
+import logging
 from typing import Tuple
 
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+
+logger = logging.getLogger()
 
 
 def load_start_page():
@@ -32,6 +35,9 @@ def query_case_id(case_id: str):
         case_radio_button = WebDriverWait(search_page, 10).until(
             EC.presence_of_element_located((By.ID, "Case"))
         )
+    except:
+        logger.error(f"Could not click button to search for case {case_id}")
+        return None
     finally:
         case_radio_button.click()
 
@@ -39,6 +45,9 @@ def query_case_id(case_id: str):
         search_box = WebDriverWait(search_page, 10).until(
             EC.presence_of_element_located((By.ID, "CaseSearchValue"))
         )
+    except:
+        logger.error(f"Could not type query to search for case {case_id}")
+        return None
     finally:
         search_box.send_keys(case_id)
         search_button = search_page.find_element_by_name("SearchSubmit")
@@ -50,6 +59,9 @@ def query_case_id(case_id: str):
         register_link = WebDriverWait(search_page, 10).until(
             EC.presence_of_element_located((By.LINK_TEXT, case_id))
         )
+    except:
+        logger.error(f"Could not click search result for case {case_id}")
+        return None
     finally:
         register_link.click()
 
@@ -57,6 +69,9 @@ def query_case_id(case_id: str):
         register_heading = WebDriverWait(search_page, 10).until(
             EC.presence_of_element_located((By.ID, "PIr11"))
         )
+    except:
+        logger.error(f"Could not load register of actions for case {case_id}")
+        return None
     finally:
         register_page_content = search_page.page_source
         search_page.close()

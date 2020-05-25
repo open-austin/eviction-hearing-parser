@@ -168,7 +168,10 @@ def make_parsed_hearing(
 
 
 def fetch_parsed_hearing(case_id: str) -> Tuple[str, str]:
-    result_page, register_page = fetch_page.query_case_id(case_id)
+    query_result = fetch_page.query_case_id(case_id)
+    if query_result is None:
+        return None
+    result_page, register_page = query_result
     result_soup = BeautifulSoup(result_page, "html.parser")
     register_soup = BeautifulSoup(register_page, "html.parser")
 
