@@ -2,3 +2,6 @@
 .vscode
 *__pycache__*
 venv/
+tests/example_data.csv
+geckodriver.log
+result.csv
