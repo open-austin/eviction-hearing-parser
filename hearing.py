@@ -1,9 +1,11 @@
 import os
 import re
 
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 from bs4 import BeautifulSoup
+
+import fetch_page
 
 
 def get_test_html_path(index: int, page_type: str) -> str:
@@ -146,7 +148,9 @@ def was_defendant_alternative_served(soup) -> List[str]:
     return dates_of_service
 
 
-def make_parsed_hearing(soup) -> Dict[str, str]:
+def make_parsed_hearing(
+    soup, status: str = "", register_url: str = ""
+) -> Dict[str, str]:
     return {
         "precinct_number": get_precinct_number(soup),
         "style": get_style(soup),
@@ -158,4 +162,18 @@ def make_parsed_hearing(soup) -> Dict[str, str]:
         "hearing_time": get_hearing_time(soup),
         "hearing_officer": get_hearing_officer(soup),
         "appeared": did_defendant_appear(soup),
+        "status": status,
+        "register_url": register_url,
     }
+
+
+def fetch_parsed_hearing(case_id: str) -> Tuple[str, str]:
+    result_page, register_page = fetch_page.query_case_id(case_id)
+    result_soup = BeautifulSoup(result_page, "html.parser")
+    register_soup = BeautifulSoup(register_page, "html.parser")
+
+    register_url = get_register_url(result_soup)
+    status = get_status(result_soup)
+    return make_parsed_hearing(
+        soup=register_soup, status=status, register_url=register_url
+    )

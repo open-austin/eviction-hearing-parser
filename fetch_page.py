@@ -44,5 +44,18 @@ def query_case_id(case_id: str):
         search_button = search_page.find_element_by_name("SearchSubmit")
         search_button.click()
         search_page.implicitly_wait(1)
-        return search_page
-    return None
+        search_page_content = search_page.page_source
+
+    try:
+        register_link = WebDriverWait(search_page, 10).until(
+            EC.presence_of_element_located((By.LINK_TEXT, case_id))
+        )
+    finally:
+        register_link.click()
+
+    try:
+        register_heading = WebDriverWait(search_page, 10).until(
+            EC.presence_of_element_located((By.ID, "PIr11"))
+        )
+    finally:
+        return search_page_content, search_page.page_source
