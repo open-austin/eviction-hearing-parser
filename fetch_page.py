@@ -1,4 +1,5 @@
 import logging
+import atexit
 from typing import Tuple
 
 from selenium import webdriver
@@ -7,10 +8,17 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 
 logger = logging.getLogger()
+driver = webdriver.Firefox()
+
+
+def close_driver():
+    driver.close()
+
+
+atexit.register(close_driver)
 
 
 def load_start_page():
-    driver = webdriver.Firefox()
     driver.get("https://odysseypa.traviscountytx.gov/JPPublicAccess/default.aspx")
     return driver
 
@@ -74,5 +82,4 @@ def query_case_id(case_id: str):
         return None
     finally:
         register_page_content = search_page.page_source
-        search_page.close()
         return search_page_content, register_page_content
