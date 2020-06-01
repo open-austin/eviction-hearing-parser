@@ -97,7 +97,8 @@ def get_hearing_time(soup) -> str:
 
 def get_hearing_officer(soup) -> str:
     hearing_text = get_hearing_text(soup)
-    name = hearing_text.split("Judicial Officer")[1]
+    officer_groups = hearing_text.split("Judicial Officer")
+    name = officer_groups[1] if len(officer_groups) > 1 else ""
     return name.strip().strip(")")
 
 
