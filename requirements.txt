@@ -1,3 +1,4 @@
+-e .
 BeautifulSoup4
 click
 selenium
