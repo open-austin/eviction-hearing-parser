@@ -39,8 +39,8 @@ def get_plaintiff(soup):
 
 def get_defendants(soup):
     defendants = []
-    for tag in soup.find_all(text="Defendant"):
-        name_elem = tag.parent.find_next_sibling("th")
+    for tag in soup.find_all("th", text="Defendant"):
+        name_elem = tag.find_next_sibling("th")
         defendants.append(name_elem.text)
     together = "; ".join(defendants)
     return together
