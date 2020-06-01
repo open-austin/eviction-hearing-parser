@@ -66,28 +66,33 @@ def get_zip(soup):
 
 
 def get_hearing_tag(soup):
+    """
+    Returns the element in the Events and Hearings section of a CaseDetail document
+    that holds the most recent hearing info if one has taken place.
+    """
     def ends_with_hearing(string: str) -> bool:
         return string.endswith("Hearing")
+    hearings = soup.find_all("b", string=ends_with_hearing)
+    return hearings[-1] if len(hearings) > 0 else None
 
-    return soup.find_all("b", string=ends_with_hearing)[-1]
 
-
-def get_hearing_text(soup):
+def get_hearing_text(soup) -> str:
     hearing_tag = get_hearing_tag(soup)
-    return hearing_tag.next_sibling
+    return hearing_tag.next_sibling if hearing_tag is not None else ""
 
 
 def get_hearing_date(soup) -> str:
     hearing_tag = get_hearing_tag(soup)
+    if hearing_tag is None:
+        return ""
     date_tag = hearing_tag.parent.find_previous_sibling("th")
     return date_tag.text
 
 
 def get_hearing_time(soup) -> str:
     hearing_text = get_hearing_text(soup)
-    up_to_time = hearing_text.split(")")[0]
-    just_time = up_to_time.split("(")[1]
-    return just_time
+    hearing_time_matches = re.search(r"\d{1,2}:\d{2} [AP]M", hearing_text)
+    return hearing_time_matches[0] if hearing_time_matches is not None else ""
 
 
 def get_hearing_officer(soup) -> str:
