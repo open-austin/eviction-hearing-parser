@@ -56,13 +56,12 @@ def get_style(soup):
     return elem.text
 
 
-def get_zip(soup):
+def get_zip(soup) -> str:
     def has_austin(string: str) -> bool:
         return "austin, tx" in string.lower()
 
     zip_tag = soup.find(string=has_austin)
-    zipcode = zip_tag.strip().split()[-1]
-    return zipcode
+    return zip_tag.strip().split()[-1] if zip_tag is not None else ""
 
 
 def get_hearing_tag(soup):
