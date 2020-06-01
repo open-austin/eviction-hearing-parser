@@ -2,24 +2,23 @@ version: 2
 jobs:
   build:
     docker:
-      # specify the version you desire here
-      # use `-browsers` prefix for selenium tests, e.g. `3.6.1-browsers`
-      - image: circleci/python:3.8.2-browsers
-
-    working_directory: ~/eviction-hearing-parser
-  
+      - image: circleci/python:3.8.2-stretch-browsers
     steps:
+      - checkout
+      - restore_cache:
+          key: deps1-{{ .Branch }}-{{ checksum "requirements.txt" }}
       - run:
-          name: install dependencies
+          name: Install Python deps in a venv
           command: |
             python3 -m venv venv
             . venv/bin/activate
             pip install -r requirements.txt
             pip install pytest
-
-      # run tests!
+      - save_cache:
+          key: deps1-{{ .Branch }}-{{ checksum "requirements.txt" }}
+          paths:
+            - "venv"
       - run:
-          name: run tests
           command: |
             . venv/bin/activate
-            pytest tests/
+            pytest
