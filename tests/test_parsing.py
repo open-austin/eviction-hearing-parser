@@ -76,7 +76,7 @@ class TestParseHTML:
     )
     def test_get_zip(self, index, expected):
         soup = hearing.get_test_soup(index)
-        number = hearing.get_zip(soup)
+        number = hearing.get_zip(hearing.get_defendant_elements(soup).pop())
         assert number == expected
 
     @pytest.mark.parametrize(

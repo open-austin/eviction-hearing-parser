@@ -31,20 +31,33 @@ def get_test_search_page(index: int) -> BeautifulSoup:
 
 
 def get_plaintiff(soup):
-    tag = soup.find(text="Plaintiff").parent
+    #TODO handle multiple plaintiffs
+    tag = get_plaintiff_elements(soup)[0]
     name_elem = tag.find_next_sibling("th")
 
     return name_elem.text
 
+def get_plaintiff_elements(soup):
+    """
+    Gets the plaintiff HTML elements from a CaseDetail.
+    These are currently used as an anchor for most of the Party Info parsing.
+    """
+    return soup.find_all("th", text="Plaintiff")
+
+def get_defendant_elements(soup):
+    """
+    Gets the defendant HTML elements from a CaseDetail.
+    These are currently used as an anchor for most of the Party Info parsing.
+    """
+    return soup.find_all("th", text="Defendant")
 
 def get_defendants(soup):
     defendants = []
-    for tag in soup.find_all("th", text="Defendant"):
+    for tag in get_defendant_elements(soup):
         name_elem = tag.find_next_sibling("th")
         defendants.append(name_elem.text)
     together = "; ".join(defendants)
     return together
-
 
 def get_case_number(soup):
     elem = soup.find(class_="ssCaseDetailCaseNbr").span
@@ -55,14 +68,14 @@ def get_style(soup):
     elem = soup.find_all("table")[4].tbody.tr.td
     return elem.text
 
+def get_zip(party_info_th_soup) -> str:
+    """Returns a ZIP code from the Table Heading Party Info of a CaseDetail"""
+    zip_regex = re.compile(r", tx \d{5}(-\d{4})?")
+    def has_zip(string: str) -> bool:
+        return bool(zip_regex.search(string.lower()))
 
-def get_zip(soup):
-    def has_austin(string: str) -> bool:
-        return "austin, tx" in string.lower()
-
-    zip_tag = soup.find(string=has_austin)
-    zipcode = zip_tag.strip().split()[-1]
-    return zipcode
+    zip_tag = party_info_th_soup.find_next(string=has_zip)
+    return zip_tag.strip().split()[-1] if zip_tag is not None else ""
 
 
 def get_hearing_tag(soup):
@@ -162,13 +175,15 @@ def was_defendant_alternative_served(soup) -> List[str]:
 def make_parsed_hearing(
     soup, status: str = "", register_url: str = ""
 ) -> Dict[str, str]:
+    #TODO handle multiple defendants/plaintiffs with different zips
     return {
         "precinct_number": get_precinct_number(soup),
         "style": get_style(soup),
         "plaintiff": get_plaintiff(soup),
         "defendants": get_defendants(soup),
         "case_number": get_case_number(soup),
-        "zip": get_zip(soup),
+        "defendant_zip": get_zip(get_defendant_elements(soup)[0]),
+        "plaintff_zip": get_zip(get_plaintiff_elements(soup)[0]),
         "hearing_date": get_hearing_date(soup),
         "hearing_time": get_hearing_time(soup),
         "hearing_officer": get_hearing_officer(soup),
