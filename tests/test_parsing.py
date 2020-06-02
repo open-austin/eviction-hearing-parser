@@ -4,7 +4,7 @@ import hearing
 
 
 class TestLoadHTML:
-    @pytest.mark.parametrize("index", [0, 1, 2])
+    @pytest.mark.parametrize("index", [0, 1, 2, 3])
     def test_html_has_title(self, index):
         soup = hearing.get_test_soup(index)
         tag = soup.div
@@ -14,7 +14,12 @@ class TestLoadHTML:
 class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
-        [(0, "XYZ Group LLC"), (1, "MOE, JOHN"), (2, "UMBRELLA CORPORATION")],
+        [
+            (0, "XYZ Group LLC"),
+            (1, "MOE, JOHN"),
+            (2, "UMBRELLA CORPORATION"),
+            (3, "National Landlords, LLC"),
+        ],
     )
     def test_get_plaintiff(self, index, expected):
         soup = hearing.get_test_soup(index)
@@ -29,6 +34,7 @@ class TestParseHTML:
             (1, "Roe, Jane"),
             (1, "Roe, Jean"),
             (2, "Noe, Ann"),
+            (3, "Lewis, Lois"),
         ],
     )
     def test_get_defendants(self, index, expected):
@@ -42,6 +48,7 @@ class TestParseHTML:
             (0, "XYZ Group LLC vs. John G Doe"),
             (1, "JOHN MOE vs. Jane Roe,Unnamed Person,Jean Roe"),
             (2, "UMBRELLA CORPORATION vs. Ann Noe"),
+            (3, "National Landlords, LLC vs. Lois Lewis,Louis Lewis"),
         ],
     )
     def test_get_style(self, index, expected):
@@ -51,7 +58,12 @@ class TestParseHTML:
 
     @pytest.mark.parametrize(
         "index, expected",
-        [(0, "J1-CV-20-001590"), (1, "J2-CV-20-001839"), (2, "J4-CV-20-000198")],
+        [
+            (0, "J1-CV-20-001590"),
+            (1, "J2-CV-20-001839"),
+            (2, "J4-CV-20-000198"),
+            (3, "J2-CV-20-001919"),
+        ],
     )
     def test_get_case_number(self, index, expected):
         soup = hearing.get_test_soup(index)
@@ -59,7 +71,8 @@ class TestParseHTML:
         assert number == expected
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "78724"), (1, "78759"), (2, "78741-0000")],
+        "index, expected",
+        [(0, "78724"), (1, "78759"), (2, "78741-0000"), (3, "78727")],
     )
     def test_get_zip(self, index, expected):
         soup = hearing.get_test_soup(index)
@@ -67,7 +80,8 @@ class TestParseHTML:
         assert number == expected
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "(11:00 AM)"), (1, "(11:00 AM)"), (2, "(2:00 PM)")],
+        "index, expected",
+        [(0, "(11:00 AM)"), (1, "(11:00 AM)"), (2, "(2:00 PM)"), (3, "")],
     )
     def test_get_hearing_text(self, index, expected):
         soup = hearing.get_test_soup(index)
@@ -80,6 +94,7 @@ class TestParseHTML:
             (0, "Williams, Yvonne M."),
             (1, "Slagle, Randall"),
             (2, "Gonzalez, Raul Arturo"),
+            (3, ""),
         ],
     )
     def test_get_hearing_officer(self, index, expected):
@@ -88,7 +103,7 @@ class TestParseHTML:
         assert name == expected
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "11:00 AM"), (1, "11:00 AM"), (2, "2:00 PM")],
+        "index, expected", [(0, "11:00 AM"), (1, "11:00 AM"), (2, "2:00 PM"), (3, "")],
     )
     def test_get_hearing_time(self, index, expected):
         soup = hearing.get_test_soup(index)
@@ -96,7 +111,8 @@ class TestParseHTML:
         assert expected == time
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "05/14/2020"), (1, "05/14/2020"), (2, "06/05/2020")],
+        "index, expected",
+        [(0, "05/14/2020"), (1, "05/14/2020"), (2, "06/05/2020"), (3, "")],
     )
     def test_get_hearing_date(self, index, expected):
         soup = hearing.get_test_soup(index)
@@ -104,7 +120,7 @@ class TestParseHTML:
         assert expected == hearing_date
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, 1), (1, 2), (2, 4)],
+        "index, expected", [(0, 1), (1, 2), (2, 4), (3, 2)],
     )
     def test_get_precinct_number(self, index, expected):
         soup = hearing.get_test_soup(index)
@@ -112,7 +128,7 @@ class TestParseHTML:
         assert expected == precinct_number
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, False), (1, False), (2, True)],
+        "index, expected", [(0, False), (1, False), (2, True), (3, False)],
     )
     def test_defendant_appeared(self, index, expected):
         soup = hearing.get_test_soup(index)
@@ -120,15 +136,23 @@ class TestParseHTML:
         assert expected == appeared
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "05/01/2020"), (1, "05/06/2020"), (2, "01/22/2020")],
+        "index, defendant, expected",
+        [
+            (0, "Doe, John G", "05/01/2020"),
+            (1, "Person, Unnamed", "05/06/2020"),
+            (1, "Roe, Jane", "05/06/2020"),
+            (1, "Roe, Jean", "05/06/2020"),
+            (2, "Noe, Ann", "01/22/2020"),
+            (3, "Lewis, Lois", None),
+        ],
     )
-    def test_defendant_served(self, index, expected):
+    def test_defendant_served(self, index, defendant, expected):
         soup = hearing.get_test_soup(index)
         served = hearing.was_defendant_served(soup)
-        assert expected == served[0]
+        assert served.get(defendant) == expected
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, []), (1, ["05/05/2020"]), (2, ["01/22/2020"])],
+        "index, expected", [(0, []), (1, ["05/05/2020"]), (2, ["01/22/2020"]), (3, [])],
     )
     def test_alternative_service(self, index, expected):
         soup = hearing.get_test_soup(index)

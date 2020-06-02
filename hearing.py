@@ -70,8 +70,10 @@ def get_hearing_tag(soup):
     Returns the element in the Events and Hearings section of a CaseDetail document
     that holds the most recent hearing info if one has taken place.
     """
+
     def ends_with_hearing(string: str) -> bool:
         return string.endswith("Hearing")
+
     hearings = soup.find_all("b", string=ends_with_hearing)
     return hearings[-1] if len(hearings) > 0 else None
 
@@ -135,11 +137,14 @@ def did_defendant_appear(soup) -> bool:
 
 
 def was_defendant_served(soup) -> List[str]:
-    dates_of_service = []
+    dates_of_service = {}
     served_tags = soup.find_all(text="Served")
     for service_tag in served_tags:
         date_tag = service_tag.parent.find_next_sibling("td")
-        dates_of_service.append(date_tag.text)
+        defendant_tag = service_tag.parent.parent.parent.parent.parent.find_previous_sibling(
+            "td"
+        )
+        dates_of_service[defendant_tag.text] = date_tag.text
 
     return dates_of_service
 
