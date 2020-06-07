@@ -43,11 +43,10 @@ def query_case_id(case_id: str):
         case_radio_button = WebDriverWait(search_page, 10).until(
             EC.presence_of_element_located((By.ID, "Case"))
         )
+        case_radio_button.click()
     except:
         logger.error(f"Could not click button to search for case {case_id}")
         return None
-    finally:
-        case_radio_button.click()
 
     try:
         search_box = WebDriverWait(search_page, 10).until(
@@ -67,11 +66,10 @@ def query_case_id(case_id: str):
         register_link = WebDriverWait(search_page, 10).until(
             EC.presence_of_element_located((By.LINK_TEXT, case_id))
         )
+        register_link.click()
     except:
         logger.error(f"Could not click search result for case {case_id}")
         return None
-    finally:
-        register_link.click()
 
     try:
         register_heading = WebDriverWait(search_page, 10).until(
