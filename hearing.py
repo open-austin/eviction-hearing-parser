@@ -113,7 +113,29 @@ def get_disposition_winning_party(disposition_tr, plaintiff) -> str:
     return "PLAINTIFF" if plaintiff.split()[0] in winner else "DEFENDANT"
 
 
-def get_hearing_tag(soup):
+def get_events_tbody_element(soup):
+    """
+    Returns the <tbody> element  of a CaseDetail document that contains Dispositions, Hearings, and Other Events.
+    Used as a starting point for many event parsing methods.
+    """
+    table_caption_div = soup.find(
+        "div", class_="ssCaseDetailSectionTitle", text="Events & Orders of the Court"
+    )
+    tbody = table_caption_div.parent.find_next_sibling("tbody")
+    return tbody
+
+
+def get_hearing_tags(soup):
+    """
+    Returns <tr> elements in the Events and Hearings section of a CaseDetail document that represent a hearing record.
+    """
+    root = get_events_tbody_element(soup)
+    hearing_ths = root.find_all("th", id=lambda id_str: "RCDHR" in id_str)
+    hearing_trs = [hearing_th.parent for hearing_th in hearing_ths]
+    return hearing_trs
+
+
+def get_hearing_tag(hearing_th_soup):
     """
     Returns the element in the Events and Hearings section of a CaseDetail document
     that holds the most recent hearing info if one has taken place.
@@ -122,31 +144,29 @@ def get_hearing_tag(soup):
     def ends_with_hearing(string: str) -> bool:
         return string.endswith("Hearing")
 
-    hearings = soup.find_all("b", string=ends_with_hearing)
+    hearings = hearing_th_soup.find_all("b", string=ends_with_hearing)
     return hearings[-1] if len(hearings) > 0 else None
 
 
-def get_hearing_text(soup) -> str:
-    hearing_tag = get_hearing_tag(soup)
-    return hearing_tag.next_sibling if hearing_tag is not None else ""
+def get_hearing_text(hearing_tag) -> str:
+    return hearing_tag.find("b").next_sibling if hearing_tag is not None else ""
 
 
-def get_hearing_date(soup) -> str:
-    hearing_tag = get_hearing_tag(soup)
+def get_hearing_date(hearing_tag) -> str:
     if hearing_tag is None:
         return ""
-    date_tag = hearing_tag.parent.find_previous_sibling("th")
+    date_tag = hearing_tag.find("th")
     return date_tag.text
 
 
-def get_hearing_time(soup) -> str:
-    hearing_text = get_hearing_text(soup)
+def get_hearing_time(hearing_tag) -> str:
+    hearing_text = get_hearing_text(hearing_tag)
     hearing_time_matches = re.search(r"\d{1,2}:\d{2} [AP]M", hearing_text)
     return hearing_time_matches[0] if hearing_time_matches is not None else ""
 
 
-def get_hearing_officer(soup) -> str:
-    hearing_text = get_hearing_text(soup)
+def get_hearing_officer(hearing_tag) -> str:
+    hearing_text = get_hearing_text(hearing_tag)
     officer_groups = hearing_text.split("Judicial Officer")
     name = officer_groups[1] if len(officer_groups) > 1 else ""
     return name.strip().strip(")")
@@ -200,13 +220,16 @@ def get_register_url(status_soup) -> str:
     return "https://odysseypa.traviscountytx.gov/JPPublicAccess/" + relative_link
 
 
-def did_defendant_appear(soup) -> bool:
+def did_defendant_appear(hearing_tag) -> bool:
     """If and only if "appeared" appears, infer defendant apparently appeared."""
+
+    if hearing_tag is None:
+        return False
 
     def appeared_in_text(text):
         return text and re.compile("[aA]ppeared").search(text)
 
-    appeared_tag = soup.find(text=appeared_in_text)
+    appeared_tag = hearing_tag.find(text=appeared_in_text)
     return appeared_tag is not None
 
 
@@ -233,11 +256,18 @@ def was_defendant_alternative_served(soup) -> List[str]:
     return dates_of_service
 
 
-def make_parsed_hearing(
-    soup, status: str = "", register_url: str = ""
-) -> Dict[str, str]:
+def make_parsed_hearing(soup):
+
+    return {
+        "hearing_date": get_hearing_date(soup),
+        "hearing_time": get_hearing_time(soup),
+        "hearing_officer": get_hearing_officer(soup),
+        "appeared": did_defendant_appear(soup),
+    }
+
+
+def make_parsed_case(soup, status: str = "", register_url: str = "") -> Dict[str, str]:
     # TODO handle multiple defendants/plaintiffs with different zips
-    disposition_tr = get_disposition_tr_element(soup)
     return {
         "precinct_number": get_precinct_number(soup),
         "style": get_style(soup),

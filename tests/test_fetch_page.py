@@ -22,7 +22,7 @@ class TestFetchSearchPage:
 
 class TestDataFromScrapedPage:
     def test_url_for_register(self):
-        parsed = hearing.fetch_parsed_hearing("J1-CV-20-001590")
+        parsed = hearing.fetch_parsed_case("J1-CV-20-001590")
         assert (
             parsed["register_url"]
             == "https://odysseypa.traviscountytx.gov/JPPublicAccess/CaseDetail.aspx?CaseID=2286743"
