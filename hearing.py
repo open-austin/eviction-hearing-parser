@@ -220,17 +220,16 @@ def make_parsed_case(soup, status: str = "", register_url: str = "") -> Dict[str
         "defendants": get_defendants(soup),
         "case_number": get_case_number(soup),
         "defendant_zip": get_zip(get_defendant_elements(soup)[0]),
-        "plaintff_zip": get_zip(get_plaintiff_elements(soup)[0]),
-        "hearing_date": get_hearing_date(soup),
-        "hearing_time": get_hearing_time(soup),
-        "hearing_officer": get_hearing_officer(soup),
-        "appeared": did_defendant_appear(soup),
+        "plaintiff_zip": get_zip(get_plaintiff_elements(soup)[0]),
+        "hearings": [
+            make_parsed_hearing(hearing) for hearing in get_hearing_tags(soup)
+        ],
         "status": status,
         "register_url": register_url,
     }
 
 
-def fetch_parsed_hearing(case_id: str) -> Tuple[str, str]:
+def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
     query_result = fetch_page.query_case_id(case_id)
     if query_result is None:
         return None
@@ -240,6 +239,6 @@ def fetch_parsed_hearing(case_id: str) -> Tuple[str, str]:
 
     register_url = get_register_url(result_soup)
     status = get_status(result_soup)
-    return make_parsed_hearing(
+    return make_parsed_case(
         soup=register_soup, status=status, register_url=register_url
     )
