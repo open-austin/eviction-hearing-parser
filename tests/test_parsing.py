@@ -85,7 +85,9 @@ class TestParseHTML:
     )
     def test_get_hearing_text(self, index, expected):
         soup = hearing.get_test_soup(index)
-        passage = hearing.get_hearing_text(soup)
+        hearing_tags = hearing.get_hearing_tags(soup)
+        hearing_tag = hearing_tags[-1] if len(hearing_tags) > 0 else None
+        passage = hearing.get_hearing_text(hearing_tag)
         assert expected in passage
 
     @pytest.mark.parametrize(
@@ -99,7 +101,9 @@ class TestParseHTML:
     )
     def test_get_hearing_officer(self, index, expected):
         soup = hearing.get_test_soup(index)
-        name = hearing.get_hearing_officer(soup)
+        hearing_tags = hearing.get_hearing_tags(soup)
+        hearing_tag = hearing_tags[-1] if len(hearing_tags) > 0 else None
+        name = hearing.get_hearing_officer(hearing_tag)
         assert name == expected
 
     @pytest.mark.parametrize(
@@ -107,7 +111,9 @@ class TestParseHTML:
     )
     def test_get_hearing_time(self, index, expected):
         soup = hearing.get_test_soup(index)
-        time = hearing.get_hearing_time(soup)
+        hearing_tags = hearing.get_hearing_tags(soup)
+        hearing_tag = hearing_tags[-1] if len(hearing_tags) > 0 else None
+        time = hearing.get_hearing_time(hearing_tag)
         assert expected == time
 
     @pytest.mark.parametrize(
@@ -116,7 +122,9 @@ class TestParseHTML:
     )
     def test_get_hearing_date(self, index, expected):
         soup = hearing.get_test_soup(index)
-        hearing_date = hearing.get_hearing_date(soup)
+        hearing_tags = hearing.get_hearing_tags(soup)
+        hearing_tag = hearing_tags[-1] if len(hearing_tags) > 0 else None
+        hearing_date = hearing.get_hearing_date(hearing_tag)
         assert expected == hearing_date
 
     @pytest.mark.parametrize(
@@ -128,11 +136,14 @@ class TestParseHTML:
         assert expected == precinct_number
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, False), (1, False), (2, True), (3, False)],
+        "index, hearing_index, expected",
+        [(0, 0, False), (1, 0, False), (2, 3, False), (2, 2, True), (3, 0, False)],
     )
-    def test_defendant_appeared(self, index, expected):
+    def test_defendant_appeared(self, index, hearing_index, expected):
         soup = hearing.get_test_soup(index)
-        appeared = hearing.did_defendant_appear(soup)
+        hearing_tags = hearing.get_hearing_tags(soup)
+        hearing_tag = hearing_tags[hearing_index] if len(hearing_tags) > 0 else None
+        appeared = hearing.did_defendant_appear(hearing_tag)
         assert expected == appeared
 
     @pytest.mark.parametrize(

@@ -31,11 +31,12 @@ def get_test_search_page(index: int) -> BeautifulSoup:
 
 
 def get_plaintiff(soup):
-    #TODO handle multiple plaintiffs
+    # TODO handle multiple plaintiffs
     tag = get_plaintiff_elements(soup)[0]
     name_elem = tag.find_next_sibling("th")
 
     return name_elem.text
+
 
 def get_plaintiff_elements(soup):
     """
@@ -44,12 +45,14 @@ def get_plaintiff_elements(soup):
     """
     return soup.find_all("th", text="Plaintiff")
 
+
 def get_defendant_elements(soup):
     """
     Gets the defendant HTML elements from a CaseDetail.
     These are currently used as an anchor for most of the Party Info parsing.
     """
     return soup.find_all("th", text="Defendant")
+
 
 def get_defendants(soup):
     defendants = []
@@ -58,6 +61,7 @@ def get_defendants(soup):
         defendants.append(name_elem.text)
     together = "; ".join(defendants)
     return together
+
 
 def get_case_number(soup):
     elem = soup.find(class_="ssCaseDetailCaseNbr").span
@@ -68,9 +72,11 @@ def get_style(soup):
     elem = soup.find_all("table")[4].tbody.tr.td
     return elem.text
 
+
 def get_zip(party_info_th_soup) -> str:
     """Returns a ZIP code from the Table Heading Party Info of a CaseDetail"""
     zip_regex = re.compile(r", tx \d{5}(-\d{4})?")
+
     def has_zip(string: str) -> bool:
         return bool(zip_regex.search(string.lower()))
 
@@ -78,7 +84,29 @@ def get_zip(party_info_th_soup) -> str:
     return zip_tag.strip().split()[-1] if zip_tag is not None else ""
 
 
-def get_hearing_tag(soup):
+def get_events_tbody_element(soup):
+    """
+    Returns the <tbody> element  of a CaseDetail document that contains Dispositions, Hearings, and Other Events.
+    Used as a starting point for many event parsing methods.
+    """
+    table_caption_div = soup.find(
+        "div", class_="ssCaseDetailSectionTitle", text="Events & Orders of the Court"
+    )
+    tbody = table_caption_div.parent.find_next_sibling("tbody")
+    return tbody
+
+
+def get_hearing_tags(soup):
+    """
+    Returns <tr> elements in the Events and Hearings section of a CaseDetail document that represent a hearing record.
+    """
+    root = get_events_tbody_element(soup)
+    hearing_ths = root.find_all("th", id=lambda id_str: "RCDHR" in id_str)
+    hearing_trs = [hearing_th.parent for hearing_th in hearing_ths]
+    return hearing_trs
+
+
+def get_hearing_tag(hearing_th_soup):
     """
     Returns the element in the Events and Hearings section of a CaseDetail document
     that holds the most recent hearing info if one has taken place.
@@ -91,27 +119,25 @@ def get_hearing_tag(soup):
     return hearings[-1] if len(hearings) > 0 else None
 
 
-def get_hearing_text(soup) -> str:
-    hearing_tag = get_hearing_tag(soup)
-    return hearing_tag.next_sibling if hearing_tag is not None else ""
+def get_hearing_text(hearing_tag) -> str:
+    return hearing_tag.find("b").next_sibling if hearing_tag is not None else ""
 
 
-def get_hearing_date(soup) -> str:
-    hearing_tag = get_hearing_tag(soup)
+def get_hearing_date(hearing_tag) -> str:
     if hearing_tag is None:
         return ""
-    date_tag = hearing_tag.parent.find_previous_sibling("th")
+    date_tag = hearing_tag.find("th")
     return date_tag.text
 
 
-def get_hearing_time(soup) -> str:
-    hearing_text = get_hearing_text(soup)
+def get_hearing_time(hearing_tag) -> str:
+    hearing_text = get_hearing_text(hearing_tag)
     hearing_time_matches = re.search(r"\d{1,2}:\d{2} [AP]M", hearing_text)
     return hearing_time_matches[0] if hearing_time_matches is not None else ""
 
 
-def get_hearing_officer(soup) -> str:
-    hearing_text = get_hearing_text(soup)
+def get_hearing_officer(hearing_tag) -> str:
+    hearing_text = get_hearing_text(hearing_tag)
     officer_groups = hearing_text.split("Judicial Officer")
     name = officer_groups[1] if len(officer_groups) > 1 else ""
     return name.strip().strip(")")
@@ -139,13 +165,16 @@ def get_register_url(status_soup) -> str:
     return "https://odysseypa.traviscountytx.gov/JPPublicAccess/" + relative_link
 
 
-def did_defendant_appear(soup) -> bool:
+def did_defendant_appear(hearing_tag) -> bool:
     """If and only if "appeared" appears, infer defendant apparently appeared."""
+
+    if hearing_tag is None:
+        return False
 
     def appeared_in_text(text):
         return text and re.compile("[aA]ppeared").search(text)
 
-    appeared_tag = soup.find(text=appeared_in_text)
+    appeared_tag = hearing_tag.find(text=appeared_in_text)
     return appeared_tag is not None
 
 
@@ -172,10 +201,18 @@ def was_defendant_alternative_served(soup) -> List[str]:
     return dates_of_service
 
 
-def make_parsed_hearing(
-    soup, status: str = "", register_url: str = ""
-) -> Dict[str, str]:
-    #TODO handle multiple defendants/plaintiffs with different zips
+def make_parsed_hearing(soup):
+
+    return {
+        "hearing_date": get_hearing_date(soup),
+        "hearing_time": get_hearing_time(soup),
+        "hearing_officer": get_hearing_officer(soup),
+        "appeared": did_defendant_appear(soup),
+    }
+
+
+def make_parsed_case(soup, status: str = "", register_url: str = "") -> Dict[str, str]:
+    # TODO handle multiple defendants/plaintiffs with different zips
     return {
         "precinct_number": get_precinct_number(soup),
         "style": get_style(soup),
