@@ -21,6 +21,8 @@ class TestParseHTML:
             (1, "MOE, JOHN"),
             (2, "UMBRELLA CORPORATION"),
             (3, "National Landlords, LLC"),
+            (4, "We Sue You, Llc"),
+            (5, "LESS SORE LLC"),
         ],
     )
     def test_get_plaintiff(self, index, expected):
@@ -192,3 +194,26 @@ class TestParseHTML:
         soup = hearing.get_test_soup(index)
         amount = hearing.get_disposition_amount(soup)
         assert expected == amount
+
+    @pytest.mark.parametrize(
+        "index, expected",
+        [
+            (0, None),
+            (1, None),
+            (2, None),
+            (3, None),
+            (4, "PLAINTIFF"),
+            (5, "PLAINTIFF"),
+        ],
+    )
+    def test_role_of_winning_party(self, index, expected):
+        soup = hearing.get_test_soup(index)
+        disposition_tr = hearing.get_disposition_tr_element(soup)
+        if disposition_tr is None:
+            winning_party = None
+        else:
+            plaintiff_name = hearing.get_plaintiff(soup)
+            winning_party = hearing.get_disposition_winning_party(
+                disposition_tr, plaintiff_name
+            )
+        assert winning_party == expected
