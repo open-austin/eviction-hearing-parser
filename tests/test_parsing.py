@@ -217,3 +217,23 @@ class TestParseHTML:
                 disposition_tr, plaintiff_name
             )
         assert winning_party == expected
+
+    @pytest.mark.parametrize(
+        "index, expected",
+        [
+            (0, None),
+            (1, None),
+            (2, None),
+            (3, None),
+            (4, "Default Judgment"),
+            (5, "Default Judgment"),
+        ],
+    )
+    def test_disposition_type(self, index, expected):
+        soup = hearing.get_test_soup(index)
+        disposition_tr = hearing.get_disposition_tr_element(soup)
+        if disposition_tr is None:
+            dt = None
+        else:
+            dt = hearing.get_disposition_type(disposition_tr)
+        assert dt == expected
