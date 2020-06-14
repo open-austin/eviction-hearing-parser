@@ -108,7 +108,6 @@ def get_disposition_winning_party(disposition_tr, plaintiff) -> str:
     Looks for part of the plaintiff's name in the awarded to field of a disposition.
     Name orders may be different in different parts of the document.
     """
-    print(disposition_tr)
     award_field = disposition_tr.find(text=re.compile(r"Awarded To:"))
 
     if award_field is None:
