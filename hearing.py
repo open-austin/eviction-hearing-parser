@@ -84,6 +84,34 @@ def get_zip(party_info_th_soup) -> str:
     return zip_tag.strip().split()[-1] if zip_tag is not None else ""
 
 
+def get_disposition_tr_element(soup) -> str:
+    """
+    Returns the <tr> element of a CaseDetail document that contains Disposition info, if one exists.
+    """
+    disp_date_th = soup.find(
+        "th", id=lambda id_str: id_str is not None and "RDISPDATE" in id_str
+    )
+    return disp_date_th.parent if disp_date_th is not None else None
+
+
+def get_disposition_type(disposition_tr) -> str:
+    return disposition_tr.find("b").text
+
+
+def get_disposition_winning_party(disposition_tr, plaintiff) -> str:
+    """
+    Looks for part of the plaintiff's name in the awarded to field of a disposition.
+    Name orders may be different in different parts of the document.
+    """
+    award_field = disposition_tr.find(text=re.compile(r"Awarded To:"))
+
+    if award_field is None:
+        return "N/A"
+    winner = award_field.next_sibling.text
+
+    return "PLAINTIFF" if plaintiff.split()[0] in winner else "DEFENDANT"
+
+
 def get_hearing_tag(soup):
     """
     Returns the element in the Events and Hearings section of a CaseDetail document
@@ -208,6 +236,7 @@ def make_parsed_hearing(
     soup, status: str = "", register_url: str = ""
 ) -> Dict[str, str]:
     # TODO handle multiple defendants/plaintiffs with different zips
+    disposition_tr = get_disposition_tr_element(soup)
     return {
         "precinct_number": get_precinct_number(soup),
         "style": get_style(soup),
@@ -222,6 +251,17 @@ def make_parsed_hearing(
         "appeared": did_defendant_appear(soup),
         "status": status,
         "register_url": register_url,
+        "disposition_type": get_disposition_type(disposition_tr)
+        if disposition_tr is not None
+        else "",
+        "disposition_amount": get_disposition_amount(disposition_tr)
+        if disposition_tr is not None
+        else "",
+        "disposition_winning_party": get_disposition_winning_party(
+            disposition_tr, get_plaintiff(soup)
+        )
+        if disposition_tr is not None
+        else "N/A",
     }
 
 
