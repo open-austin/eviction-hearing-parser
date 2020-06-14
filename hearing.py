@@ -1,6 +1,6 @@
+from decimal import Decimal
 import os
 import re
-
 from typing import Dict, List, Tuple
 
 from bs4 import BeautifulSoup
@@ -129,12 +129,24 @@ def get_judgment_date_node(soup) -> BeautifulSoup:
 
 def get_judgment_date(soup) -> str:
     judgment_date_node = get_judgment_date_node(soup)
-    return judgment_date_node.text
+    return judgment_date_node.text if judgment_date_node else None
 
 
-def get_judgment_amount(soup) -> str:
+def get_disposition_amount(soup) -> str:
     judgment_date_node = get_judgment_date_node(soup)
-    raise NotImplementedError
+    if judgment_date_node is None:
+        return None
+    judgment_label = judgment_date_node.find_next_sibling(
+        "td", headers="CDisp RDISPDATE1"
+    )
+    judgment_amount_node = judgment_label.find("nobr")
+    if judgment_amount_node is None:
+        return None
+    if "$" not in judgment_amount_node.text:
+        return None
+    amount_as_string = judgment_amount_node.text.strip(". ")
+    amount = Decimal(re.sub(r"[^\d.]", "", amount_as_string))
+    return amount
 
 
 def get_precinct_number(soup) -> int:

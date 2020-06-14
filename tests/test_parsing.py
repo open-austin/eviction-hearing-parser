@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 import pytest
 
 import hearing
@@ -177,9 +179,16 @@ class TestParseHTML:
 
     @pytest.mark.parametrize(
         "index, expected",
-        [(0, None), (1, None), (2, None), (3, None), (4, 5163.35), (5, 5980.43)],
+        [
+            (0, None),
+            (1, None),
+            (2, None),
+            (3, None),
+            (4, Decimal("5163.35")),
+            (5, Decimal("5980.43")),
+        ],
     )
     def test_judgment_amount(self, index, expected):
         soup = hearing.get_test_soup(index)
-        amount = hearing.get_judgment_amount(soup)
+        amount = hearing.get_disposition_amount(soup)
         assert expected == amount
