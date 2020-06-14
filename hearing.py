@@ -130,7 +130,9 @@ def get_hearing_tags(soup):
     Returns <tr> elements in the Events and Hearings section of a CaseDetail document that represent a hearing record.
     """
     root = get_events_tbody_element(soup)
-    hearing_ths = root.find_all("th", id=lambda id_str: id_str is not None and "RCDHR" in id_str)
+    hearing_ths = root.find_all(
+        "th", id=lambda id_str: id_str is not None and "RCDHR" in id_str
+    )
     hearing_trs = [hearing_th.parent for hearing_th in hearing_ths]
     return hearing_trs
 
@@ -268,6 +270,7 @@ def make_parsed_hearing(soup):
 
 def make_parsed_case(soup, status: str = "", register_url: str = "") -> Dict[str, str]:
     # TODO handle multiple defendants/plaintiffs with different zips
+    disposition_tr = get_disposition_tr_element(soup)
     return {
         "precinct_number": get_precinct_number(soup),
         "style": get_style(soup),
@@ -276,10 +279,9 @@ def make_parsed_case(soup, status: str = "", register_url: str = "") -> Dict[str
         "case_number": get_case_number(soup),
         "defendant_zip": get_zip(get_defendant_elements(soup)[0]),
         "plaintff_zip": get_zip(get_plaintiff_elements(soup)[0]),
-        "hearing_date": get_hearing_date(soup),
-        "hearing_time": get_hearing_time(soup),
-        "hearing_officer": get_hearing_officer(soup),
-        "appeared": did_defendant_appear(soup),
+        "hearings": [
+            make_parsed_hearing(hearing) for hearing in get_hearing_tags(soup)
+        ],
         "status": status,
         "register_url": register_url,
         "disposition_type": get_disposition_type(disposition_tr)
@@ -296,7 +298,7 @@ def make_parsed_case(soup, status: str = "", register_url: str = "") -> Dict[str
     }
 
 
-def fetch_parsed_hearing(case_id: str) -> Tuple[str, str]:
+def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
     query_result = fetch_page.query_case_id(case_id)
     if query_result is None:
         return None
@@ -306,6 +308,6 @@ def fetch_parsed_hearing(case_id: str) -> Tuple[str, str]:
 
     register_url = get_register_url(result_soup)
     status = get_status(result_soup)
-    return make_parsed_hearing(
+    return make_parsed_case(
         soup=register_soup, status=status, register_url=register_url
     )

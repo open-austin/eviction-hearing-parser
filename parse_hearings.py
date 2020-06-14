@@ -27,7 +27,7 @@ def parse_all(infile, outfile):
     parsed_hearings = []
     ids_to_parse = get_ids_to_parse(infile)
     for id_to_parse in ids_to_parse:
-        new_hearing = hearing.fetch_parsed_hearing(id_to_parse)
+        new_hearing = hearing.fetch_parsed_case(id_to_parse)
         parsed_hearings.append(new_hearing)
     json.dump(parsed_hearings, outfile)
 
