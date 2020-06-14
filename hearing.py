@@ -31,11 +31,12 @@ def get_test_search_page(index: int) -> BeautifulSoup:
 
 
 def get_plaintiff(soup):
-    #TODO handle multiple plaintiffs
+    # TODO handle multiple plaintiffs
     tag = get_plaintiff_elements(soup)[0]
     name_elem = tag.find_next_sibling("th")
 
     return name_elem.text
+
 
 def get_plaintiff_elements(soup):
     """
@@ -44,12 +45,14 @@ def get_plaintiff_elements(soup):
     """
     return soup.find_all("th", text="Plaintiff")
 
+
 def get_defendant_elements(soup):
     """
     Gets the defendant HTML elements from a CaseDetail.
     These are currently used as an anchor for most of the Party Info parsing.
     """
     return soup.find_all("th", text="Defendant")
+
 
 def get_defendants(soup):
     defendants = []
@@ -58,6 +61,7 @@ def get_defendants(soup):
         defendants.append(name_elem.text)
     together = "; ".join(defendants)
     return together
+
 
 def get_case_number(soup):
     elem = soup.find(class_="ssCaseDetailCaseNbr").span
@@ -68,9 +72,11 @@ def get_style(soup):
     elem = soup.find_all("table")[4].tbody.tr.td
     return elem.text
 
+
 def get_zip(party_info_th_soup) -> str:
     """Returns a ZIP code from the Table Heading Party Info of a CaseDetail"""
     zip_regex = re.compile(r", tx \d{5}(-\d{4})?")
+
     def has_zip(string: str) -> bool:
         return bool(zip_regex.search(string.lower()))
 
@@ -115,6 +121,20 @@ def get_hearing_officer(soup) -> str:
     officer_groups = hearing_text.split("Judicial Officer")
     name = officer_groups[1] if len(officer_groups) > 1 else ""
     return name.strip().strip(")")
+
+
+def get_judgment_date_node(soup) -> BeautifulSoup:
+    return soup.find("th", id="RDISPDATE1")
+
+
+def get_judgment_date(soup) -> str:
+    judgment_date_node = get_judgment_date_node(soup)
+    return judgment_date_node.text
+
+
+def get_judgment_amount(soup) -> str:
+    judgment_date_node = get_judgment_date_node(soup)
+    raise NotImplementedError
 
 
 def get_precinct_number(soup) -> int:
@@ -175,7 +195,7 @@ def was_defendant_alternative_served(soup) -> List[str]:
 def make_parsed_hearing(
     soup, status: str = "", register_url: str = ""
 ) -> Dict[str, str]:
-    #TODO handle multiple defendants/plaintiffs with different zips
+    # TODO handle multiple defendants/plaintiffs with different zips
     return {
         "precinct_number": get_precinct_number(soup),
         "style": get_style(soup),

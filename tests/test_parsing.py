@@ -158,3 +158,28 @@ class TestParseHTML:
         soup = hearing.get_test_soup(index)
         served = hearing.was_defendant_alternative_served(soup)
         assert expected == served
+
+    @pytest.mark.parametrize(
+        "index, expected",
+        [
+            (0, None),
+            (1, None),
+            (2, None),
+            (3, None),
+            (4, "03/13/2020"),
+            (5, "03/13/2020"),
+        ],
+    )
+    def test_judgment_date(self, index, expected):
+        soup = hearing.get_test_soup(index)
+        answer = hearing.get_judgment_date(soup)
+        assert expected == answer
+
+    @pytest.mark.parametrize(
+        "index, expected",
+        [(0, None), (1, None), (2, None), (3, None), (4, 5163.35), (5, 5980.43)],
+    )
+    def test_judgment_amount(self, index, expected):
+        soup = hearing.get_test_soup(index)
+        amount = hearing.get_judgment_amount(soup)
+        assert expected == amount
