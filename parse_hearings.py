@@ -1,5 +1,5 @@
 import csv
-import json
+import simplejson as json
 import os
 from typing import List
 
