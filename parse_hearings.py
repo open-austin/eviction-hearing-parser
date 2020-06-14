@@ -1,35 +1,39 @@
 import csv
 import simplejson as json
 import os
-from typing import List
+from typing import Any, Dict, List
 
 import click
 
 import hearing
 
 
-def get_ids_to_parse(filename: str) -> List[str]:
-    ids = []
-    with open(filename, newline="") as csvfile:
-        reader = csv.reader(csvfile)
-        for row in reader:
-            ids.append(row[0])
-    return ids
+def get_ids_to_parse(infile: click.File) -> List[str]:
+    ids_to_parse = []
+    reader = csv.reader(infile)
+    for row in reader:
+        ids_to_parse.append(row[0])
+    return ids_to_parse
+
+
+def make_case_list(ids_to_parse: List[str]) -> List[Dict[str, Any]]:
+    parsed_cases = []
+    for id_to_parse in ids_to_parse:
+        new_case = hearing.fetch_parsed_case(id_to_parse)
+        parsed_cases.append(new_case)
+    return parsed_cases
 
 
 @click.command()
 @click.argument(
-    "infile",
-    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+    "infile", type=click.File(mode="r"),
 )
 @click.argument("outfile", type=click.File(mode="w"), default="result.json")
 def parse_all(infile, outfile):
-    parsed_hearings = []
+
     ids_to_parse = get_ids_to_parse(infile)
-    for id_to_parse in ids_to_parse:
-        new_hearing = hearing.fetch_parsed_case(id_to_parse)
-        parsed_hearings.append(new_hearing)
-    json.dump(parsed_hearings, outfile)
+    parsed_cases = make_case_list(ids_to_parse)
+    json.dump(parsed_cases, outfile)
 
 
 if __name__ == "__main__":
