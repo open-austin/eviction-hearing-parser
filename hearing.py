@@ -50,8 +50,9 @@ def get_defendant_elements(soup):
     """
     Gets the defendant HTML elements from a CaseDetail.
     These are currently used as an anchor for most of the Party Info parsing.
+    Sometimes the text of the element does not always say "Defendant", but may say something like "Defendant 2".
     """
-    return soup.find_all("th", text="Defendant")
+    return soup.find_all("th", text=re.compile(r"^Defendant"))
 
 
 def get_defendants(soup):
