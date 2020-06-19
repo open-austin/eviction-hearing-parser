@@ -8,15 +8,37 @@ import hearing
 
 
 def parse_all():
-    parsed_hearings = []
+    parsed_cases = []
+    headers_written = False
     for id_to_parse in (line.rstrip() for line in sys.stdin):
-        new_hearing = hearing.fetch_parsed_hearing(id_to_parse)
-        parsed_hearings.append(new_hearing)
-    parsed_hearings = [ph for ph in parsed_hearings if ph is not None]
-    writer = csv.DictWriter(sys.stdout, list(parsed_hearings[0].keys()))
-    writer.writeheader()
-    for parsed_hearing in parsed_hearings:
-        writer.writerow(parsed_hearing)
+        new_case = hearing.fetch_parsed_case(id_to_parse)
+        if new_case is not None:
+            if not headers_written:
+                writer = csv.DictWriter(
+                    sys.stdout,
+                    sorted(
+                        list(
+                            (
+                                set(new_case.keys())
+                                | set(new_case["hearings"][0].keys())
+                                | {"hearing_number"}
+                            )
+                            - {"hearings"}
+                        )
+                    ),
+                    extrasaction="ignore",
+                )
+                writer.writeheader()
+                headers_written = True
+            else:
+                for hearing_number, parsed_hearing in enumerate(new_case["hearings"]):
+                    writer.writerow(
+                        {
+                            **new_case,
+                            **parsed_hearing,
+                            "hearing_number": hearing_number,
+                        }
+                    )
 
 
 if __name__ == "__main__":
