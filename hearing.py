@@ -222,6 +222,22 @@ def get_register_url(status_soup) -> str:
     return "https://odysseypa.traviscountytx.gov/JPPublicAccess/" + relative_link
 
 
+def get_comments(soup: BeautifulSoup) -> List[str]:
+    """Get comments from case page."""
+    comments: List[str] = []
+
+    judgment_date_node = get_judgment_date_node(soup)
+    if not judgment_date_node:
+        return comments
+
+    judgment_label = judgment_date_node.find_next_sibling("td", headers="CDisp RDISPDATE1")
+    if not judgment_label:
+        return comments
+
+    comments = [nobr.text for nobr in judgment_label.find_all("nobr") if nobr.text.startswith('Comment:')]
+    return comments
+
+
 def did_defendant_appear(hearing_tag) -> bool:
     """If and only if "appeared" appears, infer defendant apparently appeared."""
 
@@ -295,6 +311,7 @@ def make_parsed_case(soup, status: str = "", register_url: str = "") -> Dict[str
         )
         if disposition_tr is not None
         else "N/A",
+        "comments": get_comments(soup),
     }
 
 
