@@ -1,7 +1,7 @@
 from decimal import Decimal
 import os
 import re
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from bs4 import BeautifulSoup
 
@@ -238,6 +238,104 @@ def get_comments(soup: BeautifulSoup) -> List[str]:
     return comments
 
 
+def get_case_event_date_basic(soup: BeautifulSoup, event_name: str) -> Optional[str]:
+    """Get date for case event entries that only include event name."""
+    case_event_date: Optional[str] = None
+
+    case_events = get_events_tbody_element(soup)
+    event_label = case_events.find("b", text=event_name)
+    if event_label:
+        try:
+            case_event_tr = event_label.parent.parent
+            case_event_date = case_event_tr.find("th", class_="ssTableHeaderLabel").text
+        except AttributeError:
+            pass
+
+    return case_event_date
+
+
+def get_writ(soup: BeautifulSoup) -> Dict[str, str]:
+    """Get details for the "Writ" case event."""
+    event_details: Dict[str, str] = {}
+
+    case_events = get_events_tbody_element(soup)
+    event_label = case_events.find("b", text="Writ")
+    if not event_label:
+        return event_details
+
+    event_tr = event_label.parent.parent.parent.parent.parent.parent
+
+    try:
+        event_details['case_event_date'] = event_tr.find("th", class_="ssTableHeaderLabel").text
+    except AttributeError:
+        pass
+
+    served_td = event_tr.find("td", text="Served")
+    if served_td:
+        try:
+            event_details['served_date'] = served_td.find_next_sibling("td").text
+        except AttributeError:
+            pass
+
+        try:
+            event_details['served_subject'] = served_td.parent.parent.parent.parent.find_previous_sibling("td").text
+        except AttributeError:
+            pass
+
+    returned_td = event_tr.find("td", text="Returned")
+    if returned_td:
+        try:
+            event_details['returned_date'] = returned_td.find_next_sibling("td").text
+        except AttributeError:
+            pass
+
+    return event_details
+
+
+def get_writ_of_possession_service(soup: BeautifulSoup) -> Dict[str, str]:
+    """Get details for the "Writ of Possession Service" case event."""
+    event_details: Dict[str, str] = {}
+
+    event_date = get_case_event_date_basic(soup, "Writ of Possession Service")
+    if event_date:
+        event_details['case_event_date'] = event_date
+
+    return event_details
+
+
+def get_writ_of_possession_requested(soup: BeautifulSoup) -> Dict[str, str]:
+    """Get details for the "Writ of Possession Requested" case event."""
+    event_details: Dict[str, str] = {}
+
+    event_date = get_case_event_date_basic(soup, "Writ of Possession Requested")
+    if event_date:
+        event_details['case_event_date'] = event_date
+
+    return event_details
+
+
+def get_writ_of_possession_sent_to_constable(soup: BeautifulSoup) -> Dict[str, str]:
+    """Get details for the "Writ of Possession Sent to Constable's Office" case event."""
+    event_details: Dict[str, str] = {}
+
+    event_date = get_case_event_date_basic(soup, "Writ of Possession Sent to Constable's Office")
+    if event_date:
+        event_details['case_event_date'] = event_date
+
+    return event_details
+
+
+def get_writ_returned_to_court(soup: BeautifulSoup) -> Dict[str, str]:
+    """Get details for the "Writ Returned to Court" case event."""
+    event_details: Dict[str, str] = {}
+
+    event_date = get_case_event_date_basic(soup, "Writ Returned to Court")
+    if event_date:
+        event_details['case_event_date'] = event_date
+
+    return event_details
+
+
 def did_defendant_appear(hearing_tag) -> bool:
     """If and only if "appeared" appears, infer defendant apparently appeared."""
 
@@ -312,6 +410,11 @@ def make_parsed_case(soup, status: str = "", register_url: str = "") -> Dict[str
         if disposition_tr is not None
         else "N/A",
         "comments": get_comments(soup),
+        "writ": get_writ(soup),
+        "writ_of_possession_service": get_writ_of_possession_service(soup),
+        "writ_of_possession_requested": get_writ_of_possession_requested(soup),
+        "writ_of_possession_sent_to_constable_office": get_writ_of_possession_sent_to_constable(soup),
+        "writ_returned_to_court": get_writ_returned_to_court(soup),
     }
 
 
