@@ -116,7 +116,8 @@ class TestParseHTML:
         assert name == expected
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "11:00 AM"), (1, "11:00 AM"), (2, "2:00 PM"), (3, ""), (6, "9:00 AM")],
+        "index, expected",
+        [(0, "11:00 AM"), (1, "11:00 AM"), (2, "2:00 PM"), (3, ""), (6, "9:00 AM")],
     )
     def test_get_hearing_time(self, index, expected):
         soup = hearing.get_test_soup(index)
@@ -127,7 +128,13 @@ class TestParseHTML:
 
     @pytest.mark.parametrize(
         "index, expected",
-        [(0, "05/14/2020"), (1, "05/14/2020"), (2, "06/05/2020"), (3, ""), (6, "01/14/2020")],
+        [
+            (0, "05/14/2020"),
+            (1, "05/14/2020"),
+            (2, "06/05/2020"),
+            (3, ""),
+            (6, "01/14/2020"),
+        ],
     )
     def test_get_hearing_date(self, index, expected):
         soup = hearing.get_test_soup(index)
@@ -146,7 +153,14 @@ class TestParseHTML:
 
     @pytest.mark.parametrize(
         "index, hearing_index, expected",
-        [(0, 0, False), (1, 0, False), (2, 3, False), (2, 2, True), (3, 0, False), (6, 0, True)],
+        [
+            (0, 0, False),
+            (1, 0, False),
+            (2, 3, False),
+            (2, 2, True),
+            (3, 0, False),
+            (6, 0, True),
+        ],
     )
     def test_defendant_appeared(self, index, hearing_index, expected):
         soup = hearing.get_test_soup(index)
@@ -173,7 +187,8 @@ class TestParseHTML:
         assert served.get(defendant) == expected
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, []), (1, ["05/05/2020"]), (2, ["01/22/2020"]), (3, []), (6, [])],
+        "index, expected",
+        [(0, []), (1, ["05/05/2020"]), (2, ["01/22/2020"]), (3, []), (6, [])],
     )
     def test_alternative_service(self, index, expected):
         soup = hearing.get_test_soup(index)
@@ -217,26 +232,38 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
-            (0, None),
-            (1, None),
-            (2, None),
-            (3, None),
-            (4, "PLAINTIFF"),
-            (5, "PLAINTIFF"),
-            (6, "DEFENDANT"),
+            (0, "N/A"),
+            (1, "N/A"),
+            (2, "N/A"),
+            (3, "N/A"),
+            (4, "We Sue You, Llc"),
+            (5, "LESS SORE LLC"),
+            (6, "Les See"),
         ],
     )
-    def test_role_of_winning_party(self, index, expected):
+    def test_disposition_awarded_to(self, index, expected):
         soup = hearing.get_test_soup(index)
         disposition_tr = hearing.get_disposition_tr_element(soup)
-        if disposition_tr is None:
-            winning_party = None
-        else:
-            plaintiff_name = hearing.get_plaintiff(soup)
-            winning_party = hearing.get_disposition_winning_party(
-                disposition_tr, plaintiff_name
-            )
+        winning_party = hearing.get_disposition_awarded_to(disposition_tr)
         assert winning_party == expected
+
+    @pytest.mark.parametrize(
+        "index, expected",
+        [
+            (0, "N/A"),
+            (1, "N/A"),
+            (2, "N/A"),
+            (3, "N/A"),
+            (4, "David Tenant"),
+            (5, "LES SEE"),
+            (6, "Land Lorde"),
+        ],
+    )
+    def test_disposition_awarded_against(self, index, expected):
+        soup = hearing.get_test_soup(index)
+        disposition_tr = hearing.get_disposition_tr_element(soup)
+        losing_party = hearing.get_disposition_awarded_against(disposition_tr)
+        assert losing_party == expected
 
     @pytest.mark.parametrize(
         "index, expected",
@@ -268,7 +295,12 @@ class TestParseHTML:
             (3, []),
             (4, []),
             (5, []),
-            (6, ["Comment: PLTF TAKE NOTHING. APPEAL DATE: 01/21/2020. BOND AMT: $500.00. EMAILED JDMT TO BOTH PARTIES."]),
+            (
+                6,
+                [
+                    "Comment: PLTF TAKE NOTHING. APPEAL DATE: 01/21/2020. BOND AMT: $500.00. EMAILED JDMT TO BOTH PARTIES."
+                ],
+            ),
         ],
     )
     def test_comments(self, test_html_file_index, expected_comments):
