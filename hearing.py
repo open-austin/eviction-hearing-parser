@@ -99,18 +99,34 @@ def get_disposition_type(disposition_tr) -> str:
     return disposition_tr.find("b").text
 
 
-def get_disposition_winning_party(disposition_tr, plaintiff) -> str:
+def get_disposition_awarded_to(disposition_tr) -> str:
     """
-    Looks for part of the plaintiff's name in the awarded to field of a disposition.
-    Name orders may be different in different parts of the document.
+    Gets the "Awarded To" field of a disposition, if one exists.
     """
+    if disposition_tr is None:
+        return "N/A"
+
     award_field = disposition_tr.find(text=re.compile(r"Awarded To:"))
 
     if award_field is None:
         return "N/A"
-    winner = award_field.next_sibling.text
 
-    return "PLAINTIFF" if plaintiff.split()[0] in winner else "DEFENDANT"
+    return award_field.next_sibling.text.strip()
+
+
+def get_disposition_awarded_against(disposition_tr) -> str:
+    """
+    Gets the "Awarded Against" field of a disposition, if one exists.
+    """
+    if disposition_tr is None:
+        return "N/A"
+
+    award_field = disposition_tr.find(text=re.compile(r"Awarded Against:"))
+
+    if award_field is None:
+        return "N/A"
+
+    return award_field.next_sibling.text.strip()
 
 
 def get_events_tbody_element(soup):
@@ -230,11 +246,17 @@ def get_comments(soup: BeautifulSoup) -> List[str]:
     if not judgment_date_node:
         return comments
 
-    judgment_label = judgment_date_node.find_next_sibling("td", headers="CDisp RDISPDATE1")
+    judgment_label = judgment_date_node.find_next_sibling(
+        "td", headers="CDisp RDISPDATE1"
+    )
     if not judgment_label:
         return comments
 
-    comments = [nobr.text for nobr in judgment_label.find_all("nobr") if nobr.text.startswith('Comment:')]
+    comments = [
+        nobr.text
+        for nobr in judgment_label.find_all("nobr")
+        if nobr.text.startswith("Comment:")
+    ]
     return comments
 
 
@@ -404,11 +426,8 @@ def make_parsed_case(soup, status: str = "", register_url: str = "") -> Dict[str
         "disposition_amount": get_disposition_amount(disposition_tr)
         if disposition_tr is not None
         else "",
-        "disposition_winning_party": get_disposition_winning_party(
-            disposition_tr, get_plaintiff(soup)
-        )
-        if disposition_tr is not None
-        else "N/A",
+        "disposition_awarded_to": get_disposition_awarded_to(disposition_tr),
+        "disposition_awarded_against": get_disposition_awarded_against(disposition_tr),
         "comments": get_comments(soup),
         "writ": get_writ(soup),
         "writ_of_possession_service": get_writ_of_possession_service(soup),

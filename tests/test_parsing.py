@@ -306,28 +306,40 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
-            (0, None),
-            (1, None),
-            (2, None),
-            (3, None),
-            (4, "PLAINTIFF"),
-            (5, "PLAINTIFF"),
-            (6, "DEFENDANT"),
-            (7, "PLAINTIFF"),
-            (8, "PLAINTIFF"),
+            (0, "N/A"),
+            (1, "N/A"),
+            (2, "N/A"),
+            (3, "N/A"),
+            (4, "We Sue You, Llc"),
+            (5, "LESS SORE LLC"),
+            (6, "Les See"),
+            (7, "LAND LORDE, DBA LORDE"),
+            (8, "THE HOUSING AUTHORITY OF THE CITY OF AUSTIN"),
         ],
     )
-    def test_role_of_winning_party(self, index, expected):
+    def test_disposition_awarded_to(self, index, expected):
         soup = hearing.get_test_soup(index)
         disposition_tr = hearing.get_disposition_tr_element(soup)
-        if disposition_tr is None:
-            winning_party = None
-        else:
-            plaintiff_name = hearing.get_plaintiff(soup)
-            winning_party = hearing.get_disposition_winning_party(
-                disposition_tr, plaintiff_name
-            )
+        winning_party = hearing.get_disposition_awarded_to(disposition_tr)
         assert winning_party == expected
+
+    @pytest.mark.parametrize(
+        "index, expected",
+        [
+            (0, "N/A"),
+            (1, "N/A"),
+            (2, "N/A"),
+            (3, "N/A"),
+            (4, "David Tenant"),
+            (5, "LES SEE"),
+            (6, "Land Lorde"),
+        ],
+    )
+    def test_disposition_awarded_against(self, index, expected):
+        soup = hearing.get_test_soup(index)
+        disposition_tr = hearing.get_disposition_tr_element(soup)
+        losing_party = hearing.get_disposition_awarded_against(disposition_tr)
+        assert losing_party == expected
 
     @pytest.mark.parametrize(
         "index, expected",
