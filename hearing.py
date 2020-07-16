@@ -414,7 +414,7 @@ def make_parsed_case(soup, status: str = "", register_url: str = "") -> Dict[str
         "defendants": get_defendants(soup),
         "case_number": get_case_number(soup),
         "defendant_zip": get_zip(get_defendant_elements(soup)[0]),
-        "plaintff_zip": get_zip(get_plaintiff_elements(soup)[0]),
+        "plaintiff_zip": get_zip(get_plaintiff_elements(soup)[0]),
         "hearings": [
             make_parsed_hearing(hearing) for hearing in get_hearing_tags(soup)
         ],
