@@ -35,6 +35,20 @@ def rest_case(case):
             case["defendant_zip"],
         ),
     )
+    curs.execute(
+        """
+    INSERT OR REPLACE INTO DISPOSITION
+    (CASE_DETAIL_ID, TYPE, AMOUNT, AWARDED_TO, AWARDED_AGAINST)
+    VALUES (?, ?, ?, ?, ?)
+    """,
+        (
+            case["case_number"],
+            case["disposition_type"],
+            str(case["disposition_amount"]),
+            case["disposition_awarded_to"],
+            case["disposition_awarded_against"],
+        ),
+    )
     # TODO scrape all event types in a similar way (writs should be consolidated in)
     # Types should mirror the values from the HTML table headers, HR/ER/SE/etc.
     for hearing in case["hearings"]:
