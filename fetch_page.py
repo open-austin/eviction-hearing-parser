@@ -6,11 +6,16 @@ from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from selenium.webdriver.firefox.options import Options
 
 logger = logging.getLogger()
-driver = webdriver.Firefox()
 
+options = Options()
+options.add_argument("--headless")
+options.add_argument('window-size=1920,1080')
 
+driver = webdriver.Firefox(firefox_options=options)
+    
 def close_driver():
     driver.close()
 
