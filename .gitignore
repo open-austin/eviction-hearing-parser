@@ -7,3 +7,4 @@ tests/example_data.csv
 geckodriver.log
 result.csv
 result.json
+cases.db

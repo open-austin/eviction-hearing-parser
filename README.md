@@ -22,6 +22,10 @@ Install the required libraries with:
 
 `pip install -r requirements.txt`
 
+Create the sqlite database schema:
+
+`sqlite3 cases.db "$(cat sql/*)"`
+
 Install Firefox with [geckodriver](https://github.com/mozilla/geckodriver/releases) as described in the [Selenium documentation](https://selenium-python.readthedocs.io/installation.html).
 
 Create a CSV file with a list of case IDs that you want to query (check out `test_input.csv` in this repo for an example of how this file should look).
