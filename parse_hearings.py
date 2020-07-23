@@ -6,6 +6,8 @@ from typing import Any, Dict, List
 import click
 import hearing
 import fetch_page
+import persist
+
 
 def get_ids_to_parse(infile: click.File) -> List[str]:
     ids_to_parse = []
@@ -38,6 +40,8 @@ def parse_all(infile, outfile, showbrowser=False):
 
     ids_to_parse = get_ids_to_parse(infile)
     parsed_cases = make_case_list(ids_to_parse)
+    for parsed_case in parsed_cases:
+        persist.rest_case(parsed_case)
     json.dump(parsed_cases, outfile)
 
 
