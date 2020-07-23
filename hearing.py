@@ -64,6 +64,53 @@ def get_defendants(soup):
     return together
 
 
+def get_attorneys_header_id(soup: BeautifulSoup) -> Optional[str]:
+    """Get the HTML ID attribute for the "Attorneys" column header."""
+    element = soup.find("th", text="Attorneys")
+    if not element:
+        return None
+
+    return element.get("id")
+
+
+def get_attorneys_for_party(soup: BeautifulSoup, party_elements) -> Dict[str, List[str]]:
+    """Get the attorney(s) for a party."""
+    attorneys: Dict[str, List[str]] = dict()
+    attorneys_header_id = get_attorneys_header_id(soup)
+
+    for party_element in party_elements:
+        try:
+            party_name = party_element.find_next_sibling("th").text.strip()
+
+            party_element_id = party_element.get("id")
+            party_attorney_element = soup.find(
+                "td",
+                headers=lambda _headers: _headers and attorneys_header_id in _headers and party_element_id in _headers
+            )
+            party_attorney_name = party_attorney_element.find("b").text.strip()
+        except AttributeError:
+            continue
+
+        if party_attorney_name not in attorneys:
+            attorneys[party_attorney_name] = []
+
+        attorneys[party_attorney_name].append(party_name)
+
+    return attorneys
+
+
+def get_attorneys_for_defendants(soup: BeautifulSoup) -> Dict[str, List[str]]:
+    """Get the attorney(s) for the defendant(s)."""
+    defendant_elements = get_defendant_elements(soup)
+    return get_attorneys_for_party(soup, defendant_elements)
+
+
+def get_attorneys_for_plaintiffs(soup: BeautifulSoup) -> Dict[str, List[str]]:
+    """Get the attorney(s) for the plaintiff(s)."""
+    plaintiff_elements = get_plaintiff_elements(soup)
+    return get_attorneys_for_party(soup, plaintiff_elements)
+
+
 def get_case_number(soup):
     elem = soup.find(class_="ssCaseDetailCaseNbr").span
     return elem.text
@@ -190,28 +237,28 @@ def get_hearing_officer(hearing_tag) -> str:
     return name.strip().strip(")")
 
 
-def get_judgment_date_node(soup) -> BeautifulSoup:
+def get_disposition_date_node(soup) -> BeautifulSoup:
     return soup.find("th", id="RDISPDATE1")
 
 
-def get_judgment_date(soup) -> str:
-    judgment_date_node = get_judgment_date_node(soup)
-    return judgment_date_node.text if judgment_date_node else None
+def get_disposition_date(soup) -> Optional[str]:
+    disposition_date_node = get_disposition_date_node(soup)
+    return disposition_date_node.text if disposition_date_node else None
 
 
-def get_disposition_amount(soup) -> str:
-    judgment_date_node = get_judgment_date_node(soup)
-    if judgment_date_node is None:
+def get_disposition_amount(soup) -> Optional[Decimal]:
+    disposition_date_node = get_disposition_date_node(soup)
+    if disposition_date_node is None:
         return None
-    judgment_label = judgment_date_node.find_next_sibling(
+    disposition_label = disposition_date_node.find_next_sibling(
         "td", headers="CDisp RDISPDATE1"
     )
-    judgment_amount_node = judgment_label.find("nobr")
-    if judgment_amount_node is None:
+    disposition_amount_node = disposition_label.find("nobr")
+    if disposition_amount_node is None:
         return None
-    if "$" not in judgment_amount_node.text:
+    if "$" not in disposition_amount_node.text:
         return None
-    amount_as_string = judgment_amount_node.text.strip(". ")
+    amount_as_string = disposition_amount_node.text.strip(". ")
     amount = Decimal(re.sub(r"[^\d.]", "", amount_as_string))
     return amount
 
@@ -242,19 +289,19 @@ def get_comments(soup: BeautifulSoup) -> List[str]:
     """Get comments from case page."""
     comments: List[str] = []
 
-    judgment_date_node = get_judgment_date_node(soup)
-    if not judgment_date_node:
+    disposition_date_node = get_disposition_date_node(soup)
+    if not disposition_date_node:
         return comments
 
-    judgment_label = judgment_date_node.find_next_sibling(
+    disposition_label = disposition_date_node.find_next_sibling(
         "td", headers="CDisp RDISPDATE1"
     )
-    if not judgment_label:
+    if not disposition_label:
         return comments
 
     comments = [
         nobr.text
-        for nobr in judgment_label.find_all("nobr")
+        for nobr in disposition_label.find_all("nobr")
         if nobr.text.startswith("Comment:")
     ]
     return comments
@@ -412,6 +459,8 @@ def make_parsed_case(soup, status: str = "", register_url: str = "") -> Dict[str
         "style": get_style(soup),
         "plaintiff": get_plaintiff(soup),
         "defendants": get_defendants(soup),
+        "attorneys_for_plaintiffs": get_attorneys_for_plaintiffs(soup),
+        "attorneys_for_defendants": get_attorneys_for_defendants(soup),
         "case_number": get_case_number(soup),
         "defendant_zip": get_zip(get_defendant_elements(soup)[0]),
         "plaintiff_zip": get_zip(get_plaintiff_elements(soup)[0]),

@@ -26,6 +26,11 @@ class TestParseHTML:
             (6, "Lorde, Land"),
             (7, "LAND LORDE, DBA LORDE"),
             (8, "THE HOUSING AUTHORITY OF THE CITY OF AUSTIN"),
+            (9, "Proper Tea LLC"),
+            (10, "Proper Tea LLC"),
+            # (11, "Lorde, Land A; Lorde, Land B"),
+            (12, "Proper Tea LLC"),
+            (13, "Proper Tea LLC"),
         ],
     )
     def test_get_plaintiff(self, index, expected):
@@ -45,6 +50,11 @@ class TestParseHTML:
             (6, "Ant, Ten"),
             (7, "Ant, Ten"),
             (8, "ANT AND ALL OTHER OCCUPANTS, TEN"),
+            (9, "Ter, Wren"),
+            (10, "Ter, Wren"),
+            (11, "Ter, Wren"),
+            (12, "Ter, Wren A; Ter, Wren B; Ter, Wren C"),
+            (13, "Ter, Wren A; Ter, Wren B"),
         ],
     )
     def test_get_defendants(self, index, expected):
@@ -62,6 +72,11 @@ class TestParseHTML:
             (6, "Land Lorde vs. Ten Ant"),
             (7, "LAND LORDE, DBA LORDE vs. TEN ANT AND ALL OTHER OCCUPANTS"),
             (8, "THE HOUSING AUTHORITY OF THE CITY OF AUSTIN vs. TEN ANT AND ALL OTHER OCCUPANTS"),
+            (9, "Proper Tea LLC vs. Wren Ter"),
+            (10, "Proper Tea LLC vs. Wren Ter"),
+            (11, "Wren A Ter,Wren B Ter vs. Wren Ter and all other occupants"),
+            (12, "Proper Tea LLC vs. Wren A Ter,Wren B Ter,Wren C Ter"),
+            (13, "Proper Tea LLC vs. Wren A Ter,Wren B Ter"),
         ],
     )
     def test_get_style(self, index, expected):
@@ -79,6 +94,11 @@ class TestParseHTML:
             (6, "J3-EV-20-000001"),
             (7, "J2-CV-20-000021"),
             (8, "J1-CV-20-000002"),
+            (9, "J1-CV-20-001388"),
+            (10, "J3-EV-19-001138"),
+            (11, "J2-CV-19-002733"),
+            (12, "J4-CV-19-003223"),
+            (13, "J4-CV-19-000576"),
         ],
     )
     def test_get_case_number(self, index, expected):
@@ -98,6 +118,11 @@ class TestParseHTML:
             (6, "78736"),
             (7, "78728"),
             (8, "78702"),
+            (9, "78752"),
+            (10, "78746"),
+            (11, "78660"),
+            (12, "78744"),
+            (13, "78744"),
         ],
     )
     def test_get_defendant_zip(self, index, expected):
@@ -117,6 +142,11 @@ class TestParseHTML:
             (6, "78736"),
             (7, "78752"),
             (8, "78702"),
+            (9, "78752"),
+            (10, "78258"),
+            (11, "78750"),
+            (12, "78258"),
+            (13, "78752"),
         ],
     )
     def test_get_plaintiff_zip(self, index, expected):
@@ -134,6 +164,11 @@ class TestParseHTML:
             (6, ""),
             (7, "(9:30 AM)"),
             (8, "(11:30 AM)"),
+            (9, "(2:00 PM)"),
+            (10, "(9:00 AM)"),
+            (11, "(9:30 AM)"),
+            (12, "(10:00 AM)"),
+            (13, "(9:00 AM)"),
         ],
     )
     def test_get_hearing_text(self, index, expected):
@@ -153,6 +188,11 @@ class TestParseHTML:
             (6, "Judge, Mike"),
             (7, "Judge, Mike"),
             (8, "Judge, Aaron"),
+            (9, "Williams, Yvonne M."),
+            (10, "Holmes, Sylvia"),
+            (11, "Slagle, Randall"),
+            (12, "Gonzalez, Raul Arturo"),
+            (13, "Gonzalez, Raul Arturo"),
         ],
     )
     def test_get_hearing_officer(self, index, expected):
@@ -172,6 +212,11 @@ class TestParseHTML:
             (6, "9:00 AM"),
             (7, "9:30 AM"),
             (8, "11:30 AM"),
+            (9, "2:00 PM"),
+            (10, "9:00 AM"),
+            (11, "9:30 AM"),
+            (12, "10:00 AM"),
+            (13, "9:00 AM"),
         ],
     )
     def test_get_hearing_time(self, index, expected):
@@ -191,6 +236,11 @@ class TestParseHTML:
             (6, "01/14/2020"),
             (7, "01/21/2020"),
             (8, "01/23/2020"),
+            (9, "06/25/2020"),
+            (10, "12/09/2019"),
+            (11, "07/02/2019"),
+            (12, "10/18/2019"),
+            (13, "03/13/2019"),
         ],
     )
     def test_get_hearing_date(self, index, expected):
@@ -201,7 +251,21 @@ class TestParseHTML:
         assert expected == hearing_date
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, 1), (1, 2), (2, 4), (3, 2), (6, 3), (7, 2), (8, 1)],
+        "index, expected",
+        [
+            (0, 1),
+            (1, 2),
+            (2, 4),
+            (3, 2),
+            (6, 3),
+            (7, 2),
+            (8, 1),
+            (9, 1),
+            (10, 3),
+            (11, 2),
+            (12, 4),
+            (13, 4),
+        ],
     )
     def test_get_precinct_number(self, index, expected):
         soup = hearing.get_test_soup(index)
@@ -219,6 +283,18 @@ class TestParseHTML:
             (6, 0, True),
             (7, 0, True),
             (8, 0, True),
+            # (9, 0, False),  # Canceled hearing
+            # (9, 1, False),  # Canceled hearing
+            (10, 0, True),
+            # (10, 1, False),  # Canceled hearing
+            # (11, 1, False),  # Canceled hearing
+            # (11, 2, False),  # Canceled hearing
+            # (11, 3, False),  # Canceled hearing
+            (12, 0, False),
+            (12, 1, False),
+            (12, 2, True),
+            # (13, 0, False),  # Canceled hearing
+            # (13, 1, False),  # Canceled hearing
         ],
     )
     def test_defendant_appeared(self, index, hearing_index, expected):
@@ -242,6 +318,14 @@ class TestParseHTML:
             (6, "Ant, Ten", "01/02/2020"),
             # (7, "Ant, Ten", "01/08/2020"),
             # (8, "ANT AND ALL OTHER OCCUPANTS, TEN", "01/14/2020"),
+            (9, "Ter, Wren", "06/01/2020"),
+            (10, "Ter, Wren", "10/24/2019"),
+            (11, "Ter, Wren", "05/20/2019"),
+            (12, "Ter, Wren A", "09/24/2019"),
+            (12, "Ter, Wren C", "09/24/2019"),
+            (12, "Ter, Wren B", "09/24/2019"),
+            (13, "Ter, Wren B", "02/19/2019"),
+            (13, "Ter, Wren A", "02/19/2019"),
         ],
     )
     def test_defendant_served(self, index, defendant, expected):
@@ -258,6 +342,11 @@ class TestParseHTML:
             (6, []),
             (7, []),
             (8, []),
+            (9, []),
+            (10, ["10/24/2019"]),
+            (11, []),
+            (12, []),
+            (13, []),
         ],
     )
     def test_alternative_service(self, index, expected):
@@ -277,11 +366,16 @@ class TestParseHTML:
             (6, "01/14/2020"),
             (7, "01/21/2020"),
             (8, "01/23/2020"),
+            (9, None),
+            (10, "12/10/2019"),
+            (11, "07/02/2019"),
+            (12, "10/18/2019"),
+            (13, "03/11/2019"),
         ],
     )
-    def test_judgment_date(self, index, expected):
+    def test_disposition_date(self, index, expected):
         soup = hearing.get_test_soup(index)
-        answer = hearing.get_judgment_date(soup)
+        answer = hearing.get_disposition_date(soup)
         assert expected == answer
 
     @pytest.mark.parametrize(
@@ -296,9 +390,14 @@ class TestParseHTML:
             (6, None),
             (7, Decimal("1793.16")),
             (8, Decimal("1477.90")),
+            (9, None),
+            (10, None),
+            (11, None),
+            (12, None),
+            (13, None),
         ],
     )
-    def test_judgment_amount(self, index, expected):
+    def test_disposition_amount(self, index, expected):
         soup = hearing.get_test_soup(index)
         amount = hearing.get_disposition_amount(soup)
         assert expected == amount
@@ -315,6 +414,11 @@ class TestParseHTML:
             (6, "Les See"),
             (7, "LAND LORDE, DBA LORDE"),
             (8, "THE HOUSING AUTHORITY OF THE CITY OF AUSTIN"),
+            (9, "N/A"),
+            (10, "Wren Ter"),
+            (11, "N/A"),
+            (12, "Wren A Ter, et al"),
+            (13, "N/A"),
         ],
     )
     def test_disposition_awarded_to(self, index, expected):
@@ -333,6 +437,13 @@ class TestParseHTML:
             (4, "David Tenant"),
             (5, "LES SEE"),
             (6, "Land Lorde"),
+            (7, "Ten Ant"),
+            (8, "TEN ANT AND ALL OTHER OCCUPANTS"),
+            (9, "N/A"),
+            (10, "Proper Tea LLC"),
+            (11, "N/A"),
+            (12, "Proper Tea LLC"),
+            (13, "N/A"),
         ],
     )
     def test_disposition_awarded_against(self, index, expected):
@@ -353,6 +464,11 @@ class TestParseHTML:
             (6, "Final Judgment"),
             (7, "Final Judgment"),
             (8, "Default Judgment"),
+            (9, None),
+            (10, "Agreed Judgment"),
+            (11, "Nonsuited/Dismissed by Plaintiff"),
+            (12, "Final Judgment"),
+            (13, "Nonsuited/Dismissed by Plaintiff"),
         ],
     )
     def test_disposition_type(self, index, expected):
@@ -376,6 +492,11 @@ class TestParseHTML:
             (6, ["Comment: PLTF TAKE NOTHING. APPEAL DATE: 01/21/2020. BOND AMT: $500.00. EMAILED JDMT TO BOTH PARTIES."]),
             (7, ["Comment: EMAILED TO BOTH. KD"]),
             (8, []),
+            (9, []),
+            (10, ["Comment: PLTF TAKE NOTHING. APPEAL DATE: 12/16/2019. BOND AMT: $25.00. EMAILED JDMT TO BOTH PARTIES."]),
+            (11, []),
+            (12, ["Comment: + INT @ 5.25%. JGMT FOR DEFS, PLF TAKE NOTHING. APPEAL BOND $500.00."]),
+            (13, []),
         ],
     )
     def test_comments(self, test_html_file_index, expected_comments):
@@ -410,6 +531,11 @@ class TestParseHTML:
                     "served_subject": "ANT AND ALL OTHER OCCUPANTS, TEN",
                 }
             ),
+            (9, {}),
+            (10, {}),
+            (11, {}),
+            (12, {}),
+            (13, {}),
         ],
     )
     def test_get_writ(self, test_html_file_index, expected_event_details):
@@ -429,6 +555,11 @@ class TestParseHTML:
             (6, {}),
             (7, {"case_event_date": "01/29/2020"}),
             (8, {"case_event_date": "02/03/2020"}),
+            (9, {}),
+            (10, {}),
+            (11, {}),
+            (12, {}),
+            (13, {}),
         ],
     )
     def test_get_writ_of_possession_service(self, test_html_file_index, expected_event_details):
@@ -448,6 +579,11 @@ class TestParseHTML:
             (6, {}),
             (7, {}),
             (8, {"case_event_date": "02/03/2020"}),
+            (9, {}),
+            (10, {}),
+            (11, {}),
+            (12, {}),
+            (13, {}),
         ],
     )
     def test_get_writ_of_possession_requested(self, test_html_file_index, expected_event_details):
@@ -467,6 +603,11 @@ class TestParseHTML:
             (6, {}),
             (7, {}),
             (8, {"case_event_date": "02/04/2020"}),
+            (9, {}),
+            (10, {}),
+            (11, {}),
+            (12, {}),
+            (13, {}),
         ],
     )
     def test_get_writ_of_possession_sent_to_constable(self, test_html_file_index, expected_event_details):
@@ -486,9 +627,62 @@ class TestParseHTML:
             (6, {}),
             (7, {"case_event_date": "02/13/2020"}),
             (8, {}),
+            (9, {}),
+            (10, {}),
+            (11, {}),
+            (12, {}),
+            (13, {}),
         ],
     )
     def test_get_writ_returned_to_court(self, test_html_file_index, expected_event_details):
         soup = hearing.get_test_soup(test_html_file_index)
         event_details = hearing.get_writ_returned_to_court(soup)
         assert event_details == expected_event_details
+
+    @pytest.mark.parametrize(
+        "test_html_file_index, expected_attorneys",
+        [
+            (0, {}),
+            (1, {}),
+            (2, {"RYAN ELLIS": ["Noe, Ann"]}),
+            (3, {}),
+            (4, {}),
+            (5, {}),
+            (6, {}),
+            (7, {}),
+            (8, {}),
+            (9, {"MARISSA M LATTA": ["Ter, Wren"]}),
+            (10, {"MARISSA M LATTA": ["Ter, Wren"]}),
+            (11, {"MARISSA M LATTA": ["Ter, Wren"]}),
+            (12, {"MARISSA M LATTA": ["Ter, Wren A", "Ter, Wren B", "Ter, Wren C"]}),
+            (13, {"MARISSA M LATTA": ["Ter, Wren B"]}),
+        ],
+    )
+    def test_get_attorneys_for_defendants(self, test_html_file_index, expected_attorneys):
+        soup = hearing.get_test_soup(test_html_file_index)
+        attorneys = hearing.get_attorneys_for_defendants(soup)
+        assert attorneys == expected_attorneys
+
+    @pytest.mark.parametrize(
+        "test_html_file_index, expected_attorneys",
+        [
+            (0, {}),
+            (1, {}),
+            (2, {"DARRELL W. COOK": ["UMBRELLA CORPORATION"]}),
+            (3, {}),
+            (4, {"SCOTT RHODELL STOTTLEMYRE": ["We Sue You, Llc"]}),
+            (5, {"KATHARINE ALLEN": ["LESS SORE LLC"]}),
+            (6, {}),
+            (7, {}),
+            (8, {}),
+            (9, {}),
+            (10, {"TRAVIS M. MILLER": ["Proper Tea LLC"]}),
+            (11, {"JAMES D. PARKER": ["Lorde, Land A", "Lorde, Land B"]}),
+            (12, {"R DAVID FRITSCHE": ["Proper Tea LLC"]}),
+            (13, {"JAMES N. FLOYD": ["Proper Tea LLC"]}),
+        ],
+    )
+    def test_get_attorneys_for_plaintiffs(self, test_html_file_index, expected_attorneys):
+        soup = hearing.get_test_soup(test_html_file_index)
+        attorneys = hearing.get_attorneys_for_plaintiffs(soup)
+        assert attorneys == expected_attorneys
