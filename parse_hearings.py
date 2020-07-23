@@ -4,8 +4,8 @@ import os
 from typing import Any, Dict, List
 
 import click
-
 import hearing
+import fetch_page
 import persist
 
 
@@ -30,7 +30,13 @@ def make_case_list(ids_to_parse: List[str]) -> List[Dict[str, Any]]:
     "infile", type=click.File(mode="r"),
 )
 @click.argument("outfile", type=click.File(mode="w"), default="result.json")
-def parse_all(infile, outfile):
+@click.option('--showbrowser / --headless', default=False, help='whether to operate in headless mode or not')
+
+def parse_all(infile, outfile, showbrowser=False):
+    # If showbrowser is True, use the default selenium driver
+    if showbrowser: 
+        from selenium import webdriver
+        fetch_page.driver = webdriver.Firefox()
 
     ids_to_parse = get_ids_to_parse(infile)
     parsed_cases = make_case_list(ids_to_parse)
