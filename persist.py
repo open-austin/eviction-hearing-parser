@@ -3,6 +3,8 @@ import sqlite3
 
 def get_case(case_id: str):
     conn = sqlite3.connect("cases.db")
+    conn.execute("pragma journal_mode=wal")
+
     conn.row_factory = sqlite3.Row
     curs = conn.cursor()
     curs.execute("SELECT * FROM V_CASE WHERE ID = ?", (case_id,))
@@ -15,7 +17,9 @@ def rest_case(case):
     """
     Takes a dictionary representation of a case and maps it in to a sqlite DB
     """
-    conn = sqlite3.connect("cases.db")
+    conn = sqlite3.connect("cases.db", isolation_level=None)
+    conn.execute("pragma journal_mode=wal")
+
     curs = conn.cursor()
     curs.execute(
         """
@@ -67,5 +71,4 @@ def rest_case(case):
                 hearing["appeared"],
             ),
         )
-    conn.commit()
     curs.close()
