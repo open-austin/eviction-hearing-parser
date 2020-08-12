@@ -56,7 +56,11 @@ For instance, if you use the following command to scrape the three case IDs incl
  7. When the installation is complete (you should see "Successfully installed"), type the command `deactivate` to close the virtual environment
  8. Install [Firefox](https://www.mozilla.org/en-US/firefox/) on your machine (if it is not already installed)
  9. Download the [geckodriver](https://github.com/mozilla/geckodriver/releases) zip file for windows. Extract the .exe file to a folder on your PC
- 10. Add the folder containing the geckodriver.exe file to your PATH. To do this, type "Edit the system environment variables" in the start menu, select it, then click "Environment Variables" in System Properties. Select "Path", click "Edit..." , then "New", then add the folder containing geckodriver.exe and click OK. 
+ 10. Download the [Precompiled Binaries for Windows] (https://www.sqlite.org/download.html) corresponding to your machine. Create a folder called C:\sqlite and extract the files from the download to this folder. 
+ 11. Add the folder containing the geckodriver.exe, and C file to your PATH. To do this, type "Edit the system environment variables" in the start menu, select it, then click "Environment Variables" in System Properties. Select "Path", click "Edit..." , then "New", then add the folder containing geckodriver.exe and click OK, then do the same for C:\sqlite
+ 12. In the command line, while in the eviction-hearing-parser folder, type the command: 
+`sqlite3 cases.db "$(cat sql/*)"`
+
 
 #### Instructions to use the script: 
 1. Create a CSV file with a list of case IDs that you want to query (check out `test_input.csv` in this repo for an example of how this file should look).
