@@ -426,6 +426,9 @@ def make_parsed_case(soup, status: str = "", register_url: str = "") -> Dict[str
         "disposition_amount": get_disposition_amount(disposition_tr)
         if disposition_tr is not None
         else "",
+        "disposition_date": get_judgment_date(disposition_tr)
+        if disposition_tr is not None
+        else "",
         "disposition_awarded_to": get_disposition_awarded_to(disposition_tr),
         "disposition_awarded_against": get_disposition_awarded_against(disposition_tr),
         "comments": get_comments(soup),

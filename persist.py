@@ -38,12 +38,13 @@ def rest_case(case):
     curs.execute(
         """
     INSERT OR REPLACE INTO DISPOSITION
-    (CASE_DETAIL_ID, TYPE, AMOUNT, AWARDED_TO, AWARDED_AGAINST)
-    VALUES (?, ?, ?, ?, ?)
+    (CASE_DETAIL_ID, TYPE, DATE, AMOUNT, AWARDED_TO, AWARDED_AGAINST)
+    VALUES (?, ?, ?, ?, ?, ?)
     """,
         (
             case["case_number"],
             case["disposition_type"],
+            case["disposition_date"],
             str(case["disposition_amount"]),
             case["disposition_awarded_to"],
             case["disposition_awarded_against"],
