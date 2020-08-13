@@ -690,7 +690,7 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, plaintiff, disposition_date",
         [
-            (0, "XYZ Group LLC", None),
+            (0, "XYZ Group LLC", ''),
             (5, "LESS SORE LLC", "03/13/2020"),
             (6, "Lorde, Land", "01/14/2020"),
             ]
