@@ -686,3 +686,17 @@ class TestParseHTML:
         soup = hearing.get_test_soup(test_html_file_index)
         attorneys = hearing.get_attorneys_for_plaintiffs(soup)
         assert attorneys == expected_attorneys
+
+    @pytest.mark.parametrize(
+        "test_html_file_index, plaintiff, disposition_date",
+        [
+            (0, "XYZ Group LLC", None),
+            (5, "LESS SORE LLC", "03/13/2020"),
+            (6, "Lorde, Land", "01/14/2020"),
+            ]
+            )
+    def test_make_parsed_case(self, test_html_file_index, plaintiff, disposition_date):
+        soup = hearing.get_test_soup(test_html_file_index)
+        parsed_case = hearing.make_parsed_case(soup=soup)
+        assert parsed_case["plaintiff"] == plaintiff
+        assert parsed_case["disposition_date"] == disposition_date
