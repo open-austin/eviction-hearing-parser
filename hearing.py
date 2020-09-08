@@ -439,7 +439,6 @@ def make_parsed_case(soup, status: str = "", register_url: str = "") -> Dict[str
         "writ_returned_to_court": get_writ_returned_to_court(soup),
     }
 
-
 def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
     query_result = fetch_page.query_case_id(case_id)
     if query_result is None:
@@ -453,3 +452,91 @@ def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
     return make_parsed_case(
         soup=register_soup, status=status, register_url=register_url
     )
+
+def get_setting(soup):
+    "get setting as a dict from a row of the table"
+    setting_details: Dict[str, str] = {}
+    td_list = soup.find_all('td')
+    
+    #get case number
+    try:
+        setting_details['case_number'] = td_list[1].text
+    except: 
+        return None
+        
+    #get case link
+    try:
+        setting_details['case_link'] = td_list[1].find('a').get('href')
+    except: 
+        setting_details['case_link'] = ''
+    
+    #get setting type
+    try:
+        setting_details['setting_type'] = td_list[2].text
+    except: 
+        setting_details['setting_type'] = ''
+        
+    #get setting style
+    try:
+        setting_details['setting_style'] = td_list[3].text
+    except: 
+        setting_details['setting_style'] = ''
+        
+    #get judicial officer
+    try:
+        setting_details['judicial_officer'] = td_list[4].text
+    except: 
+        setting_details['judicial_officer'] = ''
+        
+    #get setting date
+    try:
+        setting_details['setting_date'] = td_list[8].text
+    except: 
+        setting_details['setting_date'] = ''
+        
+    #get setting time
+    try:
+        setting_details['setting_time'] = td_list[9].text
+    except: 
+        setting_details['setting_time'] = ''
+        
+    #get hearing type
+    try:
+        setting_details['hearing_type'] = td_list[10].text
+    except: 
+        setting_details['hearing_type'] = ''
+    return setting_details
+
+def get_setting_list(calendar_soup):
+    "gets all settings from calendar soup table, as a list of dicts"
+    #get all tables
+    table_list = calendar_soup.find_all("table")
+
+    #return first table containing string "Judicial Officer" (there may be a better way to do this)
+    officer_table_list = [table for table in table_list if table.find("td", text="Judicial Officer") is not None]
+    settings_table = officer_table_list[0]
+
+    #get the header row, and all next siblings as a list
+    header_row = settings_table.find_all('tr')[0]
+    tablerow_list = header_row.find_next_siblings('tr')
+    if len(tablerow_list) == 0:
+        return []
+    
+    #go row by row, get setting
+    setting_list = []
+    for tablerow in tablerow_list:
+        setting = get_setting(tablerow)
+        if setting is not None:
+            setting_list.append(get_setting(tablerow)) 
+    return setting_list
+
+
+
+def fetch_settings(afterdate: str, beforedate: str) -> Tuple[str, str]:
+    "fetch all settings as a list of dicts"
+    calendar_page_content = fetch_page.query_settings(afterdate, beforedate)
+    if calendar_page_content is None:
+        return None
+    calendar_soup = BeautifulSoup(calendar_page_content, "html.parser")
+    setting_list = get_setting_list(calendar_soup)
+    return setting_list
