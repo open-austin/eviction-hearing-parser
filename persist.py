@@ -3,6 +3,8 @@ import sqlite3
 
 def get_case(case_id: str):
     conn = sqlite3.connect("cases.db")
+    conn.execute("pragma journal_mode=wal")
+
     conn.row_factory = sqlite3.Row
     curs = conn.cursor()
     curs.execute("SELECT * FROM V_CASE WHERE ID = ?", (case_id,))
@@ -15,7 +17,9 @@ def rest_case(case):
     """
     Takes a dictionary representation of a case and maps it in to a sqlite DB
     """
-    conn = sqlite3.connect("cases.db")
+    conn = sqlite3.connect("cases.db", isolation_level=None)
+    conn.execute("pragma journal_mode=wal")
+
     curs = conn.cursor()
     curs.execute(
         """
@@ -52,22 +56,22 @@ def rest_case(case):
     )
     # TODO scrape all event types in a similar way (writs should be consolidated in)
     # Types should mirror the values from the HTML table headers, HR/ER/SE/etc.
-    for hearing in case["hearings"]:
+    for hearing_number, hearing in enumerate(case["hearings"]):
         curs.execute(
             """
             INSERT OR REPLACE INTO EVENT
-            (CASE_DETAIL_ID, DATE, TIME, OFFICER, RESULT, TYPE)
-            VALUES (?, ?, ?, ?, ?, 'HR')
+            (CASE_DETAIL_ID, EVENT_NUMBER, DATE, TIME, OFFICER, RESULT, TYPE)
+            VALUES (?, ?, ?, ?, ?, ?, 'HR')
             """,
             (
                 case["case_number"],
+                hearing_number,
                 hearing["hearing_date"],
                 hearing["hearing_time"],
                 hearing["hearing_officer"],
                 hearing["appeared"],
             ),
         )
-    conn.commit()
     curs.close()
 
 def rest_setting(setting):
