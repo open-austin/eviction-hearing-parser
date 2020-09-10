@@ -1,5 +1,5 @@
 -e .
 BeautifulSoup4
-click
+click>=7.1.2
 selenium
 simplejson
