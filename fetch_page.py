@@ -86,3 +86,74 @@ def query_case_id(case_id: str):
     finally:
         register_page_content = search_page.page_source
         return search_page_content, register_page_content
+
+def load_court_calendar():
+    #open the court calendar, to scrape Settings
+    start_page = load_start_page()
+    try:
+        element = WebDriverWait(start_page, 10).until(
+            EC.presence_of_element_located(
+                (By.LINK_TEXT, "Court Calendar")
+            )
+        )
+    finally:
+        element.click()
+        return start_page
+    return None
+
+def query_settings(afterdate: str, beforedate: str):
+    for tries in range(5):
+        #select Date Range radiobutton for search
+        try:
+            court_calendar = load_court_calendar()
+            date_range_radio_button = WebDriverWait(court_calendar, 10).until(
+                EC.presence_of_element_located((By.ID, "DateRange"))
+            )
+            date_range_radio_button.click()
+            break
+        except:
+            logger.error(f"Could not click button to search settings by Date Range, try {tries}")
+
+    #deselect all Case Category checkboxes besides Civil
+    for check_id in ["chkDtRangeProbate", "chkDtRangeFamily", "chkDtRangeCriminal"]:
+        try:
+            category_checkbox = WebDriverWait(court_calendar, 10).until(
+                    EC.presence_of_element_located((By.ID, check_id))
+                )
+            if category_checkbox.is_selected():
+                category_checkbox.click()
+        except:
+            logger.error(f"Could not uncheck {check_id}")
+            
+    #enter before date
+    try:
+        after_box = WebDriverWait(court_calendar, 10).until(
+            EC.presence_of_element_located((By.ID, "DateSettingOnAfter"))
+        )
+        after_box.clear()
+        after_box.send_keys(afterdate)
+    except:
+        logger.error(f"Could not type in after date {afterdate}")
+        
+    #enter after date
+    try:
+        before_box = WebDriverWait(court_calendar, 10).until(
+            EC.presence_of_element_located((By.ID, "DateSettingOnBefore"))
+        )
+        before_box.clear()
+        before_box.send_keys(beforedate)
+    except:
+        logger.error(f"Could not type in before date {beforedate}")    
+
+    #click search button
+    try:
+        settings_link = WebDriverWait(court_calendar, 10).until(
+            EC.presence_of_element_located((By.ID, "SearchSubmit"))
+        )
+        settings_link.click()
+    except:
+        logger.error(f"Could not click search result for dates {beforedate} {afterdate}")
+
+    finally:
+        calendar_page_content = court_calendar.page_source
+        return calendar_page_content

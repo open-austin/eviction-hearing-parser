@@ -73,3 +73,29 @@ def rest_case(case):
             ),
         )
     curs.close()
+
+def rest_setting(setting):
+    """
+    Takes a dictionary representation of a setting and maps it in to a sqlite DB
+    """
+    conn = sqlite3.connect("cases.db")
+    curs = conn.cursor()
+    curs.execute(
+        """
+    INSERT OR IGNORE INTO SETTING
+    (CASE_NUMBER, CASE_LINK, SETTING_TYPE, SETTING_STYLE, JUDICIAL_OFFICER, SETTING_DATE, SETTING_TIME, HEARING_TYPE)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """,
+        (
+            setting["case_number"],
+            setting["case_link"],
+            setting["setting_type"],
+            setting["setting_style"],
+            setting["judicial_officer"],
+            setting["setting_date"],
+            setting["setting_time"],
+            setting["hearing_type"],
+        ),
+    )
+    conn.commit()
+    curs.close()
