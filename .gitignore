@@ -2,6 +2,7 @@
 .vscode
 *__pycache__*
 *egg-info/
+*.coverage
 venv/
 tests/example_data.csv
 geckodriver.log
