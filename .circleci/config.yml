@@ -1,7 +1,7 @@
 jobs:
   build:
     docker:
-      - image: circleci/python:3.8.3-browsers
+      - image: circleci/python:3.8.5-browsers
     steps:
       - checkout
       - restore_cache:
@@ -21,7 +21,7 @@ jobs:
       - run:
           command: |
             . venv/bin/activate
-            pytest
+            pytest --cov=. --cov-report=term-missing
             coveralls
 workflows:
   version: 2
