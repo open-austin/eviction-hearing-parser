@@ -1,10 +1,10 @@
+import csv
 import os
 import click
 import logging
 import sqlite3
 import atexit
 import parse_hearings
-import pandas as pd
 from datetime import date, datetime
 from datetime import timedelta
 from bs4 import BeautifulSoup
@@ -249,7 +249,7 @@ def parse_filings(afterdate, beforedate, outfile, showbrowser=False):
     all_case_nums = get_all_case_nums(afterdate, beforedate) + get_old_active_case_nums()
 
     # save case nums as csv, give to parse_all function - may be a more normal way to do this
-    all_case_nums_df = pd.DataFrame(all_case_nums)
+    # all_case_nums_df = pd.DataFrame(all_case_nums)
     all_case_nums_df.to_csv("temp_cases.csv", header=False, index=False)
     os.system(f"python3 parse_hearings.py temp_cases.csv {outfile}")
     # uncomment if you want to keep the csv

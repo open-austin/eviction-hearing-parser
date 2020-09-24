@@ -2,7 +2,15 @@ import pytest
 
 import fetch_page
 import hearing
+import parse_filings
 
+class TestFetchFilingsPage:
+    def test_fetch_filings_page(self):
+        fetched = parse_filings.query_filings(
+            afterdate="06/01/2020",
+            beforedate="06/10/2020",
+            case_num_prefix="J1-CV-20*")
+        assert "J1-CV-20-001773" in fetched
 
 class TestFetchSearchPage:
     def test_load_start_page(self):
