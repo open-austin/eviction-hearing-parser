@@ -1,12 +1,11 @@
 import pytest
 
 import hearing
-import parse_filings
 
 class TestSearchFilingsPage:
     def test_get_filings_numbers(self):
         soup = hearing.get_test_filings_search_page()
-        filings = parse_filings.get_filing_case_nums(soup)
+        filings = hearing.get_filing_case_nums(soup)
         assert "J1-CV-20-001773" in filings
 
 class TestSearchPage:
