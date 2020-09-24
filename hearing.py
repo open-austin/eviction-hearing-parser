@@ -14,6 +14,17 @@ def get_test_html_path(index: int, page_type: str) -> str:
     return test_filepath
 
 
+def get_test_filing_search_path() -> str:
+    """Used for testing the separate module "parse_filings.py"."""
+    this_directory = os.path.dirname(os.path.realpath(__file__))
+    test_filepath = os.path.join(
+        this_directory,
+        "test_search_pages",
+        f"example_case_query_result.html"
+        )
+    return test_filepath
+
+
 def load_soup_from_filepath(filepath: str) -> BeautifulSoup:
     with open(filepath) as fp:
         soup = BeautifulSoup(fp, "html.parser")
@@ -29,6 +40,15 @@ def get_test_search_page(index: int) -> BeautifulSoup:
     filepath = get_test_html_path(index, page_type="test_search_pages")
     return load_soup_from_filepath(filepath)
 
+def get_test_filings_search_page() -> BeautifulSoup:
+    """
+    Used for testing the separate module "parse_filings.py".
+
+    This may or may not need to be distinct from get_test_search_page above.
+    Possibly the functions being tested can be consolidated.
+    """
+    filepath = get_test_filing_search_path()
+    return load_soup_from_filepath(filepath)
 
 def get_plaintiff(soup):
     # TODO handle multiple plaintiffs
@@ -506,53 +526,53 @@ def get_setting(soup):
     "get setting as a dict from a row of the table"
     setting_details: Dict[str, str] = {}
     td_list = soup.find_all('td')
-    
+
     #get case number
     try:
         setting_details['case_number'] = td_list[1].text
-    except: 
+    except:
         return None
-        
+
     #get case link
     try:
         setting_details['case_link'] = td_list[1].find('a').get('href')
-    except: 
+    except:
         setting_details['case_link'] = ''
-    
+
     #get setting type
     try:
         setting_details['setting_type'] = td_list[2].text
-    except: 
+    except:
         setting_details['setting_type'] = ''
-        
+
     #get setting style
     try:
         setting_details['setting_style'] = td_list[3].text
-    except: 
+    except:
         setting_details['setting_style'] = ''
-        
+
     #get judicial officer
     try:
         setting_details['judicial_officer'] = td_list[4].text
-    except: 
+    except:
         setting_details['judicial_officer'] = ''
-        
+
     #get setting date
     try:
         setting_details['setting_date'] = td_list[8].text
-    except: 
+    except:
         setting_details['setting_date'] = ''
-        
+
     #get setting time
     try:
         setting_details['setting_time'] = td_list[9].text
-    except: 
+    except:
         setting_details['setting_time'] = ''
-        
+
     #get hearing type
     try:
         setting_details['hearing_type'] = td_list[10].text
-    except: 
+    except:
         setting_details['hearing_type'] = ''
     return setting_details
 
@@ -570,13 +590,13 @@ def get_setting_list(calendar_soup):
     tablerow_list = header_row.find_next_siblings('tr')
     if len(tablerow_list) == 0:
         return []
-    
+
     #go row by row, get setting
     setting_list = []
     for tablerow in tablerow_list:
         setting = get_setting(tablerow)
         if setting is not None:
-            setting_list.append(get_setting(tablerow)) 
+            setting_list.append(get_setting(tablerow))
     return setting_list
 
 
