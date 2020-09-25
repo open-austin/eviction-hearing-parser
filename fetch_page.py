@@ -12,9 +12,10 @@ logger = logging.getLogger()
 
 options = Options()
 options.add_argument("--headless")
-options.add_argument('window-size=1920,1080')
+options.add_argument("window-size=1920,1080")
 
-driver = webdriver.Firefox(firefox_options=options)
+driver = webdriver.Firefox(options=options)
+
 
 def close_driver():
     driver.close()
@@ -41,6 +42,7 @@ def load_search_page():
         return start_page
     return None
 
+
 # clicks into Case Records search page
 def load_case_records_search_page():
     start_page = load_start_page()
@@ -54,6 +56,7 @@ def load_case_records_search_page():
         element.click()
         return start_page
     return None
+
 
 def query_case_id(case_id: str):
     search_page = load_search_page()
@@ -100,23 +103,23 @@ def query_case_id(case_id: str):
         register_page_content = search_page.page_source
         return search_page_content, register_page_content
 
+
 def load_court_calendar():
-    #open the court calendar, to scrape Settings
+    # open the court calendar, to scrape Settings
     start_page = load_start_page()
     try:
         element = WebDriverWait(start_page, 10).until(
-            EC.presence_of_element_located(
-                (By.LINK_TEXT, "Court Calendar")
-            )
+            EC.presence_of_element_located((By.LINK_TEXT, "Court Calendar"))
         )
     finally:
         element.click()
         return start_page
     return None
 
+
 def query_settings(afterdate: str, beforedate: str):
     for tries in range(5):
-        #select Date Range radiobutton for search
+        # select Date Range radiobutton for search
         try:
             court_calendar = load_court_calendar()
             date_range_radio_button = WebDriverWait(court_calendar, 10).until(
@@ -125,20 +128,22 @@ def query_settings(afterdate: str, beforedate: str):
             date_range_radio_button.click()
             break
         except:
-            logger.error(f"Could not click button to search settings by Date Range, try {tries}")
+            logger.error(
+                f"Could not click button to search settings by Date Range, try {tries}"
+            )
 
-    #deselect all Case Category checkboxes besides Civil
+    # deselect all Case Category checkboxes besides Civil
     for check_id in ["chkDtRangeProbate", "chkDtRangeFamily", "chkDtRangeCriminal"]:
         try:
             category_checkbox = WebDriverWait(court_calendar, 10).until(
-                    EC.presence_of_element_located((By.ID, check_id))
-                )
+                EC.presence_of_element_located((By.ID, check_id))
+            )
             if category_checkbox.is_selected():
                 category_checkbox.click()
         except:
             logger.error(f"Could not uncheck {check_id}")
 
-    #enter before date
+    # enter before date
     try:
         after_box = WebDriverWait(court_calendar, 10).until(
             EC.presence_of_element_located((By.ID, "DateSettingOnAfter"))
@@ -148,7 +153,7 @@ def query_settings(afterdate: str, beforedate: str):
     except:
         logger.error(f"Could not type in after date {afterdate}")
 
-    #enter after date
+    # enter after date
     try:
         before_box = WebDriverWait(court_calendar, 10).until(
             EC.presence_of_element_located((By.ID, "DateSettingOnBefore"))
@@ -158,18 +163,21 @@ def query_settings(afterdate: str, beforedate: str):
     except:
         logger.error(f"Could not type in before date {beforedate}")
 
-    #click search button
+    # click search button
     try:
         settings_link = WebDriverWait(court_calendar, 10).until(
             EC.presence_of_element_located((By.ID, "SearchSubmit"))
         )
         settings_link.click()
     except:
-        logger.error(f"Could not click search result for dates {beforedate} {afterdate}")
+        logger.error(
+            f"Could not click search result for dates {beforedate} {afterdate}"
+        )
 
     finally:
         calendar_page_content = court_calendar.page_source
         return calendar_page_content
+
 
 # executes search for case filings between beforedate and afterdate for case_num_prefix, returns content of resulting page
 def query_filings(afterdate: str, beforedate: str, case_num_prefix: str):
@@ -183,7 +191,9 @@ def query_filings(afterdate: str, beforedate: str, case_num_prefix: str):
             case_button.click()
             break
         except Exception as e:
-            logger.error(f"Could not click button to search filings by Case, try {tries}")
+            logger.error(
+                f"Could not click button to search filings by Case, try {tries}"
+            )
 
     # enter after date
     try:
@@ -195,7 +205,7 @@ def query_filings(afterdate: str, beforedate: str, case_num_prefix: str):
     except:
         logger.error(f"Could not type in after date {afterdate}")
 
-    #senter before date
+    # senter before date
     try:
         before_box = WebDriverWait(court_records, 10).until(
             EC.presence_of_element_located((By.ID, "DateFiledOnBefore"))
@@ -215,14 +225,16 @@ def query_filings(afterdate: str, beforedate: str, case_num_prefix: str):
     except:
         logger.error(f"Could not type in case number prefix {case_num_prefix}")
 
-    #click search button
+    # click search button
     try:
         settings_link = WebDriverWait(court_records, 10).until(
             EC.presence_of_element_located((By.ID, "SearchSubmit"))
         )
         settings_link.click()
     except:
-        logger.error(f"Could not click search button for dates {afterdate} {beforedate}, prefix {case_num_prefix}")
+        logger.error(
+            f"Could not click search button for dates {afterdate} {beforedate}, prefix {case_num_prefix}"
+        )
 
     finally:
         records_page_content = court_records.page_source
