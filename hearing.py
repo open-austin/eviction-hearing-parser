@@ -2,10 +2,11 @@ from decimal import Decimal
 import os
 import re
 from typing import Dict, List, Optional, Tuple
-
 from bs4 import BeautifulSoup
-
+from datetime import date, timedelta
 import fetch_page
+import logging
+logger = logging.getLogger()
 
 
 def get_test_html_path(index: int, page_type: str) -> str:
@@ -599,8 +600,6 @@ def get_setting_list(calendar_soup):
             setting_list.append(get_setting(tablerow))
     return setting_list
 
-
-
 def fetch_settings(afterdate: str, beforedate: str) -> Tuple[str, str]:
     "fetch all settings as a list of dicts"
     calendar_page_content = fetch_page.query_settings(afterdate, beforedate)
@@ -609,3 +608,90 @@ def fetch_settings(afterdate: str, beforedate: str) -> Tuple[str, str]:
     calendar_soup = BeautifulSoup(calendar_page_content, "html.parser")
     setting_list = get_setting_list(calendar_soup)
     return setting_list
+
+
+def get_filing_case_nums(filing_soup):
+    "returns list of case numbers given soup of search results"
+    #get all tables
+    table_list = filing_soup.find_all("table")
+
+    #get first table containing string "Filed/Location" in a header (get the main table of the page)
+    filings_table = [table for table in table_list if table.find("th", text="Filed/Location") is not None][0]
+
+    #get the header row, and all next siblings as a list
+    header_row = filings_table.find_all('tr')[0]
+    tablerow_list = header_row.find_next_siblings('tr')
+    if len(tablerow_list) == 0:
+        return []
+
+    #go row by row, get case number
+    case_nums = []
+    for tablerow in tablerow_list:
+        td_list = tablerow.find_all('td')
+        try:
+            if "Eviction" in td_list[3].text:
+                case_num = td_list[0].text
+                if case_num is not None:
+                    case_nums.append(case_num)
+        except:
+            logger.error(f"Couldn't get case number for row {table_row}")
+
+    # handle case of no results
+    if (len(case_nums) == 1) and ("No cases matched" in case_nums[0]):
+        case_nums = []
+
+    return case_nums
+
+
+def split_date_range(afterdate, beforedate):
+    "splits date range in half - requires inputs in format m/d/y - returns 4 strings representing two new date ranges"
+    if afterdate == beforedate:
+        logger.error("split_date_range function was called with the same beforedate and afterdate.")
+        return
+
+    afterdate_parts, beforedate_parts = afterdate.split("/"), beforedate.split("/")
+    afterdate_date = date(month=int(afterdate_parts[0]), day=int(afterdate_parts[1]), year=int(afterdate_parts[2]))
+    beoforedate_date = date(month=int(beforedate_parts[0]), day=int(beforedate_parts[1]), year=int(beforedate_parts[2]))
+
+    time_between_dates = beoforedate_date - afterdate_date
+    days_to_add = (time_between_dates / 2).days
+
+    new_beforedate_date = afterdate_date + timedelta(days=days_to_add)
+    new_afterdate_date = new_beforedate_date + timedelta(days=1)
+
+    new_beforedate = new_beforedate_date.strftime("%-m/%-d/%Y")
+    new_afterdate = new_afterdate_date.strftime("%-m/%-d/%Y")
+
+    return afterdate, new_beforedate, new_afterdate, beforedate
+
+def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str):
+    "returns list of filing case numbers between afterdate and beforedate and starting with case_num_prefix"
+    for try_num in range(5):
+        try:
+            print(f"Scraping case numbers between {afterdate} and {beforedate} for prefix {case_num_prefix}...")
+            filings_page_content = fetch_page.query_filings(afterdate, beforedate, case_num_prefix)
+            filings_soup = BeautifulSoup(filings_page_content, "html.parser")
+            filings_case_nums_list = get_filing_case_nums(filings_soup)
+
+            # handle case of too many results (200 results means that the search cut off)
+            num_results = len(filings_case_nums_list)
+            if num_results >= 200:
+                # should be very rare
+                if afterdate == beforedate:
+                    logger.error(f"The search returned {num_results} results but there's nothing the code can do because beforedate and afterdate are the same.\nCase details will be scraped for these 200 results.\n")
+                else:
+                    print(f"Got a result bigger than 200 ({num_results}), splitting date range.\n")
+                    afterdate1, beforedate1, afterdate2, beforedate2 = split_date_range(afterdate, beforedate)
+                    return fetch_filings(afterdate1, beforedate1, case_num_prefix) + fetch_filings(afterdate2, beforedate2, case_num_prefix)
+
+            # some logging to make sure results look good - could remove
+            print(f"Found {num_results} case numbers.")
+            if num_results > 5:
+                print(f"Results preview: {filings_case_nums_list[0]}, {filings_case_nums_list[1]}, ..., {filings_case_nums_list[num_results - 1]}\n")
+            else:
+                print(f"Results: {', '.join(filings_case_nums_list)}\n")
+
+            return filings_case_nums_list
+
+        except:
+            logger.error(f"Try {try_num + 1} out of 5 failed.\n")

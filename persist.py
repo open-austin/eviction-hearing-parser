@@ -99,3 +99,41 @@ def rest_setting(setting):
     )
     conn.commit()
     curs.close()
+
+def get_old_active_case_nums():
+    """
+    Retrurns list of case nums in CASE_DETAIL table that are still active.
+    """
+    conn = sqlite3.connect("cases.db")
+    curs = conn.cursor()
+
+    curs.execute("""SELECT "ID" FROM "CASE_DETAIL" WHERE "STATUS" NOT IN
+                ('Final Disposition', 'Transferred', 'Bankruptcy', 'Judgment Released',
+                'Judgment Satisfied', 'Appealed', 'Final Status', 'Dismissed')""")
+    active_case_nums = [tup[0] for tup in curs.fetchall()]
+    curs.close()
+
+    return active_case_nums
+
+# not currently being used for anything
+def drop_rows_from_table(table_name: str, case_ids: list):
+    """
+    Drops all rows with case number in case_ids from table table_name - works for CASE_DETAIL, DISPOSITION, and EVENT tables
+    """
+    if len(case_ids) == 1:
+        case_ids = str(tuple(case_ids)).replace(",", "")
+    else:
+        case_ids = str(tuple(case_ids))
+
+    conn = sqlite3.connect("cases.db")
+    curs = conn.cursor()
+
+    if table_name == "CASE_DETAIL":
+        query_string = 'delete from "' + table_name + '" where "ID" in ' + case_ids
+        curs.execute(query_string)
+    else:
+        query_string = 'delete from "' + table_name + '" where "CASE_DETAIL_ID" in ' + case_ids
+        curs.execute(query_string)
+
+    conn.commit()
+    curs.close()
