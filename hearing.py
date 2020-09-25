@@ -3,9 +3,10 @@ import os
 import re
 from typing import Dict, List, Optional, Tuple
 from bs4 import BeautifulSoup
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import fetch_page
 import logging
+
 logger = logging.getLogger()
 
 
@@ -19,10 +20,8 @@ def get_test_filing_search_path() -> str:
     """Used for testing the separate module "parse_filings.py"."""
     this_directory = os.path.dirname(os.path.realpath(__file__))
     test_filepath = os.path.join(
-        this_directory,
-        "test_search_pages",
-        f"example_case_query_result.html"
-        )
+        this_directory, "test_search_pages", f"example_case_query_result.html"
+    )
     return test_filepath
 
 
@@ -41,6 +40,7 @@ def get_test_search_page(index: int) -> BeautifulSoup:
     filepath = get_test_html_path(index, page_type="test_search_pages")
     return load_soup_from_filepath(filepath)
 
+
 def get_test_filings_search_page() -> BeautifulSoup:
     """
     Used for testing the separate module "parse_filings.py".
@@ -50,6 +50,7 @@ def get_test_filings_search_page() -> BeautifulSoup:
     """
     filepath = get_test_filing_search_path()
     return load_soup_from_filepath(filepath)
+
 
 def get_plaintiff(soup):
     # TODO handle multiple plaintiffs
@@ -94,7 +95,9 @@ def get_attorneys_header_id(soup: BeautifulSoup) -> Optional[str]:
     return element.get("id")
 
 
-def get_attorneys_for_party(soup: BeautifulSoup, party_elements) -> Dict[str, List[str]]:
+def get_attorneys_for_party(
+    soup: BeautifulSoup, party_elements
+) -> Dict[str, List[str]]:
     """Get the attorney(s) for a party."""
     attorneys: Dict[str, List[str]] = dict()
     attorneys_header_id = get_attorneys_header_id(soup)
@@ -106,7 +109,9 @@ def get_attorneys_for_party(soup: BeautifulSoup, party_elements) -> Dict[str, Li
             party_element_id = party_element.get("id")
             party_attorney_element = soup.find(
                 "td",
-                headers=lambda _headers: _headers and attorneys_header_id in _headers and party_element_id in _headers
+                headers=lambda _headers: _headers
+                and attorneys_header_id in _headers
+                and party_element_id in _headers,
             )
             party_attorney_name = party_attorney_element.find("b").text.strip()
         except AttributeError:
@@ -219,19 +224,6 @@ def get_hearing_tags(soup):
     )
     hearing_trs = [hearing_th.parent for hearing_th in hearing_ths]
     return hearing_trs
-
-
-def get_hearing_tag(hearing_th_soup):
-    """
-    Returns the element in the Events and Hearings section of a CaseDetail document
-    that holds the most recent hearing info if one has taken place.
-    """
-
-    def ends_with_hearing(string: str) -> bool:
-        return string.endswith("Hearing")
-
-    hearings = hearing_th_soup.find_all("b", string=ends_with_hearing)
-    return hearings[-1] if len(hearings) > 0 else None
 
 
 def get_hearing_text(hearing_tag) -> str:
@@ -356,26 +348,30 @@ def get_writ(soup: BeautifulSoup) -> Dict[str, str]:
     event_tr = event_label.parent.parent.parent.parent.parent.parent
 
     try:
-        event_details['case_event_date'] = event_tr.find("th", class_="ssTableHeaderLabel").text
+        event_details["case_event_date"] = event_tr.find(
+            "th", class_="ssTableHeaderLabel"
+        ).text
     except AttributeError:
         pass
 
     served_td = event_tr.find("td", text="Served")
     if served_td:
         try:
-            event_details['served_date'] = served_td.find_next_sibling("td").text
+            event_details["served_date"] = served_td.find_next_sibling("td").text
         except AttributeError:
             pass
 
         try:
-            event_details['served_subject'] = served_td.parent.parent.parent.parent.find_previous_sibling("td").text
+            event_details[
+                "served_subject"
+            ] = served_td.parent.parent.parent.parent.find_previous_sibling("td").text
         except AttributeError:
             pass
 
     returned_td = event_tr.find("td", text="Returned")
     if returned_td:
         try:
-            event_details['returned_date'] = returned_td.find_next_sibling("td").text
+            event_details["returned_date"] = returned_td.find_next_sibling("td").text
         except AttributeError:
             pass
 
@@ -388,7 +384,7 @@ def get_writ_of_possession_service(soup: BeautifulSoup) -> Dict[str, str]:
 
     event_date = get_case_event_date_basic(soup, "Writ of Possession Service")
     if event_date:
-        event_details['case_event_date'] = event_date
+        event_details["case_event_date"] = event_date
 
     return event_details
 
@@ -399,7 +395,7 @@ def get_writ_of_possession_requested(soup: BeautifulSoup) -> Dict[str, str]:
 
     event_date = get_case_event_date_basic(soup, "Writ of Possession Requested")
     if event_date:
-        event_details['case_event_date'] = event_date
+        event_details["case_event_date"] = event_date
 
     return event_details
 
@@ -408,9 +404,11 @@ def get_writ_of_possession_sent_to_constable(soup: BeautifulSoup) -> Dict[str, s
     """Get details for the "Writ of Possession Sent to Constable's Office" case event."""
     event_details: Dict[str, str] = {}
 
-    event_date = get_case_event_date_basic(soup, "Writ of Possession Sent to Constable's Office")
+    event_date = get_case_event_date_basic(
+        soup, "Writ of Possession Sent to Constable's Office"
+    )
     if event_date:
-        event_details['case_event_date'] = event_date
+        event_details["case_event_date"] = event_date
 
     return event_details
 
@@ -421,7 +419,7 @@ def get_writ_returned_to_court(soup: BeautifulSoup) -> Dict[str, str]:
 
     event_date = get_case_event_date_basic(soup, "Writ Returned to Court")
     if event_date:
-        event_details['case_event_date'] = event_date
+        event_details["case_event_date"] = event_date
 
     return event_details
 
@@ -505,9 +503,12 @@ def make_parsed_case(soup, status: str = "", register_url: str = "") -> Dict[str
         "writ": get_writ(soup),
         "writ_of_possession_service": get_writ_of_possession_service(soup),
         "writ_of_possession_requested": get_writ_of_possession_requested(soup),
-        "writ_of_possession_sent_to_constable_office": get_writ_of_possession_sent_to_constable(soup),
+        "writ_of_possession_sent_to_constable_office": get_writ_of_possession_sent_to_constable(
+            soup
+        ),
         "writ_returned_to_court": get_writ_returned_to_court(soup),
     }
+
 
 def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
     query_result = fetch_page.query_case_id(case_id)
@@ -523,82 +524,89 @@ def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
         soup=register_soup, status=status, register_url=register_url
     )
 
+
 def get_setting(soup):
     "get setting as a dict from a row of the table"
     setting_details: Dict[str, str] = {}
-    td_list = soup.find_all('td')
+    td_list = soup.find_all("td")
 
-    #get case number
+    # get case number
     try:
-        setting_details['case_number'] = td_list[1].text
+        setting_details["case_number"] = td_list[1].text
     except:
         return None
 
-    #get case link
+    # get case link
     try:
-        setting_details['case_link'] = td_list[1].find('a').get('href')
+        setting_details["case_link"] = td_list[1].find("a").get("href")
     except:
-        setting_details['case_link'] = ''
+        setting_details["case_link"] = ""
 
-    #get setting type
+    # get setting type
     try:
-        setting_details['setting_type'] = td_list[2].text
+        setting_details["setting_type"] = td_list[2].text
     except:
-        setting_details['setting_type'] = ''
+        setting_details["setting_type"] = ""
 
-    #get setting style
+    # get setting style
     try:
-        setting_details['setting_style'] = td_list[3].text
+        setting_details["setting_style"] = td_list[3].text
     except:
-        setting_details['setting_style'] = ''
+        setting_details["setting_style"] = ""
 
-    #get judicial officer
+    # get judicial officer
     try:
-        setting_details['judicial_officer'] = td_list[4].text
+        setting_details["judicial_officer"] = td_list[4].text
     except:
-        setting_details['judicial_officer'] = ''
+        setting_details["judicial_officer"] = ""
 
-    #get setting date
+    # get setting date
     try:
-        setting_details['setting_date'] = td_list[8].text
+        setting_details["setting_date"] = td_list[8].text
     except:
-        setting_details['setting_date'] = ''
+        setting_details["setting_date"] = ""
 
-    #get setting time
+    # get setting time
     try:
-        setting_details['setting_time'] = td_list[9].text
+        setting_details["setting_time"] = td_list[9].text
     except:
-        setting_details['setting_time'] = ''
+        setting_details["setting_time"] = ""
 
-    #get hearing type
+    # get hearing type
     try:
-        setting_details['hearing_type'] = td_list[10].text
+        setting_details["hearing_type"] = td_list[10].text
     except:
-        setting_details['hearing_type'] = ''
+        setting_details["hearing_type"] = ""
     return setting_details
+
 
 def get_setting_list(calendar_soup):
     "gets all settings from calendar soup table, as a list of dicts"
-    #get all tables
+    # get all tables
     table_list = calendar_soup.find_all("table")
 
-    #return first table containing string "Judicial Officer" (there may be a better way to do this)
-    officer_table_list = [table for table in table_list if table.find("td", text="Judicial Officer") is not None]
+    # return first table containing string "Judicial Officer" (there may be a better way to do this)
+    officer_table_list = [
+        table
+        for table in table_list
+        if table.find("td", text="Judicial Officer") is not None
+    ]
     settings_table = officer_table_list[0]
 
-    #get the header row, and all next siblings as a list
-    header_row = settings_table.find_all('tr')[0]
-    tablerow_list = header_row.find_next_siblings('tr')
+    # get the header row, and all next siblings as a list
+    header_row = settings_table.find_all("tr")[0]
+    tablerow_list = header_row.find_next_siblings("tr")
     if len(tablerow_list) == 0:
         return []
 
-    #go row by row, get setting
+    # go row by row, get setting
     setting_list = []
     for tablerow in tablerow_list:
         setting = get_setting(tablerow)
         if setting is not None:
             setting_list.append(get_setting(tablerow))
     return setting_list
+
 
 def fetch_settings(afterdate: str, beforedate: str) -> Tuple[str, str]:
     "fetch all settings as a list of dicts"
@@ -612,22 +620,26 @@ def fetch_settings(afterdate: str, beforedate: str) -> Tuple[str, str]:
 
 def get_filing_case_nums(filing_soup):
     "returns list of case numbers given soup of search results"
-    #get all tables
+    # get all tables
     table_list = filing_soup.find_all("table")
 
-    #get first table containing string "Filed/Location" in a header (get the main table of the page)
-    filings_table = [table for table in table_list if table.find("th", text="Filed/Location") is not None][0]
+    # get first table containing string "Filed/Location" in a header (get the main table of the page)
+    filings_table = [
+        table
+        for table in table_list
+        if table.find("th", text="Filed/Location") is not None
+    ][0]
 
-    #get the header row, and all next siblings as a list
-    header_row = filings_table.find_all('tr')[0]
-    tablerow_list = header_row.find_next_siblings('tr')
+    # get the header row, and all next siblings as a list
+    header_row = filings_table.find_all("tr")[0]
+    tablerow_list = header_row.find_next_siblings("tr")
     if len(tablerow_list) == 0:
         return []
 
-    #go row by row, get case number
+    # go row by row, get case number
     case_nums = []
     for tablerow in tablerow_list:
-        td_list = tablerow.find_all('td')
+        td_list = tablerow.find_all("td")
         try:
             if "Eviction" in td_list[3].text:
                 case_num = td_list[0].text
@@ -643,33 +655,44 @@ def get_filing_case_nums(filing_soup):
     return case_nums
 
 
-def split_date_range(afterdate, beforedate):
-    "splits date range in half - requires inputs in format m/d/y - returns 4 strings representing two new date ranges"
-    if afterdate == beforedate:
-        logger.error("split_date_range function was called with the same beforedate and afterdate.")
-        return
+def split_date_range(afterdate, beforedate) -> Tuple[str, str]:
+    """
+    Split date range in half.
 
-    afterdate_parts, beforedate_parts = afterdate.split("/"), beforedate.split("/")
-    afterdate_date = date(month=int(afterdate_parts[0]), day=int(afterdate_parts[1]), year=int(afterdate_parts[2]))
-    beoforedate_date = date(month=int(beforedate_parts[0]), day=int(beforedate_parts[1]), year=int(beforedate_parts[2]))
+    Requires inputs in format m/d/y.
+    Returns 4 strings representing two new date ranges
+    """
 
-    time_between_dates = beoforedate_date - afterdate_date
+    beforedate_date = datetime.strptime(afterdate, "%m/%d/%Y").date()
+    afterdate_date = datetime.strptime(beforedate, "%m/%d/%Y").date()
+
+    if beforedate_date == afterdate_date:
+        raise ValueError(
+            "split_date_range function was called with the same beforedate and afterdate."
+        )
+
+    time_between_dates = beforedate_date - afterdate_date
     days_to_add = (time_between_dates / 2).days
 
-    new_beforedate_date = afterdate_date + timedelta(days=days_to_add)
-    new_afterdate_date = new_beforedate_date + timedelta(days=1)
+    end_of_first_range_date = afterdate_date + timedelta(days=days_to_add)
+    start_of_second_range_date = end_of_first_range_date + timedelta(days=1)
 
-    new_beforedate = new_beforedate_date.strftime("%-m/%-d/%Y")
-    new_afterdate = new_afterdate_date.strftime("%-m/%-d/%Y")
+    end_of_first_range = end_of_first_range_date.strftime("%-m/%-d/%Y")
+    start_of_second_range = start_of_second_range_date.strftime("%-m/%-d/%Y")
 
-    return afterdate, new_beforedate, new_afterdate, beforedate
+    return end_of_first_range, start_of_second_range
+
 
 def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str):
     "returns list of filing case numbers between afterdate and beforedate and starting with case_num_prefix"
     for try_num in range(5):
         try:
-            print(f"Scraping case numbers between {afterdate} and {beforedate} for prefix {case_num_prefix}...")
-            filings_page_content = fetch_page.query_filings(afterdate, beforedate, case_num_prefix)
+            print(
+                f"Scraping case numbers between {afterdate} and {beforedate} for prefix {case_num_prefix}..."
+            )
+            filings_page_content = fetch_page.query_filings(
+                afterdate, beforedate, case_num_prefix
+            )
             filings_soup = BeautifulSoup(filings_page_content, "html.parser")
             filings_case_nums_list = get_filing_case_nums(filings_soup)
 
@@ -678,16 +701,26 @@ def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str):
             if num_results >= 200:
                 # should be very rare
                 if afterdate == beforedate:
-                    logger.error(f"The search returned {num_results} results but there's nothing the code can do because beforedate and afterdate are the same.\nCase details will be scraped for these 200 results.\n")
+                    logger.error(
+                        f"The search returned {num_results} results but there's nothing the code can do because beforedate and afterdate are the same.\nCase details will be scraped for these 200 results.\n"
+                    )
                 else:
-                    print(f"Got a result bigger than 200 ({num_results}), splitting date range.\n")
-                    afterdate1, beforedate1, afterdate2, beforedate2 = split_date_range(afterdate, beforedate)
-                    return fetch_filings(afterdate1, beforedate1, case_num_prefix) + fetch_filings(afterdate2, beforedate2, case_num_prefix)
+                    print(
+                        f"Got a result bigger than 200 ({num_results}), splitting date range.\n"
+                    )
+                    afterdate1, beforedate1, afterdate2, beforedate2 = split_date_range(
+                        afterdate, beforedate
+                    )
+                    return fetch_filings(
+                        afterdate1, beforedate1, case_num_prefix
+                    ) + fetch_filings(afterdate2, beforedate2, case_num_prefix)
 
             # some logging to make sure results look good - could remove
             print(f"Found {num_results} case numbers.")
             if num_results > 5:
-                print(f"Results preview: {filings_case_nums_list[0]}, {filings_case_nums_list[1]}, ..., {filings_case_nums_list[num_results - 1]}\n")
+                print(
+                    f"Results preview: {filings_case_nums_list[0]}, {filings_case_nums_list[1]}, ..., {filings_case_nums_list[num_results - 1]}\n"
+                )
             else:
                 print(f"Results: {', '.join(filings_case_nums_list)}\n")
 
