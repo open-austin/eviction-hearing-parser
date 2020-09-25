@@ -8,6 +8,7 @@ import fetch_page
 import logging
 
 logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 
 def get_test_html_path(index: int, page_type: str) -> str:
@@ -618,7 +619,7 @@ def fetch_settings(afterdate: str, beforedate: str) -> Tuple[str, str]:
     return setting_list
 
 
-def get_filing_case_nums(filing_soup):
+def get_filing_case_nums(filing_soup) -> Tuple[List[str], bool]:
     "returns list of case numbers given soup of search results"
     # get all tables
     table_list = filing_soup.find_all("table")
@@ -630,15 +631,18 @@ def get_filing_case_nums(filing_soup):
         if table.find("th", text="Filed/Location") is not None
     ][0]
 
+    query_needs_splitting = False
+
     # get the header row, and all next siblings as a list
     header_row = filings_table.find_all("tr")[0]
     tablerow_list = header_row.find_next_siblings("tr")
-    if len(tablerow_list) == 0:
-        return []
 
     # go row by row, get case number
     case_nums = []
     for tablerow in tablerow_list:
+        if "too many matches to display" in tablerow.text:
+            logger.warning("case number query had too many matches, will be split")
+            query_needs_splitting = True
         td_list = tablerow.find_all("td")
         try:
             if "Eviction" in td_list[3].text:
@@ -652,7 +656,7 @@ def get_filing_case_nums(filing_soup):
     if (len(case_nums) == 1) and ("No cases matched" in case_nums[0]):
         case_nums = []
 
-    return case_nums
+    return case_nums, query_needs_splitting
 
 
 def split_date_range(afterdate: str, beforedate: str) -> Tuple[str, str]:
@@ -683,44 +687,43 @@ def split_date_range(afterdate: str, beforedate: str) -> Tuple[str, str]:
     return end_of_first_range, start_of_second_range
 
 
-def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str):
-    "returns list of filing case numbers between afterdate and beforedate and starting with case_num_prefix"
+def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str) -> List[str]:
+    "Get filing case numbers between afterdate and beforedate and starting with case_num_prefix."
 
-    print(
-        f"Scraping case numbers between {afterdate} and {beforedate} for prefix {case_num_prefix}..."
+    logger.info(
+        f"Scraping case numbers between {afterdate} and {beforedate} "
+        f"for prefix {case_num_prefix}..."
     )
     filings_page_content = fetch_page.query_filings(
         afterdate, beforedate, case_num_prefix
     )
     filings_soup = BeautifulSoup(filings_page_content, "html.parser")
-    filings_case_nums_list = get_filing_case_nums(filings_soup)
+    filings_case_nums_list, query_needs_splitting = get_filing_case_nums(filings_soup)
 
     # handle case of too many results (200 results means that the search cut off)
-    num_results = len(filings_case_nums_list)
-    if num_results >= 200:
-        # should be very rare
-        if afterdate == beforedate:
-            logger.error(
-                f"The search returned {num_results} results but there's nothing the code can do because beforedate and afterdate are the same.\nCase details will be scraped for these 200 results.\n"
-            )
-        else:
-            print(
-                f"Got a result bigger than 200 ({num_results}), splitting date range.\n"
-            )
+    if query_needs_splitting:
+        try:
             end_of_first_range, start_of_second_range = split_date_range(
                 afterdate, beforedate
             )
-            return fetch_filings(
+            filings_case_nums_list = fetch_filings(
                 afterdate, end_of_first_range, case_num_prefix
             ) + fetch_filings(start_of_second_range, beforedate, case_num_prefix)
+        except ValueError:
+            logger.error(
+                f"The search returned {len(filings_case_nums_list)} results but there's nothing "
+                "the code can do because beforedate and afterdate are the same.\n"
+                "Case details will be scraped for these results.\n"
+            )
 
     # some logging to make sure results look good - could remove
-    print(f"Found {num_results} case numbers.")
-    if num_results > 5:
-        print(
-            f"Results preview: {filings_case_nums_list[0]}, {filings_case_nums_list[1]}, ..., {filings_case_nums_list[num_results - 1]}\n"
+    logger.info(f"Found {len(filings_case_nums_list)} case numbers.")
+    if len(filings_case_nums_list) > 5:
+        logger.info(
+            f"Results preview: {filings_case_nums_list[0]}, {filings_case_nums_list[1]}, "
+            f"..., {filings_case_nums_list[-1]}\n"
         )
     else:
-        print(f"Results: {', '.join(filings_case_nums_list)}\n")
+        logger.info(f"Results: {', '.join(filings_case_nums_list)}\n")
 
     return filings_case_nums_list

@@ -15,14 +15,15 @@ class TestFetchFilingsPage:
 class TestFetchCaseNumbers:
     def test_fetch_case_numbers_requiring_split(self):
         """
-        Test date range requiring two pages of queries.
+        Test date range requiring multiple pages of search results.
 
-        The scraper will need to split this into two queries and combine the results of both.
+        The scraper will need to split this into multiple queries and combine the results.
         """
         numbers = hearing.fetch_filings(
             afterdate="01/01/2020", beforedate="01/30/2020", case_num_prefix="J1-CV-20*"
         )
         assert "J1-CV-20-000001" in numbers
+        assert len(numbers) > 200
 
 
 class TestFetchSearchPage:

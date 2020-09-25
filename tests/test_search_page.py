@@ -6,8 +6,9 @@ import hearing
 class TestSearchFilingsPage:
     def test_get_filings_numbers(self):
         soup = hearing.get_test_filings_search_page()
-        filings = hearing.get_filing_case_nums(soup)
+        filings, need_splitting = hearing.get_filing_case_nums(soup)
         assert "J1-CV-20-001773" in filings
+        assert need_splitting is False
 
     def test_split_date_range(self):
         afterdate = "1/01/2020"
