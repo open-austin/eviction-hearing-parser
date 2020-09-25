@@ -646,7 +646,7 @@ def get_filing_case_nums(filing_soup):
                 if case_num is not None:
                     case_nums.append(case_num)
         except:
-            logger.error(f"Couldn't get case number for row {table_row}")
+            logger.error(f"Couldn't get case number for row {tablerow}")
 
     # handle case of no results
     if (len(case_nums) == 1) and ("No cases matched" in case_nums[0]):
@@ -685,48 +685,42 @@ def split_date_range(afterdate: str, beforedate: str) -> Tuple[str, str]:
 
 def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str):
     "returns list of filing case numbers between afterdate and beforedate and starting with case_num_prefix"
-    for try_num in range(5):
-        try:
+
+    print(
+        f"Scraping case numbers between {afterdate} and {beforedate} for prefix {case_num_prefix}..."
+    )
+    filings_page_content = fetch_page.query_filings(
+        afterdate, beforedate, case_num_prefix
+    )
+    filings_soup = BeautifulSoup(filings_page_content, "html.parser")
+    filings_case_nums_list = get_filing_case_nums(filings_soup)
+
+    # handle case of too many results (200 results means that the search cut off)
+    num_results = len(filings_case_nums_list)
+    if num_results >= 200:
+        # should be very rare
+        if afterdate == beforedate:
+            logger.error(
+                f"The search returned {num_results} results but there's nothing the code can do because beforedate and afterdate are the same.\nCase details will be scraped for these 200 results.\n"
+            )
+        else:
             print(
-                f"Scraping case numbers between {afterdate} and {beforedate} for prefix {case_num_prefix}..."
+                f"Got a result bigger than 200 ({num_results}), splitting date range.\n"
             )
-            filings_page_content = fetch_page.query_filings(
-                afterdate, beforedate, case_num_prefix
+            end_of_first_range, start_of_second_range = split_date_range(
+                afterdate, beforedate
             )
-            filings_soup = BeautifulSoup(filings_page_content, "html.parser")
-            filings_case_nums_list = get_filing_case_nums(filings_soup)
+            return fetch_filings(
+                afterdate, end_of_first_range, case_num_prefix
+            ) + fetch_filings(start_of_second_range, beforedate, case_num_prefix)
 
-            # handle case of too many results (200 results means that the search cut off)
-            num_results = len(filings_case_nums_list)
-            if num_results >= 200:
-                # should be very rare
-                if afterdate == beforedate:
-                    logger.error(
-                        f"The search returned {num_results} results but there's nothing the code can do because beforedate and afterdate are the same.\nCase details will be scraped for these 200 results.\n"
-                    )
-                else:
-                    print(
-                        f"Got a result bigger than 200 ({num_results}), splitting date range.\n"
-                    )
-                    end_of_first_range, start_of_second_range = split_date_range(
-                        afterdate, beforedate
-                    )
-                    return fetch_filings(
-                        afterdate, end_of_first_range, case_num_prefix
-                    ) + fetch_filings(
-                        start_of_second_range, beforedate, case_num_prefix
-                    )
+    # some logging to make sure results look good - could remove
+    print(f"Found {num_results} case numbers.")
+    if num_results > 5:
+        print(
+            f"Results preview: {filings_case_nums_list[0]}, {filings_case_nums_list[1]}, ..., {filings_case_nums_list[num_results - 1]}\n"
+        )
+    else:
+        print(f"Results: {', '.join(filings_case_nums_list)}\n")
 
-            # some logging to make sure results look good - could remove
-            print(f"Found {num_results} case numbers.")
-            if num_results > 5:
-                print(
-                    f"Results preview: {filings_case_nums_list[0]}, {filings_case_nums_list[1]}, ..., {filings_case_nums_list[num_results - 1]}\n"
-                )
-            else:
-                print(f"Results: {', '.join(filings_case_nums_list)}\n")
-
-            return filings_case_nums_list
-
-        except:
-            logger.error(f"Try {try_num + 1} out of 5 failed.\n")
+    return filings_case_nums_list
