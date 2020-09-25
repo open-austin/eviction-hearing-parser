@@ -655,7 +655,7 @@ def get_filing_case_nums(filing_soup):
     return case_nums
 
 
-def split_date_range(afterdate, beforedate) -> Tuple[str, str]:
+def split_date_range(afterdate: str, beforedate: str) -> Tuple[str, str]:
     """
     Split date range in half.
 
@@ -708,12 +708,14 @@ def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str):
                     print(
                         f"Got a result bigger than 200 ({num_results}), splitting date range.\n"
                     )
-                    afterdate1, beforedate1, afterdate2, beforedate2 = split_date_range(
+                    end_of_first_range, start_of_second_range = split_date_range(
                         afterdate, beforedate
                     )
                     return fetch_filings(
-                        afterdate1, beforedate1, case_num_prefix
-                    ) + fetch_filings(afterdate2, beforedate2, case_num_prefix)
+                        afterdate, end_of_first_range, case_num_prefix
+                    ) + fetch_filings(
+                        start_of_second_range, beforedate, case_num_prefix
+                    )
 
             # some logging to make sure results look good - could remove
             print(f"Found {num_results} case numbers.")
