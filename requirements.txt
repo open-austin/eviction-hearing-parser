@@ -1,5 +1,5 @@
--e .
 python-3.8.5
+-e .
 BeautifulSoup4
 click>=7.1.2
 selenium
