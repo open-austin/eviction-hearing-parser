@@ -21,7 +21,7 @@ def get_all_case_nums(afterdate: str, beforedate: str):
 @click.option('--showbrowser / --headless', default=False, help='whether to operate in headless mode or not')
 
 # Performs a full 'scraper run' between afterdate and beforedate - gets case details, events, and dispositions for all case nums between
-# afterdate and beforedate. Also updates rows in event/disposition/case_detail table that are still active
+# afterdate and beforedate. Example of date format - 9/1/2020. Also updates rows in event/disposition/case_detail table that are still active
 def parse_filings(afterdate, beforedate, outfile, showbrowser=False):
     # use default firefox browser (rather than headless) is showbrowser is True
     showbroser_str = ""
