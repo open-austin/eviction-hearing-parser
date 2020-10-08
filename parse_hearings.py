@@ -24,6 +24,21 @@ def make_case_list(ids_to_parse: List[str]) -> List[Dict[str, Any]]:
         parsed_cases.append(new_case)
     return parsed_cases
 
+# same as parse_all but takes a list of case_nums rather than a csv
+def parse_all_from_parse_filings(case_nums, showbrowser=False):
+    if showbrowser:
+        from selenium import webdriver
+        fetch_page.driver = webdriver.Firefox()
+
+    parsed_cases = make_case_list(case_nums)
+
+    for parsed_case in parsed_cases:
+        persist.rest_case(parsed_case)
+
+    return parsed_cases
+
+
+
 
 @click.command()
 @click.argument(
@@ -34,7 +49,7 @@ def make_case_list(ids_to_parse: List[str]) -> List[Dict[str, Any]]:
 
 def parse_all(infile, outfile, showbrowser=False):
     # If showbrowser is True, use the default selenium driver
-    if showbrowser: 
+    if showbrowser:
         from selenium import webdriver
         fetch_page.driver = webdriver.Firefox()
 
