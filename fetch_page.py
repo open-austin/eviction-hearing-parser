@@ -1,3 +1,4 @@
+import sys
 import logging
 import atexit
 from typing import Tuple
@@ -9,6 +10,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 
 logger = logging.getLogger()
+logging.basicConfig(stream=sys.stdout)
 
 options = Options()
 options.add_argument("--headless")

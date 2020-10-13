@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import click
 import fetch_page
@@ -6,6 +7,10 @@ from hearing import fetch_filings
 from parse_hearings import parse_all_from_parse_filings
 from persist import get_old_active_case_nums
 from selenium import webdriver
+import logging
+
+logger = logging.getLogger()
+logging.basicConfig(stream=sys.stdout)
 
 
 # returns list of all case nums for all prefixes between afterdate and beforedate
@@ -19,6 +24,8 @@ def get_all_case_nums(afterdate: str, beforedate: str):
 
 # same as parse_filings but without command line interface and showbrowser/outfile options
 def parse_filings_on_cloud(afterdate, beforedate):
+    logger.info(f"Parsing filings between {afterdate} and {beforedate}.")
+
     all_case_nums = get_all_case_nums(afterdate, beforedate) + get_old_active_case_nums()
     parse_all_from_parse_filings(all_case_nums)
 

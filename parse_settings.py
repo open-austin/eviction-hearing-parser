@@ -1,12 +1,17 @@
 import csv
 import simplejson as json
 import os
+import sys
 from typing import Any, Dict, List
 import datetime as dt
 import click
 import hearing
 import fetch_page
 import persist
+import logging
+
+logger = logging.getLogger()
+logging.basicConfig(stream=sys.stdout)
 
 
 def get_days_between_dates(afterdate, beforedate):
@@ -32,6 +37,8 @@ def make_setting_list(days_to_pull: List[str]) -> List[Dict[str, Any]]:
 
 # same as parse_settings but without comman line interface and showbrowser option
 def parse_settings_on_cloud(afterdate, beforedate):
+    logger.info(f"Parsing settings between {afterdate} and {beforedate}.")
+
     days_to_pull = get_days_between_dates(afterdate=afterdate, beforedate=beforedate)
     pulled_settings = make_setting_list(days_to_pull)
     for setting in pulled_settings:
