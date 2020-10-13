@@ -1,13 +1,11 @@
 import os
 import json
 import click
-import logger
 import fetch_page
 from hearing import fetch_filings
 from parse_hearings import parse_all_from_parse_filings
 from persist import get_old_active_case_nums
 from selenium import webdriver
-logger = logging.getLogger()
 
 
 # returns list of all case nums for all prefixes between afterdate and beforedate
@@ -19,17 +17,10 @@ def get_all_case_nums(afterdate: str, beforedate: str):
         all_case_nums += prefix_case_nums
     return all_case_nums
 
-# same as parse_filings but without comman line interface and showbrowser/outfile options
-# try mutliple times because nobody will see if it doesn't work
+# same as parse_filings but without command line interface and showbrowser/outfile options
 def parse_filings_on_cloud(afterdate, beforedate):
-    for tries in range(1, 6):
-        try:
-            all_case_nums = get_all_case_nums(afterdate, beforedate) + get_old_active_case_nums()
-            parse_all_from_parse_filings(all_case_nums, showbrowser=showbrowser)
-            logger.info("Successfully parsed filings for dates {beforedate} and {afterdate} after {tries} attempts.")
-            break
-        except:
-            logger.error("Failed to parse filings for dates {beforedate} and {afterdate} - try {tries} out of 5.")
+    all_case_nums = get_all_case_nums(afterdate, beforedate) + get_old_active_case_nums()
+    parse_all_from_parse_filings(all_case_nums)
 
 @click.command()
 @click.argument("afterdate", nargs=1)

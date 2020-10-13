@@ -37,9 +37,6 @@ def parse_all_from_parse_filings(case_nums, showbrowser=False):
 
     return parsed_cases
 
-
-
-
 @click.command()
 @click.argument(
     "infile", type=click.File(mode="r"),

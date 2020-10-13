@@ -153,12 +153,8 @@ def drop_rows_from_table(table_name: str, case_ids: list):
     curs = conn.cursor()
 
     if table_name == "CASE_DETAIL":
-        # query_string = 'delete from "' + table_name + '" where ID in ' + case_ids
-        # curs.execute(query_string)
         curs.execute("DELETE FROM %s WHERE ID IN %s", (table_name, case_ids))
     else:
-        # query_string = 'delete from "' + table_name + '" where CASE_DETAIL_ID in ' + case_ids
-        # curs.execute(query_string)
         curs.execute("DELETE FROM %s WHERE CASE_DETAIL_ID IN %s", (table_name, case_ids))
 
     conn.commit()
