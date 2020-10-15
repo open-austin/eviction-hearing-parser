@@ -1,9 +1,14 @@
 import sqlite3
+import os
+from dotenv import load_dotenv
+from connect_to_database import get_database_connection
 
+load_dotenv()
+local_dev = os.getenv("LOCAL_DEV") == "true"
 
 def get_case(case_id: str):
-    conn = sqlite3.connect("cases.db")
-    conn.execute("pragma journal_mode=wal")
+    conn = get_database_connection(local_dev=local_dev)
+    # conn.execute("pragma journal_mode=wal")
 
     conn.row_factory = sqlite3.Row
     curs = conn.cursor()
@@ -17,74 +22,91 @@ def rest_case(case):
     """
     Takes a dictionary representation of a case and maps it in to a sqlite DB
     """
-    conn = sqlite3.connect("cases.db", isolation_level=None)
-    conn.execute("pragma journal_mode=wal")
+    conn = get_database_connection(local_dev=local_dev)
+    # conn.execute("pragma journal_mode=wal")
 
     curs = conn.cursor()
     curs.execute(
-        """
-    INSERT OR REPLACE INTO CASE_DETAIL
+    """
+    INSERT INTO CASE_DETAIL
     (ID, STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (%(case_num)s, %(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s)
+    ON CONFLICT(ID)
+    DO UPDATE SET
+    (STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP) =
+    (%(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s)
     """,
-        (
-            case["case_number"],
-            case["status"],
-            case["register_url"],
-            case["precinct_number"],
-            case["style"],
-            case["plaintiff"],
-            case["defendants"],
-            case["plaintiff_zip"],
-            case["defendant_zip"],
-        ),
+        {
+            'case_num': case["case_number"],
+            'status': case["status"],
+            'reg_url': case["register_url"],
+            'prec_num': case["precinct_number"],
+            'style': case["style"],
+            'plaint': case["plaintiff"],
+            'defend': case["defendants"],
+            'plaint_zip': case["plaintiff_zip"],
+            'defend_zip': case["defendant_zip"],
+        },
     )
+
     curs.execute(
-        """
-    INSERT OR REPLACE INTO DISPOSITION
+    """
+    INSERT INTO DISPOSITION
     (CASE_DETAIL_ID, TYPE, DATE, AMOUNT, AWARDED_TO, AWARDED_AGAINST)
-    VALUES (?, ?, ?, ?, ?, ?)
+    VALUES (%(case_num)s, %(disp_type)s, %(disp_date)s, %(disp_amt)s, %(disp_to)s, %(disp_against)s)
+    ON CONFLICT(CASE_DETAIL_ID)
+    DO UPDATE SET
+    (TYPE, DATE, AMOUNT, AWARDED_TO, AWARDED_AGAINST) =
+    (%(disp_type)s, %(disp_date)s, %(disp_amt)s, %(disp_to)s, %(disp_against)s)
     """,
-        (
-            case["case_number"],
-            case["disposition_type"],
-            case["disposition_date"],
-            str(case["disposition_amount"]),
-            case["disposition_awarded_to"],
-            case["disposition_awarded_against"],
-        ),
+        {
+            'case_num': case["case_number"],
+            'disp_type': case["disposition_type"],
+            'disp_date': case["disposition_date"],
+            'disp_amt': str(case["disposition_amount"]),
+            'disp_to': case["disposition_awarded_to"],
+            'disp_against': case["disposition_awarded_against"],
+        },
     )
     # TODO scrape all event types in a similar way (writs should be consolidated in)
     # Types should mirror the values from the HTML table headers, HR/ER/SE/etc.
     for hearing_number, hearing in enumerate(case["hearings"]):
         curs.execute(
             """
-            INSERT OR REPLACE INTO EVENT
+            INSERT INTO EVENT
             (CASE_DETAIL_ID, EVENT_NUMBER, DATE, TIME, OFFICER, RESULT, TYPE)
-            VALUES (?, ?, ?, ?, ?, ?, 'HR')
+            VALUES (%(case_num)s, %(hearing_num)s, %(hearing_date)s, %(hearing_time)s, %(hearing_officer)s, %(hearing_appeared)s, 'HR')
+            ON CONFLICT(CASE_DETAIL_ID, EVENT_NUMBER)
+            DO UPDATE SET
+            (EVENT_NUMBER, DATE, TIME, OFFICER, RESULT, TYPE) =
+            (%(hearing_num)s, %(hearing_date)s, %(hearing_time)s, %(hearing_officer)s, %(hearing_appeared)s, 'HR')
             """,
-            (
-                case["case_number"],
-                hearing_number,
-                hearing["hearing_date"],
-                hearing["hearing_time"],
-                hearing["hearing_officer"],
-                hearing["appeared"],
-            ),
+            {
+                'case_num': case["case_number"],
+                'hearing_num': hearing_number,
+                'hearing_date': hearing["hearing_date"],
+                'hearing_time': hearing["hearing_time"],
+                'hearing_officer': hearing["hearing_officer"],
+                'hearing_appeared': hearing["appeared"],
+            },
         )
+    conn.commit()
     curs.close()
+    conn.close()
 
 def rest_setting(setting):
     """
     Takes a dictionary representation of a setting and maps it in to a sqlite DB
     """
-    conn = sqlite3.connect("cases.db")
+    conn = get_database_connection(local_dev=local_dev)
     curs = conn.cursor()
     curs.execute(
-        """
-    INSERT OR IGNORE INTO SETTING
+    """
+    INSERT INTO SETTING
     (CASE_NUMBER, CASE_LINK, SETTING_TYPE, SETTING_STYLE, JUDICIAL_OFFICER, SETTING_DATE, SETTING_TIME, HEARING_TYPE)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    ON CONFLICT(CASE_NUMBER, SETTING_STYLE, SETTING_DATE, SETTING_TIME)
+    DO NOTHING
     """,
         (
             setting["case_number"],
@@ -99,19 +121,21 @@ def rest_setting(setting):
     )
     conn.commit()
     curs.close()
+    conn.close()
 
 def get_old_active_case_nums():
     """
     Retrurns list of case nums in CASE_DETAIL table that are still active.
     """
-    conn = sqlite3.connect("cases.db")
+    conn = get_database_connection(local_dev=local_dev)
     curs = conn.cursor()
 
-    curs.execute("""SELECT "ID" FROM "CASE_DETAIL" WHERE "STATUS" NOT IN
+    curs.execute("""SELECT ID FROM CASE_DETAIL WHERE STATUS NOT IN
                 ('Final Disposition', 'Transferred', 'Bankruptcy', 'Judgment Released',
                 'Judgment Satisfied', 'Appealed', 'Final Status', 'Dismissed')""")
     active_case_nums = [tup[0] for tup in curs.fetchall()]
     curs.close()
+    conn.close()
 
     return active_case_nums
 
@@ -125,15 +149,14 @@ def drop_rows_from_table(table_name: str, case_ids: list):
     else:
         case_ids = str(tuple(case_ids))
 
-    conn = sqlite3.connect("cases.db")
+    conn = get_database_connection(local_dev=local_dev)
     curs = conn.cursor()
 
     if table_name == "CASE_DETAIL":
-        query_string = 'delete from "' + table_name + '" where "ID" in ' + case_ids
-        curs.execute(query_string)
+        curs.execute("DELETE FROM %s WHERE ID IN %s", (table_name, case_ids))
     else:
-        query_string = 'delete from "' + table_name + '" where "CASE_DETAIL_ID" in ' + case_ids
-        curs.execute(query_string)
+        curs.execute("DELETE FROM %s WHERE CASE_DETAIL_ID IN %s", (table_name, case_ids))
 
     conn.commit()
     curs.close()
+    conn.close()

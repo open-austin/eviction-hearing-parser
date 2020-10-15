@@ -1,12 +1,17 @@
 import csv
 import simplejson as json
 import os
+import sys
 from typing import Any, Dict, List
 import datetime as dt
 import click
 import hearing
 import fetch_page
 import persist
+import logging
+
+logger = logging.getLogger()
+logging.basicConfig(stream=sys.stdout)
 
 
 def get_days_between_dates(afterdate, beforedate):
@@ -30,6 +35,15 @@ def make_setting_list(days_to_pull: List[str]) -> List[Dict[str, Any]]:
         pulled_settings.extend(day_settings)
     return pulled_settings
 
+# same as parse_settings but without comman line interface and showbrowser option
+def parse_settings_on_cloud(afterdate, beforedate):
+    logger.info(f"Parsing settings between {afterdate} and {beforedate}.")
+
+    days_to_pull = get_days_between_dates(afterdate=afterdate, beforedate=beforedate)
+    pulled_settings = make_setting_list(days_to_pull)
+    for setting in pulled_settings:
+        persist.rest_setting(setting)
+
 
 
 @click.command()
@@ -41,9 +55,10 @@ def make_setting_list(days_to_pull: List[str]) -> List[Dict[str, Any]]:
 @click.argument("outfile", type=click.File(mode="w"), default="result.json")
 @click.option('--showbrowser / --headless', default=False, help='whether to operate in headless mode or not')
 
+# example date format: 9-1-2020
 def parse_settings(afterdate, beforedate, outfile, showbrowser=False):
     # If showbrowser is True, use the default selenium driver
-    if showbrowser: 
+    if showbrowser:
         from selenium import webdriver
         fetch_page.driver = webdriver.Firefox()
 

@@ -3,3 +3,5 @@ BeautifulSoup4
 click>=7.1.2
 selenium
 simplejson
+dotenv
+APScheduler==3.0.0

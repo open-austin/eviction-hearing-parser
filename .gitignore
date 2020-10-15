@@ -10,3 +10,4 @@ result.csv
 result.json
 cases.db*
 .DS_Store
+.env

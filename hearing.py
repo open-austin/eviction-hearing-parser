@@ -1,6 +1,7 @@
 from decimal import Decimal
 import os
 import re
+import sys
 from typing import Dict, List, Optional, Tuple
 from bs4 import BeautifulSoup
 from datetime import date, datetime, timedelta
@@ -9,6 +10,8 @@ import logging
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+logging.basicConfig(stream=sys.stdout)
+
 
 
 def get_test_html_path(index: int, page_type: str) -> str:
