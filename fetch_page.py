@@ -29,12 +29,22 @@ if not local_dev:
 
     driver = webdriver.Chrome(executable_path=CHROMEDRIVER_PATH , chrome_options=options)
 else:
-    from selenium.webdriver.firefox.options import Options
+    from selenium.webdriver.chrome.options import Options
     options = Options()
-    options.add_argument("--headless")
+    CHROMEDRIVER_PATH = os.environ.get('CHROMEDRIVER_PATH', '/usr/local/bin/chromedriver')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--no-sandbox')
     options.add_argument("window-size=1920,1080")
+    options.headless = True
 
-    driver = webdriver.Firefox(options=options)
+    driver = webdriver.Chrome("./chromedriver", chrome_options=options)
+
+    # from selenium.webdriver.firefox.options import Options
+    # options = Options()
+    # options.add_argument("--headless")
+    # options.add_argument("window-size=1920,1080")
+    #
+    # driver = webdriver.Firefox(options=options)
 
 # from selenium.webdriver.chrome.options import Options
 #
