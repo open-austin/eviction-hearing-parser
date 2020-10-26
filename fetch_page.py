@@ -17,7 +17,7 @@ options.add_argument("--headless")
 options.add_argument("window-size=1920,1080")
 
 # driver = webdriver.Firefox(options=options)
-driver = webdriver.Firefox(options=options, executable_path='/usr/local/bin/geckodriver')
+driver = webdriver.Firefox(options=options, executable_path='/app/vendor/geckodriver/geckodriver')
 
 
 
