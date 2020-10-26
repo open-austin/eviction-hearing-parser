@@ -1,7 +1,7 @@
 -e .
 BeautifulSoup4
 click>=7.1.2
-selenium==3.141.0
+selenium
 simplejson
 psycopg2-binary
 python-dotenv
