@@ -4,59 +4,32 @@ import atexit
 import os
 from dotenv import load_dotenv
 from typing import Tuple
-load_dotenv()
-local_dev = os.getenv("LOCAL_DEV") == "true"
 
 from selenium import webdriver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
 
+options = Options()
+options.add_argument('--disable-gpu')
+options.add_argument('--no-sandbox')
+options.add_argument("window-size=1920,1080")
+options.headless = True
 
 logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
 
+load_dotenv()
+local_dev = os.getenv("LOCAL_DEV") == "true"
 
-if not local_dev:
-    from selenium.webdriver.chrome.options import Options
-    options = Options()
-    CHROMEDRIVER_PATH = os.environ.get('CHROMEDRIVER_PATH', '/usr/local/bin/chromedriver')
-    GOOGLE_CHROME_BIN = os.environ.get('GOOGLE_CHROME_BIN', '/usr/bin/google-chrome')
-    options.binary_location = GOOGLE_CHROME_BIN
-    options.add_argument('--disable-gpu')
-    options.add_argument('--no-sandbox')
-    options.headless = True
-
-    driver = webdriver.Chrome(executable_path=CHROMEDRIVER_PATH , chrome_options=options)
-else:
-    from selenium.webdriver.chrome.options import Options
-    options = Options()
-    CHROMEDRIVER_PATH = os.environ.get('CHROMEDRIVER_PATH', '/usr/local/bin/chromedriver')
-    options.add_argument('--disable-gpu')
-    options.add_argument('--no-sandbox')
-    options.add_argument("window-size=1920,1080")
-    options.headless = True
-
+if local_dev:
     driver = webdriver.Chrome("./chromedriver", chrome_options=options)
+else:
+    driver_path, chrome_bin = os.getenv('CHROMEDRIVER_PATH'), os.getenv('GOOGLE_CHROME_BIN')
+    options.binary_location = chrome_bin
+    driver = webdriver.Chrome(executable_path=driver_path , chrome_options=options)
 
-    # from selenium.webdriver.firefox.options import Options
-    # options = Options()
-    # options.add_argument("--headless")
-    # options.add_argument("window-size=1920,1080")
-    #
-    # driver = webdriver.Firefox(options=options)
-
-# from selenium.webdriver.chrome.options import Options
-#
-# CHROMEDRIVER_PATH = os.environ.get('CHROMEDRIVER_PATH', '/usr/local/bin/chromedriver')
-# GOOGLE_CHROME_BIN = os.environ.get('GOOGLE_CHROME_BIN', '/usr/bin/google-chrome')
-# options = Options()
-# options.binary_location = GOOGLE_CHROME_BIN
-# options.add_argument('--disable-gpu')
-# options.add_argument('--no-sandbox')
-# options.headless = True
-#
-# driver = webdriver.Chrome(executable_path=CHROMEDRIVER_PATH , chrome_options=options)
 
 
 def close_driver():
