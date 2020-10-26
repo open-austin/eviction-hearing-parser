@@ -20,7 +20,7 @@ def get_case(case_id: str):
 
 def rest_case(case):
     """
-    Takes a dictionary representation of a case and maps it in to a sqlite DB
+    Takes a dictionary representation of a case and maps it in to a PostgreSQL DB
     """
     conn = get_database_connection(local_dev=local_dev)
     # conn.execute("pragma journal_mode=wal")
