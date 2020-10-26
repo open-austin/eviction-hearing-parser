@@ -63,16 +63,29 @@ def scrape_filings_and_settings_task():
     perform_task_and_catch_errors(scrape_filings, "Scraping filings")
     perform_task_and_catch_errors(scrape_settings, "Scraping settings")
 
-for i in range(1000):
-    try:
-        parse_filings_on_cloud("10/8/2020", "10/15/2020")
-        parse_settings_on_cloud("10-8-2020", "10-15-2020")
-        print("worked!\n")
-        exit()
-    except:
-        print("failed\n", i)
-# exit()
+
+def do_all_since_january():
+    print("Beginning....")
+    for tries in range(100):
+        try:
+            parse_filings_on_cloud("1/1/2020", "10/25/2020")
+            print(f"Parsing filings worked on the {tries}th attempt\n")
+        except:
+            print(f"Parsing filings failed on the {tries}th attempt\n")
+
+    for tries in range(100):
+        try:
+            parse_settings_on_cloud("1-1-2020", "10-25-2020")
+            print(f"Parsing settings worked on the {tries}th attempt!!\n")
+        except:
+            print(f"Parsing settings failed on the {tries}th attempt :(\n")
+
+
+
+
 # scrape filings and settings every Monday at 3:00 A.M. EST
-# sched = BlockingScheduler()
+sched = BlockingScheduler()
 # sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-10-12 03:00:00', timezone='US/Eastern')
-# sched.start()
+sched.add_job(do_all_since_january, 'interval', weeks=1, start_date='2020-10-12 18:07:00', timezone='US/Eastern')
+
+sched.start()
