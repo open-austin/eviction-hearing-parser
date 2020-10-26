@@ -12,12 +12,6 @@ from selenium.webdriver.firefox.options import Options
 logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
 
-options = Options()
-options.add_argument("--headless")
-options.add_argument("window-size=1920,1080")
-
-driver = webdriver.Firefox(options=options)
-
 # for using heroku firefox-geckodriver buildback
 # driver = webdriver.Firefox(options=options, executable_path='/app/vendor/geckodriver/geckodriver')
 import os
@@ -26,8 +20,9 @@ from dotenv import load_dotenv
 load_dotenv()
 local_dev = os.getenv("LOCAL_DEV") == "true"
 if not local_dev:
+    print("in nonlocal...")
     from selenium.webdriver.chrome.options import Options
-    
+
     CHROMEDRIVER_PATH = os.environ.get('CHROMEDRIVER_PATH', '/usr/local/bin/chromedriver')
     GOOGLE_CHROME_BIN = os.environ.get('GOOGLE_CHROME_BIN', '/usr/bin/google-chrome')
     options = Options()
@@ -37,6 +32,14 @@ if not local_dev:
     options.headless = True
 
     driver = webdriver.Chrome(executable_path=CHROMEDRIVER_PATH , chrome_options=options)
+else:
+    print('in local...')
+    options = Options()
+    options.add_argument("--headless")
+    options.add_argument("window-size=1920,1080")
+
+    driver = webdriver.Firefox(options=options)
+
 
 
 
