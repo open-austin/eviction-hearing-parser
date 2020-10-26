@@ -70,6 +70,7 @@ def do_all_since_january():
         try:
             parse_filings_on_cloud("1/1/2020", "10/25/2020")
             print(f"Parsing filings worked on the {tries}th attempt\n")
+            break
         except:
             print(f"Parsing filings failed on the {tries}th attempt :(\n")
 
@@ -77,6 +78,7 @@ def do_all_since_january():
         try:
             parse_settings_on_cloud("1-1-2020", "10-25-2020")
             print(f"Parsing settings worked on the {tries}th attempt!!\n")
+            break
         except:
             print(f"Parsing settings failed on the {tries}th attempt :(\n")
 
