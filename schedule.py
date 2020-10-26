@@ -65,7 +65,7 @@ def scrape_filings_and_settings_task():
 
 parse_filings_on_cloud("1/1/2020", "1/10/2020")
 parse_settings_on_cloud("1/1/2020", "1/10/2020")
-# exit()
+
 # scrape filings and settings every Monday at 3:00 A.M. EST
 # sched = BlockingScheduler()
 # sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-10-12 03:00:00', timezone='US/Eastern')
