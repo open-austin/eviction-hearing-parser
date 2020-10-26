@@ -71,7 +71,7 @@ def do_all_since_january():
             parse_filings_on_cloud("1/1/2020", "10/25/2020")
             print(f"Parsing filings worked on the {tries}th attempt\n")
         except:
-            print(f"Parsing filings failed on the {tries}th attempt\n")
+            print(f"Parsing filings failed on the {tries}th attempt :(\n")
 
     for tries in range(100):
         try:
@@ -86,6 +86,6 @@ def do_all_since_january():
 # scrape filings and settings every Monday at 3:00 A.M. EST
 sched = BlockingScheduler()
 # sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-10-12 03:00:00', timezone='US/Eastern')
-sched.add_job(do_all_since_january, 'interval', weeks=1, start_date='2020-10-12 18:07:00', timezone='US/Eastern')
+sched.add_job(do_all_since_january, 'interval', weeks=1, start_date='2020-10-12 18:10:00', timezone='US/Eastern')
 
 sched.start()
