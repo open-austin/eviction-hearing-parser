@@ -67,9 +67,10 @@ for i in range(1000):
     try:
         parse_filings_on_cloud("10/8/2020", "10/15/2020")
         parse_settings_on_cloud("10-8-2020", "10-15-2020")
+        print("worked!\n")
         exit()
     except:
-        print("failed", i)
+        print("failed\n", i)
 # exit()
 # scrape filings and settings every Monday at 3:00 A.M. EST
 # sched = BlockingScheduler()
