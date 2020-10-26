@@ -32,8 +32,14 @@ def parse_all_from_parse_filings(case_nums, showbrowser=False):
 
     parsed_cases = make_case_list(case_nums)
 
+    # delete once done
+    num_cases = len(parsed_cases)
+    print(f"\nGot {num_cases} cases.")
+    i = 0
     for parsed_case in parsed_cases:
         persist.rest_case(parsed_case)
+        i += 1
+        print(f"Rested {i} out of {num_cases} cases.")
 
     return parsed_cases
 
