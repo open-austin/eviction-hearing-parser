@@ -16,15 +16,13 @@ logging.basicConfig(stream=sys.stdout)
 logger.setLevel(logging.INFO)
 
 
-# returns today's date and the 6 days ago date, each in m_d_y format, where _ is determined by sep
-def get_before_after_date(sep):
-    beforedate = date.today()
-    afterdate = beforedate - timedelta(days=6)
+# returns yesterday's date, in mm_dd_yyyy format, where _ is determined by sep
+def get_yesterday(sep):
+    today = date.today()
+    yesterday = today - timedelta(days=1)
 
-    beforedate_str = beforedate.strftime(f"%-m{sep}%-d{sep}%Y")
-    afterdate_str = afterdate.strftime(f"%-m{sep}%-d{sep}%Y")
-
-    return afterdate_str, beforedate_str
+    yesterday_str = yesterday.strftime(f"%-m{sep}%-d{sep}%Y")
+    return yesterday_str
 
 def send_email(message, subject):
     email, password = os.getenv("ERROR_EMAIL_ADDRESS"), os.getenv("ERROR_EMAIL_ADDRESS_PASSWORD")
@@ -33,7 +31,7 @@ def send_email(message, subject):
         server.login(email, password)
         server.sendmail(email, email, f"Subject: {subject}\n\n{message}\n")
 
-def log_and_email(message, subject):
+def log_and_email(message, subject, error=False):
     if error:
         logger.error(f"{subject}:\n{message}")
     else:
@@ -43,7 +41,7 @@ def log_and_email(message, subject):
 
 def perform_task_and_catch_errors(task_function, task_name, error=False):
     before = time.time()
-    logger.info(f"{task_name}...")
+    logger.info(f"\n{task_name}...")
     for tries in range(1, 6):
         try:
             task_function()
@@ -53,20 +51,23 @@ def perform_task_and_catch_errors(task_function, task_name, error=False):
             logger.error(f"Unanticipated Error {task_name} on attempt {tries} of 5:\n{str(error)}")
     log_and_email(f"{task_name} failed on every attempt. Check Heroku logs for more details.", f"{task_name} failed", error=True)
 
-
 def scrape_filings():
-    afterdate, beforedate = get_before_after_date("/")
-    parse_filings_on_cloud(afterdate, beforedate)
+    yesterday = get_yesterday("/")
+    parse_filings_on_cloud(yesterday, yesterday)
 
 def scrape_settings():
-    afterdate, beforedate = get_before_after_date("-")
-    parse_settings_on_cloud(afterdate, beforedate)
+    yesterday = get_yesterday("-")
+    parse_settings_on_cloud(yesterday, yesterday)
 
 def scrape_filings_and_settings_task():
     perform_task_and_catch_errors(scrape_filings, "Scraping filings")
     perform_task_and_catch_errors(scrape_settings, "Scraping settings")
 
+parse_filings_on_cloud("1/1/2020", "1/10/2020")
+parse_settings_on_cloud("1/1/2020", "1/10/2020")
+# exit()
+
 # scrape filings and settings every Monday at 3:00 A.M. EST
-sched = BlockingScheduler()
-sched.add_job(scrape_filings_and_settings_task, 'interval', weeks=1, start_date='2020-10-12 03:00:00', timezone='US/Eastern')
-sched.start()
+# sched = BlockingScheduler()
+# sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-10-12 03:00:00', timezone='US/Eastern')
+# sched.start()
