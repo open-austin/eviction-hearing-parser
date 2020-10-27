@@ -12,6 +12,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
 options = Options()
+# options.add_argument('--disable-gpu')
 options.add_argument('--no-sandbox')
 options.add_argument("window-size=1920,1080")
 options.headless = True

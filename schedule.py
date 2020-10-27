@@ -66,13 +66,14 @@ def scrape_filings_and_settings_task():
 
 def do_all_since_january():
     print("Beginning....")
-    for tries in range(100):
+    for tries in range(5):
         try:
             parse_filings_on_cloud("1/1/2020", "10/25/2020")
             print(f"Parsing filings worked on the {tries}th attempt\n")
             break
-        except:
+        except Exception as error:
             print(f"Parsing filings failed on the {tries}th attempt :(\n")
+            print("Error message:", error)
 
     # for tries in range(100):
     #     try:

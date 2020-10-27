@@ -27,6 +27,7 @@ def parse_filings_on_cloud(afterdate, beforedate):
     logger.info(f"Parsing filings between {afterdate} and {beforedate}.")
 
     all_case_nums = get_all_case_nums(afterdate, beforedate) + get_old_active_case_nums()
+    print(f"Found {len(all_case_nums)} case numbers.")
     parse_all_from_parse_filings(all_case_nums)
 
 @click.command()
