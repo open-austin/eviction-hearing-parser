@@ -89,6 +89,6 @@ def do_all_since_january():
 # scrape filings and settings every Monday at 3:00 A.M. EST
 sched = BlockingScheduler()
 # sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-10-12 03:00:00', timezone='US/Eastern')
-sched.add_job(do_all_since_january, 'interval', weeks=1, start_date='2020-10-12 19:15:00', timezone='US/Eastern')
+sched.add_job(do_all_since_january, 'interval', weeks=1, start_date='2020-10-13 00:03:00', timezone='US/Eastern')
 
 sched.start()
