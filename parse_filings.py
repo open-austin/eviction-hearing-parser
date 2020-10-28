@@ -26,7 +26,10 @@ def get_all_case_nums(afterdate: str, beforedate: str):
 def parse_filings_on_cloud(afterdate, beforedate):
     logger.info(f"Parsing filings between {afterdate} and {beforedate}.")
 
-    all_case_nums = get_all_case_nums(afterdate, beforedate) + get_old_active_case_nums()
+    # uncomment line 30 and delete line 31 before making PR
+    # all_case_nums = get_all_case_nums(afterdate, beforedate) + get_old_active_case_nums()
+    all_case_nums = get_all_case_nums(afterdate, beforedate)
+
     print(f"Found {len(all_case_nums)} case numbers.")
     parse_all_from_parse_filings(all_case_nums)
 
@@ -41,7 +44,8 @@ def parse_filings_on_cloud(afterdate, beforedate):
 def parse_filings(afterdate, beforedate, outfile, showbrowser=False):
     # use default firefox browser (rather than headless) is showbrowser is True
     if showbrowser:
-        fetch_page.driver = webdriver.Firefox()
+        fetch_page.driver = webdriver.Chrome("./chromedriver")
+
 
     all_case_nums = get_all_case_nums(afterdate, beforedate) + get_old_active_case_nums()
     parsed_cases = parse_all_from_parse_filings(all_case_nums, showbrowser=showbrowser)

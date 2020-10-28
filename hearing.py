@@ -291,9 +291,11 @@ def get_precinct_number(soup) -> int:
 
 
 def get_status(status_soup) -> str:
-    eviction_tag = status_soup.find(text="Eviction")
-    status_tag = eviction_tag.parent.find_next_sibling("div")
-    return status_tag.text
+    tds = status_soup.find_all("td")
+    status = tds[-1].find_all("div")[1].text
+    return status
+
+
 
 
 def get_register_url(status_soup) -> str:
@@ -646,12 +648,14 @@ def get_filing_case_nums(filing_soup) -> Tuple[List[str], bool]:
         if "too many matches to display" in tablerow.text:
             logger.warning("case number query had too many matches, will be split")
             query_needs_splitting = True
-        td_list = tablerow.find_all("td")
+            break
         try:
-            if "Eviction" in td_list[3].text:
-                case_num = td_list[0].text
-                if case_num is not None:
-                    case_nums.append(case_num)
+            td_list = tablerow.find_all("td")
+            # uncomment and indent next 3 lines if you want only evictions
+            # if "Eviction" in td_list[3].text:
+            case_num = td_list[0].text
+            if case_num is not None:
+                case_nums.append(case_num)
         except:
             logger.error(f"Couldn't get case number for row {tablerow}")
 
@@ -688,7 +692,6 @@ def split_date_range(afterdate: str, beforedate: str) -> Tuple[str, str]:
     start_of_second_range = start_of_second_range_date.strftime("%-m/%-d/%Y")
 
     return end_of_first_range, start_of_second_range
-
 
 def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str) -> List[str]:
     "Get filing case numbers between afterdate and beforedate and starting with case_num_prefix."

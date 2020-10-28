@@ -1,4 +1,3 @@
-import sqlite3
 import os
 from dotenv import load_dotenv
 from connect_to_database import get_database_connection
@@ -8,9 +7,8 @@ local_dev = os.getenv("LOCAL_DEV") == "true"
 
 def get_case(case_id: str):
     conn = get_database_connection(local_dev=local_dev)
-    # conn.execute("pragma journal_mode=wal")
 
-    conn.row_factory = sqlite3.Row
+    # conn.row_factory = sqlite3.Row
     curs = conn.cursor()
     curs.execute("SELECT * FROM V_CASE WHERE ID = ?", (case_id,))
     case = curs.fetchone()
