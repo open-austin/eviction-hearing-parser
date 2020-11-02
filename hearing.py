@@ -479,16 +479,37 @@ def make_parsed_hearing(soup):
 def make_parsed_case(soup, status: str = "", register_url: str = "") -> Dict[str, str]:
     # TODO handle multiple defendants/plaintiffs with different zips
     disposition_tr = get_disposition_tr_element(soup)
+
+    try:
+        defendant_zip = get_zip(get_defendant_elements(soup)[0])
+    except:
+        defendant_zip = None
+
+    try:
+        style = get_style(soup)
+    except:
+        style = None
+
+    try:
+        plaintiff = get_plaintiff(soup)
+    except:
+        plaintiff = None
+
+    try:
+        plaintiff_zip = get_zip(get_plaintiff_elements(soup)[0])
+    except:
+        plaintiff_zip = None
+
     return {
         "precinct_number": get_precinct_number(soup),
-        "style": get_style(soup),
-        "plaintiff": get_plaintiff(soup),
+        "style": style,
+        "plaintiff": plaintiff,
         "defendants": get_defendants(soup),
         "attorneys_for_plaintiffs": get_attorneys_for_plaintiffs(soup),
         "attorneys_for_defendants": get_attorneys_for_defendants(soup),
         "case_number": get_case_number(soup),
-        "defendant_zip": get_zip(get_defendant_elements(soup)[0]),
-        "plaintiff_zip": get_zip(get_plaintiff_elements(soup)[0]),
+        "defendant_zip": defendant_zip,
+        "plaintiff_zip": plaintiff_zip,
         "hearings": [
             make_parsed_hearing(hearing) for hearing in get_hearing_tags(soup)
         ],
@@ -526,6 +547,7 @@ def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
 
     register_url = get_register_url(result_soup)
     status = get_status(result_soup)
+    print(f"About to make parsed case for {case_id}, which has status {status} and url {register_url}.")
     return make_parsed_case(
         soup=register_soup, status=status, register_url=register_url
     )

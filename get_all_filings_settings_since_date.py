@@ -37,7 +37,7 @@ def try_to_parse(start, end, tries):
     print(Fore.RED + f"Failed to parse filings (sadly) between {start} and {end}.\n" + Style.RESET_ALL)
     return message
 
-
+# gets all filings since a given date but splits it up by week, tells you which weeks failed
 # when doing this, should remove the get_old_active_case_nums from parse_filings_on_cloud function
 # date should be string in format mm/dd/yyyy
 def get_all_filings_since_date(start_date):

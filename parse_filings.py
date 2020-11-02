@@ -13,9 +13,16 @@ logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
 
 
-# returns list of all case nums for all prefixes between afterdate and beforedate
+# returns list of all case nums for all prefixes between afterdate and beforedate - dates are in format mm/dd/yyyy
 def get_all_case_nums(afterdate: str, beforedate: str):
-    case_num_prefixes = ["J1-CV-20*", "J2-CV-20*", "J3-EV-20*", "J4-CV-20*", "J5-CV-20*"]
+    aferdate_year = afterdate.split("/")[-1][-2:]
+    beforedate_year = beforedate.split("/")[-1][-2:]
+
+    years = set([aferdate_year, beforedate_year])
+    case_num_prefixes = []
+    for year in years:
+        case_num_prefixes += [f"J1-CV-{year}*", f"J2-CV-{year}*", f"J3-EV-{year}*", f"J4-CV-{year}*", f"J5-CV-{year}*"]
+
     all_case_nums = []
     for prefix in case_num_prefixes:
         prefix_case_nums = fetch_filings(afterdate, beforedate, prefix)
@@ -30,7 +37,7 @@ def parse_filings_on_cloud(afterdate, beforedate):
     # all_case_nums = get_all_case_nums(afterdate, beforedate) + get_old_active_case_nums()
     all_case_nums = get_all_case_nums(afterdate, beforedate)
 
-    print(f"Found {len(all_case_nums)} case numbers.")
+    logger.info(f"Found {len(all_case_nums)} case numbers.")
     parse_all_from_parse_filings(all_case_nums)
 
 @click.command()

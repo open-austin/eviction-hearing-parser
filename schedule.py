@@ -15,14 +15,16 @@ logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
 logger.setLevel(logging.INFO)
 
-
-# returns yesterday's date, in mm_dd_yyyy format, where _ is determined by sep
-def get_yesterday(sep):
+# returns date, mm_dd_yyyy format, where _ is determined by sep, number_of_days days ago or from today's date, depending on past_or_future
+def get_date_from_today(sep, number_of_days, past_or_future):
     today = date.today()
-    yesterday = today - timedelta(days=1)
 
-    yesterday_str = yesterday.strftime(f"%-m{sep}%-d{sep}%Y")
-    return yesterday_str
+    if past_or_future == "future":
+        return_date = today + timedelta(days=number_of_days)
+    else:
+        return_date = today - timedelta(days=number_of_days)
+
+    return return_date.strftime(f"%-m{sep}%-d{sep}%Y")
 
 def send_email(message, subject):
     email, password = os.getenv("ERROR_EMAIL_ADDRESS"), os.getenv("ERROR_EMAIL_ADDRESS_PASSWORD")
@@ -52,12 +54,13 @@ def perform_task_and_catch_errors(task_function, task_name, error=False):
     log_and_email(f"{task_name} failed on every attempt. Check Heroku logs for more details.", f"{task_name} failed", error=True)
 
 def scrape_filings():
-    yesterday = get_yesterday("/")
-    parse_filings_on_cloud(yesterday, yesterday)
+    seven_days_ago = get_date_from_today("/", 7, "past")
+    parse_filings_on_cloud(seven_days_ago, date.today().strftime(f"%-m/%-d/%Y"))
 
 def scrape_settings():
-    yesterday = get_yesterday("-")
-    parse_settings_on_cloud(yesterday, yesterday)
+    ninety_days_later = get_date_from_today("-", 90, "future")
+    seven_days_ago = get_date_from_today("-", 7, "past")
+    parse_settings_on_cloud(seven_days_ago, ninety_days_later)
 
 def scrape_filings_and_settings_task():
     perform_task_and_catch_errors(scrape_filings, "Scraping filings")
@@ -65,7 +68,6 @@ def scrape_filings_and_settings_task():
 
 # scrape filings and settings every Monday at 3:00 A.M. EST
 if __name__ == "__main__":
-    print('schedule starting')
     sched = BlockingScheduler()
     sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-10-12 03:00:00', timezone='US/Eastern')
     sched.start()
