@@ -33,9 +33,8 @@ def get_all_case_nums(afterdate: str, beforedate: str):
 def parse_filings_on_cloud(afterdate, beforedate):
     logger.info(f"Parsing filings between {afterdate} and {beforedate}.")
 
-    # uncomment line 30 and delete line 31 before making PR
-    # all_case_nums = get_all_case_nums(afterdate, beforedate) + get_old_active_case_nums()
-    all_case_nums = get_all_case_nums(afterdate, beforedate)
+    all_case_nums = get_all_case_nums(afterdate, beforedate) + get_old_active_case_nums()
+    # all_case_nums = get_all_case_nums(afterdate, beforedate)
 
     logger.info(f"Found {len(all_case_nums)} case numbers.")
     parse_all_from_parse_filings(all_case_nums)

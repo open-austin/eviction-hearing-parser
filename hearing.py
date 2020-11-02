@@ -547,7 +547,7 @@ def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
 
     register_url = get_register_url(result_soup)
     status = get_status(result_soup)
-    print(f"About to make parsed case for {case_id}, which has status {status} and url {register_url}.")
+    # print(f"About to make parsed case for {case_id}, which has status {status} and url {register_url}.")
     return make_parsed_case(
         soup=register_soup, status=status, register_url=register_url
     )
