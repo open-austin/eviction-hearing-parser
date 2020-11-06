@@ -546,7 +546,7 @@ def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
 
     register_url = get_register_url(result_soup)
     status, type = get_status_and_type(result_soup)
-    
+
     return make_parsed_case(
         soup=register_soup, status=status, type=type, register_url=register_url
     )
@@ -721,11 +721,16 @@ def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str) -> List
         f"Scraping case numbers between {afterdate} and {beforedate} "
         f"for prefix {case_num_prefix}..."
     )
-    filings_page_content = fetch_page.query_filings(
-        afterdate, beforedate, case_num_prefix
-    )
-    filings_soup = BeautifulSoup(filings_page_content, "html.parser")
-    filings_case_nums_list, query_needs_splitting = get_filing_case_nums(filings_soup)
+
+    for tries in range(1, 11):
+        try:
+            filings_page_content = fetch_page.query_filings(
+                afterdate, beforedate, case_num_prefix
+            )
+            filings_soup = BeautifulSoup(filings_page_content, "html.parser")
+            filings_case_nums_list, query_needs_splitting = get_filing_case_nums(filings_soup)
+        except:
+            logger.error(f"Failed to find case numbers on try {tries}.")
 
     # handle case of too many results (200 results means that the search cut off)
     if query_needs_splitting:
