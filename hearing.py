@@ -290,13 +290,11 @@ def get_precinct_number(soup) -> int:
     return word_to_number[precinct_number]
 
 
-def get_status(status_soup) -> str:
+def get_status_and_type(status_soup) -> str:
     tds = status_soup.find_all("td")
-    status = tds[-1].find_all("div")[1].text
-    return status
-
-
-
+    divs = tds[-1].find_all("div")
+    status, type = divs[1].text, divs[0].text
+    return status, type
 
 def get_register_url(status_soup) -> str:
     link_tag = status_soup.find(style="color: blue")
@@ -476,7 +474,7 @@ def make_parsed_hearing(soup):
     }
 
 
-def make_parsed_case(soup, status: str = "", register_url: str = "") -> Dict[str, str]:
+def make_parsed_case(soup, status: str = "", type: str = "", register_url: str = "") -> Dict[str, str]:
     # TODO handle multiple defendants/plaintiffs with different zips
     disposition_tr = get_disposition_tr_element(soup)
 
@@ -514,6 +512,7 @@ def make_parsed_case(soup, status: str = "", register_url: str = "") -> Dict[str
             make_parsed_hearing(hearing) for hearing in get_hearing_tags(soup)
         ],
         "status": status,
+        "type": type,
         "register_url": register_url,
         "disposition_type": get_disposition_type(disposition_tr)
         if disposition_tr is not None
@@ -546,10 +545,10 @@ def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
     register_soup = BeautifulSoup(register_page, "html.parser")
 
     register_url = get_register_url(result_soup)
-    status = get_status(result_soup)
-    # print(f"About to make parsed case for {case_id}, which has status {status} and url {register_url}.")
+    status, type = get_status_and_type(result_soup)
+    
     return make_parsed_case(
-        soup=register_soup, status=status, register_url=register_url
+        soup=register_soup, status=status, type=type, register_url=register_url
     )
 
 
