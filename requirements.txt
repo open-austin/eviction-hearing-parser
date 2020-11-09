@@ -1,8 +1,10 @@
 -e .
+APScheduler==3.0.0
 BeautifulSoup4
 click>=7.1.2
-selenium==3.14
-simplejson
+gspread
+oauth2client
 psycopg2-binary
 python-dotenv
-APScheduler==3.0.0
+selenium==3.14
+simplejson
