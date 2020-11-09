@@ -1,4 +1,3 @@
-import sqlite3
 import os
 from dotenv import load_dotenv
 from connect_to_database import get_database_connection
@@ -8,9 +7,8 @@ local_dev = os.getenv("LOCAL_DEV") == "true"
 
 def get_case(case_id: str):
     conn = get_database_connection(local_dev=local_dev)
-    # conn.execute("pragma journal_mode=wal")
 
-    conn.row_factory = sqlite3.Row
+    # conn.row_factory = sqlite3.Row
     curs = conn.cursor()
     curs.execute("SELECT * FROM V_CASE WHERE ID = ?", (case_id,))
     case = curs.fetchone()
@@ -29,12 +27,12 @@ def rest_case(case):
     curs.execute(
     """
     INSERT INTO CASE_DETAIL
-    (ID, STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP)
-    VALUES (%(case_num)s, %(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s)
+    (ID, STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP, CASE_TYPE)
+    VALUES (%(case_num)s, %(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s, %(type)s)
     ON CONFLICT(ID)
     DO UPDATE SET
-    (STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP) =
-    (%(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s)
+    (STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP, CASE_TYPE) =
+    (%(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s, %(type)s)
     """,
         {
             'case_num': case["case_number"],
@@ -46,6 +44,7 @@ def rest_case(case):
             'defend': case["defendants"],
             'plaint_zip': case["plaintiff_zip"],
             'defend_zip': case["defendant_zip"],
+            'type': case["type"]
         },
     )
 

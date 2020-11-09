@@ -60,7 +60,7 @@ def parse_settings(afterdate, beforedate, outfile, showbrowser=False):
     # If showbrowser is True, use the default selenium driver
     if showbrowser:
         from selenium import webdriver
-        fetch_page.driver = webdriver.Firefox()
+        fetch_page.driver = webdriver.Chrome("./chromedriver")
 
     days_to_pull = get_days_between_dates(afterdate=afterdate, beforedate=beforedate)
     pulled_settings = make_setting_list(days_to_pull)
