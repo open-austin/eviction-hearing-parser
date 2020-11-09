@@ -17,7 +17,10 @@ logger.setLevel(logging.INFO)
 if __name__ == "__main__":
     # use creds to create a client to interact with the Google Drive API
     #scope = ['https://spreadsheets.google.com/feeds']
-    creds = ServiceAccountCredentials.from_json_keyfile_name(os.getenv("GOOGLE_SHEETS_CREDS_JSON"))#, scope)
+    json_creds = os.getenv("GOOGLE_SHEETS_CREDS_JSON")
+    creds_dict = json.loads(json_creds)
+    creds_dict["private_key"] = creds_dict["private_key"].replace("\\\\n", "\n")
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict)
     client = gspread.authorize(creds)
     
     # Find a workbook by name and open the first sheet
