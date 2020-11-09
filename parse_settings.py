@@ -5,9 +5,14 @@ import sys
 from typing import Any, Dict, List
 import datetime as dt
 import click
+import pandas as pd
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+from dotenv import load_dotenv
 import hearing
 import fetch_page
 import persist
+import gsheet
 import logging
 
 logger = logging.getLogger()
@@ -43,8 +48,7 @@ def parse_settings_on_cloud(afterdate, beforedate):
     pulled_settings = make_setting_list(days_to_pull)
     for setting in pulled_settings:
         persist.rest_setting(setting)
-
-
+    gsheet.write_data(gsheet.open_sheet(gsheet.init_sheets(),"Court_scraper_backend","Settings_scheduler"),pd.DataFrame(pulled_settings))
 
 @click.command()
 @click.argument(
@@ -66,8 +70,15 @@ def parse_settings(afterdate, beforedate, outfile, showbrowser=False):
     pulled_settings = make_setting_list(days_to_pull)
     for setting in pulled_settings:
         persist.rest_setting(setting)
+    #cleaner way to do this without reinitializing every run?
+    gsheet.write_data(gsheet.open_sheet(gsheet.init_sheets(),"Court_scraper_backend","Settings_scheduler"),pd.DataFrame(pulled_settings))
     json.dump(pulled_settings, outfile)
 
 
 if __name__ == "__main__":
-    parse_settings()
+    for tries in range(1, 11):
+        try:
+            parse_settings()
+            break
+        except Exception as e:
+            logger.error(f"Failed to find case numbers on try {tries}: because {e}.")

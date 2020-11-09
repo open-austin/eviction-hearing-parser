@@ -729,6 +729,7 @@ def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str) -> List
             )
             filings_soup = BeautifulSoup(filings_page_content, "html.parser")
             filings_case_nums_list, query_needs_splitting = get_filing_case_nums(filings_soup)
+            break
         except:
             logger.error(f"Failed to find case numbers on try {tries}.")
 

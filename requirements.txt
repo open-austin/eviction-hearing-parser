@@ -4,6 +4,7 @@ BeautifulSoup4
 click>=7.1.2
 gspread
 oauth2client
+pandas
 psycopg2-binary
 python-dotenv
 selenium==3.14

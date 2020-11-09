@@ -65,6 +65,7 @@ def scrape_settings():
 def scrape_filings_and_settings_task():
     perform_task_and_catch_errors(scrape_filings, "Scraping filings")
     perform_task_and_catch_errors(scrape_settings, "Scraping settings")
+    #dump sql to sheets
 
 # scrape filings and settings every Monday at 3:00 A.M. EST
 if __name__ == "__main__":
