@@ -78,7 +78,7 @@ def parse_settings(afterdate, beforedate, outfile, showbrowser=False):
 if __name__ == "__main__":
     for tries in range(1, 11):
         try:
-            parse_settings()
+            parse_settings_on_cloud()
             break
         except Exception as e:
             logger.error(f"Failed to find case numbers on try {tries}: because {e}.")
