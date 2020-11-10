@@ -29,11 +29,13 @@ def get_all_case_nums(afterdate: str, beforedate: str):
     return all_case_nums
 
 # same as parse_filings but without command line interface and showbrowser/outfile options
-def parse_filings_on_cloud(afterdate, beforedate):
+def parse_filings_on_cloud(afterdate, beforedate, get_old_active=True):
     logger.info(f"Parsing filings between {afterdate} and {beforedate}.")
 
-    all_case_nums = get_all_case_nums(afterdate, beforedate) + get_old_active_case_nums()
-    # all_case_nums = get_all_case_nums(afterdate, beforedate)
+    if get_old_active:
+        all_case_nums = get_all_case_nums(afterdate, beforedate) + get_old_active_case_nums()
+    else:
+        all_case_nums = get_all_case_nums(afterdate, beforedate)
 
     logger.info(f"Found {len(all_case_nums)} case numbers.")
     parse_all_from_parse_filings(all_case_nums)

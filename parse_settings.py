@@ -44,8 +44,6 @@ def parse_settings_on_cloud(afterdate, beforedate):
     for setting in pulled_settings:
         persist.rest_setting(setting)
 
-
-
 @click.command()
 @click.argument(
     "afterdate", nargs=1
