@@ -1,8 +1,10 @@
 from datetime import date, datetime, timedelta
 from schedule import send_email
 from parse_filings import parse_filings_on_cloud
+from parse_settings import parse_settings_on_cloud
 from colorama import Fore, Style
 import logging
+import sys
 logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
 logger.setLevel(logging.INFO)
@@ -30,13 +32,15 @@ def try_to_parse(start, end, tries):
         try:
             parse_filings_on_cloud(start, end, get_old_active=False)
             parse_settings_on_cloud(start, end)
+            logger.info(Fore.GREEN + f"Successfully parsed filings between {start} and {end} on attempt {attempt}.\n" + Style.RESET_ALL)
+
             return "success"
         except Exception as error:
             if attempt == tries:
                 logger.error(f"Error message: {error}")
 
     message = f"{start}, {end}"
-    logger.error(Fore.RED + f"Failed to parse filings (sadly) between {start} and {end}.\n" + Style.RESET_ALL)
+    logger.error(Fore.RED + f"Failed to parse filings and settings between {start} and {end} on all {tries} attempts.\n" + Style.RESET_ALL)
     return message
 
 # gets all filings since a given date but splits it up by week, tells you which weeks failed
@@ -56,9 +60,9 @@ def get_all_filings_since_date(start_date):
         failures_str = "\n".join(failures)
         logger.info("All failures:")
         logger.info(Fore.RED + failures_str + Style.RESET_ALL)
-        send_email(failures_str, "Date ranges for which parsing files failed")
+        send_email(failures_str, "Date ranges for which parsing filings and settings failed")
     else:
         logger.info(Fore.GREEN + f"There were no failures when getting all filings between {start_date} and {yesterdays_date} - yay!!" + Style.RESET_ALL)
 
 
-get_all_filings_since_date("10-12-2020")
+get_all_filings_since_date("10-25-2020")

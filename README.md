@@ -90,8 +90,10 @@ delete email lines if you don't have that
 
 ### .env File Instructions
 Create a .env file in the root directory of the project, and add the following two lines:
-`LOCAL_DEV=true`
-`LOCAL_DATABASE_URL=postgres://localhost/your_local_database_name`
+```
+LOCAL_DEV=true
+LOCAL_DATABASE_URL=postgres://localhost/your_local_database_name
+```
 
 ### Instructions for Contributing Developers
 

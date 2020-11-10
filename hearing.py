@@ -652,7 +652,8 @@ def fetch_settings(afterdate: str, beforedate: str) -> Tuple[str, str]:
             setting_list = get_setting_list(calendar_soup)
             break
         except:
-            logger.error(f"Failed to get setting list between {afterdate} and {beforedate} on try {tries}.")
+            if tries == 10:
+                logger.error(f"Failed to get setting list between {afterdate} and {beforedate} on all 10 attempts.")
 
     return setting_list
 
@@ -703,7 +704,7 @@ def split_date_range(afterdate: str, beforedate: str) -> Tuple[str, str]:
     """
     Split date range in half.
 
-    Requires inputs in format m/d/y.
+    Requires inputs in format m-d-y.
     Returns 4 strings representing two new date ranges
     """
 
@@ -743,7 +744,9 @@ def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str) -> List
             filings_case_nums_list, query_needs_splitting = get_filing_case_nums(filings_soup)
             break
         except:
-            logger.error(f"Failed to find case numbers on try {tries}.")
+            if tries == 10:
+                logger.error(f"Failed to find case numbers on all 10 attempts.")
+
 
     # handle case of too many results (200 results means that the search cut off)
     if query_needs_splitting:
