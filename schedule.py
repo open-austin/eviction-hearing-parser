@@ -5,9 +5,13 @@ import logging
 import smtplib, ssl
 from datetime import date, timedelta
 from apscheduler.schedulers.blocking import BlockingScheduler
-from parse_filings import parse_filings_on_cloud
-from parse_settings import parse_settings_on_cloud
 from dotenv import load_dotenv
+
+# need this to prevent cirvular import error when running parse_hearings.py
+if __name__ == "__main__":
+    from parse_filings import parse_filings_on_cloud
+    from parse_settings import parse_settings_on_cloud
+
 
 load_dotenv()
 
@@ -31,7 +35,7 @@ def send_email(message, subject):
     port, smtp_server, context  = 465, "smtp.gmail.com", ssl.create_default_context()
     with smtplib.SMTP_SSL(smtp_server, port, context=context) as server:
         server.login(email, password)
-        server.sendmail(email, email, f"Subject: {subject}\n\n{message}\n")
+        server.sendmail(email, email, f"Subject: Eviction-scraper: {subject}\n\n{message}\n")
 
 def log_and_email(message, subject, error=False):
     if error:
@@ -54,8 +58,8 @@ def perform_task_and_catch_errors(task_function, task_name, error=False):
     log_and_email(f"{task_name} failed on every attempt. Check Heroku logs for more details.", f"{task_name} failed", error=True)
 
 def scrape_filings():
-    seven_days_ago = get_date_from_today("/", 7, "past")
-    parse_filings_on_cloud(seven_days_ago, date.today().strftime(f"%-m/%-d/%Y"))
+    seven_days_ago = get_date_from_today("-", 7, "past")
+    parse_filings_on_cloud(seven_days_ago, date.today().strftime(f"%-m-%-d-%Y"))
 
 def scrape_settings():
     ninety_days_later = get_date_from_today("-", 90, "future")
@@ -69,9 +73,5 @@ def scrape_filings_and_settings_task():
 # scrape filings and settings every Monday at 3:00 A.M. EST
 if __name__ == "__main__":
     sched = BlockingScheduler()
-<<<<<<< HEAD
     sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-10-12 03:00:00', timezone='US/Eastern')
-=======
-    sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-11-08 04:55:00', timezone='US/Eastern')
->>>>>>> 660243051066ea313511141d3ea9a83fcc53f27b
     sched.start()

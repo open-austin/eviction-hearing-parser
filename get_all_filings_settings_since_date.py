@@ -2,27 +2,29 @@ from datetime import date, datetime, timedelta
 from schedule import send_email
 from parse_filings import parse_filings_on_cloud
 from colorama import Fore, Style
+import logging
+# logger = logging.getLogger()
+# logging.basicConfig(stream=sys.stdout)
+# logger.setLevel(logging.INFO)
 
-
-# dates should be strings in format m/d/yyyy
+# dates should be strings in format (m)m-(d)d-yyyy
 def split_into_weeks(start, end):
-    start_date = datetime.strptime(start, "%m/%d/%Y").date()
-    end_date = datetime.strptime(end, "%m/%d/%Y").date()
+    start_date = datetime.strptime(start, "%m-%d-%Y").date()
+    end_date = datetime.strptime(end, "%m-%d-%Y").date()
 
     days_in_range = ((end_date - start_date).days) + 1
 
     if days_in_range > 7:
         first_end_date = start_date + timedelta(days=6)
-        first_end_date_str = first_end_date.strftime("%-m/%-d/%Y")
-        next_start_date_str = (first_end_date + timedelta(days=1)).strftime("%-m/%-d/%Y")
+        first_end_date_str = first_end_date.strftime("%-m-%-d-%Y")
+        next_start_date_str = (first_end_date + timedelta(days=1)).strftime("%-m-%-d-%Y")
 
         return [(start, first_end_date_str)] + split_into_weeks(next_start_date_str, end)
 
     else:
         return [(start, end)]
 
-
-# stat, end are dates as strings
+# start, end are dates as strings
 def try_to_parse(start, end, tries):
     for attempt in range(1, tries + 1):
         try:
@@ -39,9 +41,9 @@ def try_to_parse(start, end, tries):
 
 # gets all filings since a given date but splits it up by week, tells you which weeks failed
 # when doing this, should remove the get_old_active_case_nums from parse_filings_on_cloud function
-# date should be string in format mm/dd/yyyy
+# date should be string in format (m)m-(d)d-yyyy
 def get_all_filings_since_date(start_date):
-    yesterdays_date = (date.today() - timedelta(days=1)).strftime("%-m/%-d/%Y")
+    yesterdays_date = (date.today() - timedelta(days=1)).strftime("%-m-%-d-%Y")
     weeks = split_into_weeks(start_date, yesterdays_date)
     print(f"Will get all filings between {start_date} and {yesterdays_date}\n")
 
@@ -60,4 +62,4 @@ def get_all_filings_since_date(start_date):
         print(Fore.GREEN + f"There were no failures when getting all filings between {start_date} and {yesterdays_date} - yay!!" + Style.RESET_ALL)
 
 
-get_all_filings_since_date("10/12/2020")
+get_all_filings_since_date("10-12-2020")

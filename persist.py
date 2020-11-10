@@ -104,7 +104,7 @@ def rest_setting(setting):
     INSERT INTO SETTING
     (CASE_NUMBER, CASE_LINK, SETTING_TYPE, SETTING_STYLE, JUDICIAL_OFFICER, SETTING_DATE, SETTING_TIME, HEARING_TYPE)
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    ON CONFLICT(CASE_NUMBER, SETTING_STYLE, SETTING_DATE, SETTING_TIME)
+    ON CONFLICT(CASE_NUMBER, SETTING_TYPE, HEARING_TYPE)
     DO NOTHING
     """,
         (
@@ -129,9 +129,9 @@ def get_old_active_case_nums():
     conn = get_database_connection(local_dev=local_dev)
     curs = conn.cursor()
 
-    curs.execute("""SELECT ID FROM CASE_DETAIL WHERE STATUS NOT IN
-                ('Final Disposition', 'Transferred', 'Bankruptcy', 'Judgment Released',
-                'Judgment Satisfied', 'Appealed', 'Final Status', 'Dismissed')""")
+    curs.execute("""SELECT ID FROM CASE_DETAIL WHERE LOWER(STATUS) NOT IN
+                ('final disposition', 'transferred', 'bankruptcy', 'judgment released',
+                'judgment satisfied', 'appealed', 'final status', 'dismissed')""")
     active_case_nums = [tup[0] for tup in curs.fetchall()]
     curs.close()
     conn.close()

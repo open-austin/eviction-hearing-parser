@@ -12,11 +12,10 @@ import logging
 logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
 
-
 # returns list of all case nums for all prefixes between afterdate and beforedate - dates are in format mm/dd/yyyy
 def get_all_case_nums(afterdate: str, beforedate: str):
-    aferdate_year = afterdate.split("/")[-1][-2:]
-    beforedate_year = beforedate.split("/")[-1][-2:]
+    aferdate_year = afterdate.split("-")[-1][-2:]
+    beforedate_year = beforedate.split("-")[-1][-2:]
 
     years = set([aferdate_year, beforedate_year])
     case_num_prefixes = []
@@ -52,12 +51,13 @@ def parse_filings(afterdate, beforedate, outfile, showbrowser=False):
     if showbrowser:
         fetch_page.driver = webdriver.Chrome("./chromedriver")
 
-
     all_case_nums = get_all_case_nums(afterdate, beforedate) + get_old_active_case_nums()
     parsed_cases = parse_all_from_parse_filings(all_case_nums, showbrowser=showbrowser)
 
-    json.dump(parsed_cases, outfile)
-
+    try:
+        json.dump(parsed_cases, outfile)
+    except:
+        logger.error("There was an error creating the results json file.")
 
 if __name__ == "__main__":
     parse_filings()
