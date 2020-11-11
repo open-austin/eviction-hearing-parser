@@ -66,12 +66,12 @@ def scrape_settings():
     seven_days_ago = get_date_from_today("-", 7, "past")
     parse_settings_on_cloud(seven_days_ago, ninety_days_later)
 
-#Dumps sql table to google sheets
+#Dumps sql table to google sheets does not work locally (need to change connect to data base to pass True)
 def dump_to_sheets(sheet,worksheet,tables,filter_evictions = False):
     sheet = gsheet.open_sheet(gsheet.init_sheets(), sheet, worksheet)
     dfs = []
     for table in tables:
-        conn = connect_to_database.get_database_connection()
+        conn = connect_to_database.get_database_connection(False)
         sql = "select * from " + table
         df = pd.read_sql_query(sql, conn) 
         #Group cases with multiple events into the same case number do we want to do this it leads to columns with " , " junk
