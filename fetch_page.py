@@ -24,11 +24,11 @@ load_dotenv()
 local_dev = os.getenv("LOCAL_DEV") == "true"
 
 if local_dev:
-    driver = webdriver.Chrome("./chromedriver", chrome_options=options)
+    driver = webdriver.Chrome("./chromedriver", options=options)
 else:
     driver_path, chrome_bin = os.getenv('CHROMEDRIVER_PATH'), os.getenv('GOOGLE_CHROME_BIN')
     options.binary_location = chrome_bin
-    driver = webdriver.Chrome(executable_path=driver_path , chrome_options=options)
+    driver = webdriver.Chrome(executable_path=driver_path , options=options)
 
 
 

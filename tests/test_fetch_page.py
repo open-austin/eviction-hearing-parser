@@ -7,7 +7,7 @@ import hearing
 class TestFetchFilingsPage:
     def test_fetch_filings_page(self):
         fetched = fetch_page.query_filings(
-            afterdate="06/01/2020", beforedate="06/30/2020", case_num_prefix="J1-CV-20*"
+            afterdate="6-1-2020", beforedate="6-30-2020", case_num_prefix="J1-CV-20*"
         )
         assert "J1-CV-20-001773" in fetched
 
@@ -20,7 +20,7 @@ class TestFetchCaseNumbers:
         The scraper will need to split this into multiple queries and combine the results.
         """
         numbers = hearing.fetch_filings(
-            afterdate="01/01/2020", beforedate="01/30/2020", case_num_prefix="J1-CV-20*"
+            afterdate="1-1-2020", beforedate="1-30-2020", case_num_prefix="J1-CV-20*"
         )
         assert "J1-CV-20-000001" in numbers
         assert len(numbers) > 200

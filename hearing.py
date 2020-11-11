@@ -685,7 +685,7 @@ def get_filing_case_nums(filing_soup) -> Tuple[List[str], bool]:
     case_nums = []
     for tablerow in tablerow_list:
         if "too many matches to display" in tablerow.text:
-            logger.warning("case number query had too many matches, will be split")
+            logger.warning("Case number query had too many matches, will be split")
             query_needs_splitting = True
             break
         try:
