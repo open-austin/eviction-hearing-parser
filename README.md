@@ -124,7 +124,7 @@ gets all data from September 1, 2020 up until the current date.
 
 5) Write code.
 
-5) Make sure the scraper still works by running the tests in the tests folder and making sure the command line tools (parse_hearings.py, parse_settings.py, parse_filings.py) successfully populate the database and don't throw errors.
+5) Make sure the scraper still works by running the tests in the tests folder and making sure the command line tools (parse_hearings.py, parse_settings.py, parse_filings.py) successfully populate the database and don't throw errors. To run the tests, just use the command `pytest`.
 
 6) Ideally, add your own tests (if it makes sense to do so).
 
