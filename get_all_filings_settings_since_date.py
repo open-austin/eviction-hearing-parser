@@ -4,6 +4,7 @@ from parse_filings import parse_filings_on_cloud
 from parse_settings import parse_settings_on_cloud
 from colorama import Fore, Style
 import logging
+import click
 import sys
 logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
@@ -45,7 +46,7 @@ def try_to_parse(start, end, tries):
 
 # gets all filings since a given date but splits it up by week, tells you which weeks failed
 # date should be string in format (m)m-(d)d-yyyy
-def get_all_filings_since_date(start_date):
+def get_all_filings_settings_since_date(start_date):
     yesterdays_date = (date.today() - timedelta(days=1)).strftime("%-m-%-d-%Y")
     weeks = split_into_weeks(start_date, yesterdays_date)
     logger.info(f"Will get all filings and settings between {start_date} and {yesterdays_date}\n")
@@ -64,5 +65,12 @@ def get_all_filings_since_date(start_date):
     else:
         logger.info(Fore.GREEN + f"There were no failures when getting all filings between {start_date} and {yesterdays_date} - yay!!" + Style.RESET_ALL)
 
+@click.command()
+@click.argument("date", nargs=1)
 
-get_all_filings_since_date("10-25-2020")
+# date should be in format (m)m-(d)d-yyyy
+def get_all_since_date(date):
+    get_all_filings_settings_since_date(date)
+
+if __name__ == "__main__":
+    get_all_since_date()
