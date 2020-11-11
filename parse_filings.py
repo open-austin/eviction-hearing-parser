@@ -55,9 +55,10 @@ def parse_filings(afterdate, beforedate, outfile, showbrowser=False):
 
     all_case_nums = get_all_case_nums(afterdate, beforedate) + get_old_active_case_nums()
     parsed_cases = parse_all_from_parse_filings(all_case_nums, showbrowser=showbrowser)
-
-    json.dump(parsed_cases, outfile)
-
+    try:
+        json.dump(parsed_cases, outfile)
+    except Exception as e:
+        logger.info(f"Error {e}")
 
 if __name__ == "__main__":
     parse_filings()

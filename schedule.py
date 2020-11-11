@@ -3,11 +3,16 @@ import sys
 import time
 import logging
 import smtplib, ssl
+import connect_to_database
+import pandas as pd
+import gsheet
 from datetime import date, timedelta
 from apscheduler.schedulers.blocking import BlockingScheduler
+from functools import reduce
 from parse_filings import parse_filings_on_cloud
 from parse_settings import parse_settings_on_cloud
 from dotenv import load_dotenv
+from sqlalchemy import create_engine
 
 load_dotenv()
 
@@ -62,13 +67,31 @@ def scrape_settings():
     seven_days_ago = get_date_from_today("-", 7, "past")
     parse_settings_on_cloud(seven_days_ago, ninety_days_later)
 
+#Dumps sql table to google sheets
+def dump_to_sheets(sheet,worksheet,tables,filter_evictions = False):
+    sheet = gsheet.open_sheet(gsheet.init_sheets(), sheet, worksheet)
+    dfs = []
+    for table in tables:
+        conn = connect_to_database.get_database_connection()
+        sql = "select * from " + table
+        df = pd.read_sql_query(sql, conn) 
+        #Group cases with multiple events into the same case number do we want to do this it leads to columns with " , " junk
+        #if table=="events": df = df.groupby("case_detail_id").fillna('').agg(', '.join).reset_index()
+        dfs.append(df) 
+    df = reduce(lambda left,right: pd.merge(left,right,on='case_number',how='outer'), dfs)
+    if filter_evictions: gsheet.filter_df(df,'case_type','Eviction')
+    gsheet.write_data(sheet,df)    
+
 def scrape_filings_and_settings_task():
     perform_task_and_catch_errors(scrape_filings, "Scraping filings")
+    dump_to_sheets('Court_scraper_filings_archive','filings_archive',['case_detail','disposition','event'])
     perform_task_and_catch_errors(scrape_settings, "Scraping settings")
-    #dump sql to sheets
+    dump_to_sheets('Court_scraper_settings_archive','settings_archive',['setting']) 
+    dump_to_sheets('Court_scraper_evictions_archive','evictions_archive',['case_detail','disposition','event','setting'],True)
 
 # scrape filings and settings every Monday at 3:00 A.M. EST
 if __name__ == "__main__":
-    sched = BlockingScheduler()
-    sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-10-12 03:00:00', timezone='US/Eastern')
-    sched.start()
+    #sched = BlockingScheduler()
+    #sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-10-12 03:00:00', timezone='US/Eastern')
+    #sched.start()
+    scrape_filings_and_settings_task()

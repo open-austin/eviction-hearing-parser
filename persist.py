@@ -27,9 +27,9 @@ def rest_case(case):
     curs.execute(
     """
     INSERT INTO CASE_DETAIL
-    (ID, STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP, CASE_TYPE)
+    (CASE_NUMBER, STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP, CASE_TYPE)
     VALUES (%(case_num)s, %(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s, %(type)s)
-    ON CONFLICT(ID)
+    ON CONFLICT(CASE_NUMBER)
     DO UPDATE SET
     (STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP, CASE_TYPE) =
     (%(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s, %(type)s)
@@ -51,9 +51,9 @@ def rest_case(case):
     curs.execute(
     """
     INSERT INTO DISPOSITION
-    (CASE_DETAIL_ID, TYPE, DATE, AMOUNT, AWARDED_TO, AWARDED_AGAINST)
+    (CASE_NUMBER, TYPE, DATE, AMOUNT, AWARDED_TO, AWARDED_AGAINST)
     VALUES (%(case_num)s, %(disp_type)s, %(disp_date)s, %(disp_amt)s, %(disp_to)s, %(disp_against)s)
-    ON CONFLICT(CASE_DETAIL_ID)
+    ON CONFLICT(CASE_NUMBER)
     DO UPDATE SET
     (TYPE, DATE, AMOUNT, AWARDED_TO, AWARDED_AGAINST) =
     (%(disp_type)s, %(disp_date)s, %(disp_amt)s, %(disp_to)s, %(disp_against)s)
@@ -73,9 +73,9 @@ def rest_case(case):
         curs.execute(
             """
             INSERT INTO EVENT
-            (CASE_DETAIL_ID, EVENT_NUMBER, DATE, TIME, OFFICER, RESULT, TYPE)
+            (CASE_NUMBER, EVENT_NUMBER, DATE, TIME, OFFICER, RESULT, TYPE)
             VALUES (%(case_num)s, %(hearing_num)s, %(hearing_date)s, %(hearing_time)s, %(hearing_officer)s, %(hearing_appeared)s, 'HR')
-            ON CONFLICT(CASE_DETAIL_ID, EVENT_NUMBER)
+            ON CONFLICT(CASE_NUMBER, EVENT_NUMBER)
             DO UPDATE SET
             (EVENT_NUMBER, DATE, TIME, OFFICER, RESULT, TYPE) =
             (%(hearing_num)s, %(hearing_date)s, %(hearing_time)s, %(hearing_officer)s, %(hearing_appeared)s, 'HR')
@@ -104,7 +104,7 @@ def rest_setting(setting):
     INSERT INTO SETTING
     (CASE_NUMBER, CASE_LINK, SETTING_TYPE, SETTING_STYLE, JUDICIAL_OFFICER, SETTING_DATE, SETTING_TIME, HEARING_TYPE)
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-    ON CONFLICT(CASE_NUMBER, SETTING_TYPE, HEARING_TYPE)
+    ON CONFLICT(CASE_NUMBER, SETTING_TYPE, HEARING_TYPE, SETTING_DATE)
     DO NOTHING
     """,
         (
@@ -129,9 +129,9 @@ def get_old_active_case_nums():
     conn = get_database_connection(local_dev=local_dev)
     curs = conn.cursor()
 
-    curs.execute("""SELECT ID FROM CASE_DETAIL WHERE STATUS NOT IN
-                ('Final Disposition', 'Transferred', 'Bankruptcy', 'Judgment Released',
-                'Judgment Satisfied', 'Appealed', 'Final Status', 'Dismissed')""")
+    curs.execute("""SELECT CASE_NUMBER FROM CASE_DETAIL WHERE LOWER(STATUS) NOT IN
+                ('final disposition', 'transferred', 'bankruptcy', 'judgment released',
+                'judgment satisfied', 'appealed', 'final status', 'dismissed')""")
     active_case_nums = [tup[0] for tup in curs.fetchall()]
     curs.close()
     conn.close()
@@ -152,9 +152,9 @@ def drop_rows_from_table(table_name: str, case_ids: list):
     curs = conn.cursor()
 
     if table_name == "CASE_DETAIL":
-        curs.execute("DELETE FROM %s WHERE ID IN %s", (table_name, case_ids))
+        curs.execute("DELETE FROM %s WHERE CASE_NUMBER IN %s", (table_name, case_ids))
     else:
-        curs.execute("DELETE FROM %s WHERE CASE_DETAIL_ID IN %s", (table_name, case_ids))
+        curs.execute("DELETE FROM %s WHERE CASE_NUMBER IN %s", (table_name, case_ids))
 
     conn.commit()
     curs.close()
