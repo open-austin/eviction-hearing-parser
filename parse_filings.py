@@ -59,7 +59,7 @@ def parse_filings(afterdate, beforedate, outfile, showbrowser=False):
     try:
         json.dump(parsed_cases, outfile)
     except:
-        logger.error("There was an error creating the results json file.")
+        logger.error("Creating the json file may have been unsuccessful.")
 
 if __name__ == "__main__":
     parse_filings()

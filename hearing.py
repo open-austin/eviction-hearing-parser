@@ -16,6 +16,7 @@ logging.basicConfig(stream=sys.stdout)
 
 
 
+
 def get_test_html_path(index: int, page_type: str) -> str:
     this_directory = os.path.dirname(os.path.realpath(__file__))
     test_filepath = os.path.join(this_directory, page_type, f"example_{index}.html")
@@ -550,7 +551,11 @@ def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
     status, type = get_status_and_type(result_soup)
 
     if status.lower() not in known_statuses:
-        log_and_email(f"Case {case_id} has status '{status}', which is not in our list of known statuses.", "Found Unknown Status", error=True)
+        load_dotenv()
+        if os.getenv("LOCAL_DEV") != "true":
+            log_and_email(f"Case {case_id} has status '{status}', which is not in our list of known statuses.", "Found Unknown Status", error=True)
+        else:
+            logger.info(f"Case {case_id} has status '{status}', which is not in our list of known statuses.")
 
     return make_parsed_case(
         soup=register_soup, status=status, type=type, register_url=register_url
