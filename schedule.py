@@ -12,7 +12,6 @@ from functools import reduce
 from parse_filings import parse_filings_on_cloud
 from parse_settings import parse_settings_on_cloud
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
 
 load_dotenv()
 
