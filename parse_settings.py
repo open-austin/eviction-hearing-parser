@@ -5,9 +5,14 @@ import sys
 from typing import Any, Dict, List
 import datetime as dt
 import click
+import pandas as pd
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+from dotenv import load_dotenv
 import hearing
 import fetch_page
 import persist
+import gsheet
 import logging
 
 logger = logging.getLogger()
@@ -35,7 +40,7 @@ def make_setting_list(days_to_pull: List[str]) -> List[Dict[str, Any]]:
         pulled_settings.extend(day_settings)
     return pulled_settings
 
-# same as parse_settings but without comman line interface and showbrowser option
+# same as parse_settings but without comman line interface and showbrowser option outputs scrape results to a gsheet:Settings_scheduler
 def parse_settings_on_cloud(afterdate, beforedate):
     logger.info(f"Parsing settings between {afterdate} and {beforedate}.")
 
@@ -44,6 +49,7 @@ def parse_settings_on_cloud(afterdate, beforedate):
     for setting in pulled_settings:
         persist.rest_setting(setting)
 
+    gsheet.write_data(gsheet.open_sheet(gsheet.init_sheets(),"Court_scraper_eviction_scheduler","eviction_scheduler"),gsheet.combine_cols(gsheet.filter_df(gsheet.filter_df(pd.DataFrame(pulled_settings),'setting_type','Eviction'),'hearing_type','(Hearing)|(Trial)'),['case_number','setting_style'],'case_dets'))
 
 
 @click.command()
@@ -60,14 +66,13 @@ def parse_settings(afterdate, beforedate, outfile, showbrowser=False):
     # If showbrowser is True, use the default selenium driver
     if showbrowser:
         from selenium import webdriver
-        fetch_page.driver = webdriver.Firefox()
+        fetch_page.driver = webdriver.Chrome("./chromedriver")
 
     days_to_pull = get_days_between_dates(afterdate=afterdate, beforedate=beforedate)
     pulled_settings = make_setting_list(days_to_pull)
     for setting in pulled_settings:
         persist.rest_setting(setting)
     json.dump(pulled_settings, outfile)
-
 
 if __name__ == "__main__":
     parse_settings()

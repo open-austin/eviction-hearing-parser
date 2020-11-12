@@ -11,3 +11,4 @@ result.json
 cases.db*
 .DS_Store
 .env
+chromedriver

@@ -7,10 +7,13 @@ from bs4 import BeautifulSoup
 from datetime import date, datetime, timedelta
 import fetch_page
 import logging
+from known_statuses import known_statuses
+from schedule import log_and_email
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logging.basicConfig(stream=sys.stdout)
+
 
 
 
@@ -290,11 +293,11 @@ def get_precinct_number(soup) -> int:
     return word_to_number[precinct_number]
 
 
-def get_status(status_soup) -> str:
-    eviction_tag = status_soup.find(text="Eviction")
-    status_tag = eviction_tag.parent.find_next_sibling("div")
-    return status_tag.text
-
+def get_status_and_type(status_soup) -> str:
+    tds = status_soup.find_all("td")
+    divs = tds[-1].find_all("div")
+    status, type = divs[1].text, divs[0].text
+    return status, type
 
 def get_register_url(status_soup) -> str:
     link_tag = status_soup.find(style="color: blue")
@@ -474,23 +477,45 @@ def make_parsed_hearing(soup):
     }
 
 
-def make_parsed_case(soup, status: str = "", register_url: str = "") -> Dict[str, str]:
+def make_parsed_case(soup, status: str = "", type: str = "", register_url: str = "") -> Dict[str, str]:
     # TODO handle multiple defendants/plaintiffs with different zips
     disposition_tr = get_disposition_tr_element(soup)
+
+    try:
+        defendant_zip = get_zip(get_defendant_elements(soup)[0])
+    except:
+        defendant_zip = None
+
+    try:
+        style = get_style(soup)
+    except:
+        style = None
+
+    try:
+        plaintiff = get_plaintiff(soup)
+    except:
+        plaintiff = None
+
+    try:
+        plaintiff_zip = get_zip(get_plaintiff_elements(soup)[0])
+    except:
+        plaintiff_zip = None
+
     return {
         "precinct_number": get_precinct_number(soup),
-        "style": get_style(soup),
-        "plaintiff": get_plaintiff(soup),
+        "style": style,
+        "plaintiff": plaintiff,
         "defendants": get_defendants(soup),
         "attorneys_for_plaintiffs": get_attorneys_for_plaintiffs(soup),
         "attorneys_for_defendants": get_attorneys_for_defendants(soup),
         "case_number": get_case_number(soup),
-        "defendant_zip": get_zip(get_defendant_elements(soup)[0]),
-        "plaintiff_zip": get_zip(get_plaintiff_elements(soup)[0]),
+        "defendant_zip": defendant_zip,
+        "plaintiff_zip": plaintiff_zip,
         "hearings": [
             make_parsed_hearing(hearing) for hearing in get_hearing_tags(soup)
         ],
         "status": status,
+        "type": type,
         "register_url": register_url,
         "disposition_type": get_disposition_type(disposition_tr)
         if disposition_tr is not None
@@ -523,9 +548,17 @@ def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
     register_soup = BeautifulSoup(register_page, "html.parser")
 
     register_url = get_register_url(result_soup)
-    status = get_status(result_soup)
+    status, type = get_status_and_type(result_soup)
+
+    if status.lower() not in known_statuses:
+        load_dotenv()
+        if os.getenv("LOCAL_DEV") != "true":
+            log_and_email(f"Case {case_id} has status '{status}', which is not in our list of known statuses.", "Found Unknown Status", error=True)
+        else:
+            logger.info(f"Case {case_id} has status '{status}', which is not in our list of known statuses.")
+
     return make_parsed_case(
-        soup=register_soup, status=status, register_url=register_url
+        soup=register_soup, status=status, type=type, register_url=register_url
     )
 
 
@@ -613,12 +646,20 @@ def get_setting_list(calendar_soup):
 
 
 def fetch_settings(afterdate: str, beforedate: str) -> Tuple[str, str]:
-    "fetch all settings as a list of dicts"
-    calendar_page_content = fetch_page.query_settings(afterdate, beforedate)
-    if calendar_page_content is None:
-        return None
-    calendar_soup = BeautifulSoup(calendar_page_content, "html.parser")
-    setting_list = get_setting_list(calendar_soup)
+
+    for tries in range(1, 11):
+        try:
+            "fetch all settings as a list of dicts"
+            calendar_page_content = fetch_page.query_settings(afterdate, beforedate)
+            if calendar_page_content is None:
+                return None
+            calendar_soup = BeautifulSoup(calendar_page_content, "html.parser")
+            setting_list = get_setting_list(calendar_soup)
+            break
+        except:
+            if tries == 10:
+                logger.error(f"Failed to get setting list between {afterdate} and {beforedate} on all 10 attempts.")
+
     return setting_list
 
 
@@ -644,14 +685,16 @@ def get_filing_case_nums(filing_soup) -> Tuple[List[str], bool]:
     case_nums = []
     for tablerow in tablerow_list:
         if "too many matches to display" in tablerow.text:
-            logger.warning("case number query had too many matches, will be split")
+            logger.warning("Case number query had too many matches, will be split")
             query_needs_splitting = True
-        td_list = tablerow.find_all("td")
+            break
         try:
-            if "Eviction" in td_list[3].text:
-                case_num = td_list[0].text
-                if case_num is not None:
-                    case_nums.append(case_num)
+            td_list = tablerow.find_all("td")
+            # uncomment and indent next 3 lines if you want only evictions
+            # if "Eviction" in td_list[3].text:
+            case_num = td_list[0].text
+            if case_num is not None:
+                case_nums.append(case_num)
         except:
             logger.error(f"Couldn't get case number for row {tablerow}")
 
@@ -666,12 +709,12 @@ def split_date_range(afterdate: str, beforedate: str) -> Tuple[str, str]:
     """
     Split date range in half.
 
-    Requires inputs in format m/d/y.
+    Requires inputs in format m-d-y.
     Returns 4 strings representing two new date ranges
     """
 
-    beforedate_date = datetime.strptime(afterdate, "%m/%d/%Y").date()
-    afterdate_date = datetime.strptime(beforedate, "%m/%d/%Y").date()
+    beforedate_date = datetime.strptime(afterdate, "%m-%d-%Y").date()
+    afterdate_date = datetime.strptime(beforedate, "%m-%d-%Y").date()
 
     if beforedate_date == afterdate_date:
         raise ValueError(
@@ -684,11 +727,10 @@ def split_date_range(afterdate: str, beforedate: str) -> Tuple[str, str]:
     end_of_first_range_date = afterdate_date + timedelta(days=days_to_add)
     start_of_second_range_date = end_of_first_range_date + timedelta(days=1)
 
-    end_of_first_range = end_of_first_range_date.strftime("%-m/%-d/%Y")
-    start_of_second_range = start_of_second_range_date.strftime("%-m/%-d/%Y")
+    end_of_first_range = end_of_first_range_date.strftime("%-m-%-d-%Y")
+    start_of_second_range = start_of_second_range_date.strftime("%-m-%-d-%Y")
 
     return end_of_first_range, start_of_second_range
-
 
 def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str) -> List[str]:
     "Get filing case numbers between afterdate and beforedate and starting with case_num_prefix."
@@ -697,11 +739,19 @@ def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str) -> List
         f"Scraping case numbers between {afterdate} and {beforedate} "
         f"for prefix {case_num_prefix}..."
     )
-    filings_page_content = fetch_page.query_filings(
-        afterdate, beforedate, case_num_prefix
-    )
-    filings_soup = BeautifulSoup(filings_page_content, "html.parser")
-    filings_case_nums_list, query_needs_splitting = get_filing_case_nums(filings_soup)
+
+    for tries in range(1, 11):
+        try:
+            filings_page_content = fetch_page.query_filings(
+                afterdate, beforedate, case_num_prefix
+            )
+            filings_soup = BeautifulSoup(filings_page_content, "html.parser")
+            filings_case_nums_list, query_needs_splitting = get_filing_case_nums(filings_soup)
+            break
+        except:
+            if tries == 10:
+                logger.error(f"Failed to find case numbers on all 10 attempts.")
+
 
     # handle case of too many results (200 results means that the search cut off)
     if query_needs_splitting:

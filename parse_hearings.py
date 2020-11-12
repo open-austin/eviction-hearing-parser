@@ -28,7 +28,7 @@ def make_case_list(ids_to_parse: List[str]) -> List[Dict[str, Any]]:
 def parse_all_from_parse_filings(case_nums, showbrowser=False):
     if showbrowser:
         from selenium import webdriver
-        fetch_page.driver = webdriver.Firefox()
+        fetch_page.driver = webdriver.Chrome("./chromedriver")
 
     parsed_cases = make_case_list(case_nums)
 
@@ -48,7 +48,7 @@ def parse_all(infile, outfile, showbrowser=False):
     # If showbrowser is True, use the default selenium driver
     if showbrowser:
         from selenium import webdriver
-        fetch_page.driver = webdriver.Firefox()
+        fetch_page.driver = webdriver.Chrome("./chromedriver")
 
     ids_to_parse = get_ids_to_parse(infile)
     parsed_cases = make_case_list(ids_to_parse)

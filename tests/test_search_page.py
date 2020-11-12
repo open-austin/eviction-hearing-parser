@@ -11,11 +11,11 @@ class TestSearchFilingsPage:
         assert need_splitting is False
 
     def test_split_date_range(self):
-        afterdate = "1/01/2020"
-        beforedate = "1/20/2020"
+        afterdate = "1-1-2020"
+        beforedate = "1-20-2020"
         end_first, start_second = hearing.split_date_range(afterdate, beforedate)
-        assert end_first == "1/10/2020"
-        assert start_second == "1/11/2020"
+        assert end_first == "1-10-2020"
+        assert start_second == "1-11-2020"
 
 
 class TestSearchPage:
@@ -25,7 +25,7 @@ class TestSearchPage:
     )
     def test_get_case_status(self, index, expected):
         soup = hearing.get_test_search_page(index)
-        status = hearing.get_status(soup)
+        status, type = hearing.get_status_and_type(soup)
         assert expected in status
 
     @pytest.mark.parametrize(
