@@ -8,7 +8,7 @@ from datetime import date, datetime, timedelta
 import fetch_page
 import logging
 from known_statuses import known_statuses
-from email import log_and_email
+from emailing import log_and_email
 from dotenv import load_dotenv
 
 logger = logging.getLogger()

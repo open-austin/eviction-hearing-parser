@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from email import send_email
+from emailing import send_email
 from colorama import Fore, Style
 import logging
 import click

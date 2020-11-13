@@ -10,7 +10,7 @@ from datetime import date, timedelta
 from apscheduler.schedulers.blocking import BlockingScheduler
 from functools import reduce
 from dotenv import load_dotenv
-from email import log_and_email
+from emailing import log_and_email
 import parse_filings
 import parse_settings
 
