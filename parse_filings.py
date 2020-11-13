@@ -12,11 +12,10 @@ import logging
 logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
 
-
-# returns list of all case nums for all prefixes between afterdate and beforedate - dates are in format mm/dd/yyyy
+# returns list of all case nums for all prefixes between afterdate and beforedate - dates are in format mm-dd-yyyy
 def get_all_case_nums(afterdate: str, beforedate: str):
-    aferdate_year = afterdate.split("/")[-1][-2:]
-    beforedate_year = beforedate.split("/")[-1][-2:]
+    aferdate_year = afterdate.split("-")[-1][-2:]
+    beforedate_year = beforedate.split("-")[-1][-2:]
 
     years = set([aferdate_year, beforedate_year])
     case_num_prefixes = []
@@ -30,11 +29,13 @@ def get_all_case_nums(afterdate: str, beforedate: str):
     return all_case_nums
 
 # same as parse_filings but without command line interface and showbrowser/outfile options
-def parse_filings_on_cloud(afterdate, beforedate):
+def parse_filings_on_cloud(afterdate, beforedate, get_old_active=True):
     logger.info(f"Parsing filings between {afterdate} and {beforedate}.")
 
-    all_case_nums = get_all_case_nums(afterdate, beforedate) + get_old_active_case_nums()
-    # all_case_nums = get_all_case_nums(afterdate, beforedate)
+    if get_old_active:
+        all_case_nums = get_all_case_nums(afterdate, beforedate) + get_old_active_case_nums()
+    else:
+        all_case_nums = get_all_case_nums(afterdate, beforedate)
 
     logger.info(f"Found {len(all_case_nums)} case numbers.")
     parse_all_from_parse_filings(all_case_nums)
@@ -42,23 +43,23 @@ def parse_filings_on_cloud(afterdate, beforedate):
 @click.command()
 @click.argument("afterdate", nargs=1)
 @click.argument("beforedate", nargs=1)
-@click.argument("outfile", type=click.File(mode="w"), default="results.json")
+@click.argument("outfile", type=click.File(mode="w"), default="result.json")
 @click.option('--showbrowser / --headless', default=False, help='whether to operate in headless mode or not')
 
 # Performs a full 'scraper run' between afterdate and beforedate - gets case details, events, and dispositions for all case nums between
-# afterdate and beforedate. Example of date format - 9/1/2020. Also updates rows in event/disposition/case_detail table that are still active
+# afterdate and beforedate. Example of date format - 9-1-2020. Also updates rows in event/disposition/case_detail table that are still active
 def parse_filings(afterdate, beforedate, outfile, showbrowser=False):
     # use default firefox browser (rather than headless) is showbrowser is True
     if showbrowser:
         fetch_page.driver = webdriver.Chrome("./chromedriver")
 
-
     all_case_nums = get_all_case_nums(afterdate, beforedate) + get_old_active_case_nums()
     parsed_cases = parse_all_from_parse_filings(all_case_nums, showbrowser=showbrowser)
+
     try:
         json.dump(parsed_cases, outfile)
-    except Exception as e:
-        logger.info(f"Error {e}")
+    except:
+        logger.error("Creating the json file may have been unsuccessful.")
 
 if __name__ == "__main__":
     parse_filings()

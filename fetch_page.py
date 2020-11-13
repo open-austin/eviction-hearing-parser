@@ -24,11 +24,11 @@ load_dotenv()
 local_dev = os.getenv("LOCAL_DEV") == "true"
 
 if local_dev:
-    driver = webdriver.Chrome("./chromedriver", chrome_options=options)
+    driver = webdriver.Chrome("./chromedriver", options=options)
 else:
     driver_path, chrome_bin = os.getenv('CHROMEDRIVER_PATH'), os.getenv('GOOGLE_CHROME_BIN')
     options.binary_location = chrome_bin
-    driver = webdriver.Chrome(executable_path=driver_path , chrome_options=options)
+    driver = webdriver.Chrome(executable_path=driver_path , options=options)
 
 
 
@@ -216,7 +216,7 @@ def query_filings(afterdate: str, beforedate: str, case_num_prefix: str):
             EC.presence_of_element_located((By.ID, "DateFiledOnAfter"))
         )
         after_box.clear()
-        after_box.send_keys(afterdate)
+        after_box.send_keys(afterdate.replace("-", "/"))
     except:
         logger.error(f"Could not type in after date {afterdate}")
 
@@ -226,7 +226,7 @@ def query_filings(afterdate: str, beforedate: str, case_num_prefix: str):
             EC.presence_of_element_located((By.ID, "DateFiledOnBefore"))
         )
         before_box.clear()
-        before_box.send_keys(beforedate)
+        before_box.send_keys(beforedate.replace("-", "/"))
     except Exception as e:
         logger.error(f"Could not type in before date {beforedate}")
 

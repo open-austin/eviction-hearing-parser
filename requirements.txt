@@ -9,3 +9,4 @@ psycopg2-binary
 python-dotenv
 selenium==3.14
 simplejson
+colorama

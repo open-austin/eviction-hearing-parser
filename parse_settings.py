@@ -48,6 +48,7 @@ def parse_settings_on_cloud(afterdate, beforedate):
     pulled_settings = make_setting_list(days_to_pull)
     for setting in pulled_settings:
         persist.rest_setting(setting)
+
     gsheet.write_data(gsheet.open_sheet(gsheet.init_sheets(),"Court_scraper_eviction_scheduler","eviction_scheduler"),gsheet.combine_cols(gsheet.filter_df(gsheet.filter_df(pd.DataFrame(pulled_settings),'setting_type','Eviction'),'hearing_type','(Hearing)|(Trial)'),['case_number','setting_style'],'case_dets'))
 
 
@@ -71,13 +72,7 @@ def parse_settings(afterdate, beforedate, outfile, showbrowser=False):
     pulled_settings = make_setting_list(days_to_pull)
     for setting in pulled_settings:
         persist.rest_setting(setting)
-    gsheet.write_data(gsheet.open_sheet(gsheet.init_sheets(),"Court_scraper_eviction_scheduler","eviction_scheduler"),gsheet.combine_cols(gsheet.filter_df(gsheet.filter_df(pd.DataFrame(pulled_settings),'setting_type','Eviction'),'hearing_type','(Hearing)|(Trial)'),['case_number','setting_style'],'case_dets'))
-    #json.dump(pulled_settings, outfile)
+    json.dump(pulled_settings, outfile)
 
 if __name__ == "__main__":
-    for tries in range(1, 11):
-        try:
-            parse_settings()
-            break
-        except Exception as e:
-            logger.error(f"Failed to find case numbers on try {tries}: because {e}.")
+    parse_settings()

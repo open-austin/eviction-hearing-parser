@@ -7,10 +7,13 @@ from bs4 import BeautifulSoup
 from datetime import date, datetime, timedelta
 import fetch_page
 import logging
+from known_statuses import known_statuses
+from schedule import log_and_email
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logging.basicConfig(stream=sys.stdout)
+
 
 
 
@@ -547,6 +550,13 @@ def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
     register_url = get_register_url(result_soup)
     status, type = get_status_and_type(result_soup)
 
+    if status.lower() not in known_statuses:
+        load_dotenv()
+        if os.getenv("LOCAL_DEV") != "true":
+            log_and_email(f"Case {case_id} has status '{status}', which is not in our list of known statuses.", "Found Unknown Status", error=True)
+        else:
+            logger.info(f"Case {case_id} has status '{status}', which is not in our list of known statuses.")
+
     return make_parsed_case(
         soup=register_soup, status=status, type=type, register_url=register_url
     )
@@ -636,12 +646,20 @@ def get_setting_list(calendar_soup):
 
 
 def fetch_settings(afterdate: str, beforedate: str) -> Tuple[str, str]:
-    "fetch all settings as a list of dicts"
-    calendar_page_content = fetch_page.query_settings(afterdate, beforedate)
-    if calendar_page_content is None:
-        return None
-    calendar_soup = BeautifulSoup(calendar_page_content, "html.parser")
-    setting_list = get_setting_list(calendar_soup)
+
+    for tries in range(1, 11):
+        try:
+            "fetch all settings as a list of dicts"
+            calendar_page_content = fetch_page.query_settings(afterdate, beforedate)
+            if calendar_page_content is None:
+                return None
+            calendar_soup = BeautifulSoup(calendar_page_content, "html.parser")
+            setting_list = get_setting_list(calendar_soup)
+            break
+        except:
+            if tries == 10:
+                logger.error(f"Failed to get setting list between {afterdate} and {beforedate} on all 10 attempts.")
+
     return setting_list
 
 
@@ -667,7 +685,7 @@ def get_filing_case_nums(filing_soup) -> Tuple[List[str], bool]:
     case_nums = []
     for tablerow in tablerow_list:
         if "too many matches to display" in tablerow.text:
-            logger.warning("case number query had too many matches, will be split")
+            logger.warning("Case number query had too many matches, will be split")
             query_needs_splitting = True
             break
         try:
@@ -691,12 +709,12 @@ def split_date_range(afterdate: str, beforedate: str) -> Tuple[str, str]:
     """
     Split date range in half.
 
-    Requires inputs in format m/d/y.
+    Requires inputs in format m-d-y.
     Returns 4 strings representing two new date ranges
     """
 
-    beforedate_date = datetime.strptime(afterdate, "%m/%d/%Y").date()
-    afterdate_date = datetime.strptime(beforedate, "%m/%d/%Y").date()
+    beforedate_date = datetime.strptime(afterdate, "%m-%d-%Y").date()
+    afterdate_date = datetime.strptime(beforedate, "%m-%d-%Y").date()
 
     if beforedate_date == afterdate_date:
         raise ValueError(
@@ -709,8 +727,8 @@ def split_date_range(afterdate: str, beforedate: str) -> Tuple[str, str]:
     end_of_first_range_date = afterdate_date + timedelta(days=days_to_add)
     start_of_second_range_date = end_of_first_range_date + timedelta(days=1)
 
-    end_of_first_range = end_of_first_range_date.strftime("%-m/%-d/%Y")
-    start_of_second_range = start_of_second_range_date.strftime("%-m/%-d/%Y")
+    end_of_first_range = end_of_first_range_date.strftime("%-m-%-d-%Y")
+    start_of_second_range = start_of_second_range_date.strftime("%-m-%-d-%Y")
 
     return end_of_first_range, start_of_second_range
 
@@ -731,7 +749,9 @@ def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str) -> List
             filings_case_nums_list, query_needs_splitting = get_filing_case_nums(filings_soup)
             break
         except:
-            logger.error(f"Failed to find case numbers on try {tries}.")
+            if tries == 10:
+                logger.error(f"Failed to find case numbers on all 10 attempts.")
+
 
     # handle case of too many results (200 results means that the search cut off)
     if query_needs_splitting:

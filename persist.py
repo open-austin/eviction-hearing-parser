@@ -10,7 +10,7 @@ def get_case(case_id: str):
 
     # conn.row_factory = sqlite3.Row
     curs = conn.cursor()
-    curs.execute("SELECT * FROM V_CASE WHERE ID = ?", (case_id,))
+    curs.execute("SELECT * FROM V_CASE WHERE CASE_NUMBER = ?", (case_id,))
     case = curs.fetchone()
     curs.close()
     return dict(case)
