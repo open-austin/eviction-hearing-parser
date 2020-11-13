@@ -99,9 +99,9 @@ def scrape_filings_and_settings_task():
     gsheet.dump_to_sheets('Court_scraper_settings_archive','settings_archive',['setting'])
     gsheet.dump_to_sheets('Court_scraper_evictions_archive','evictions_archive',['case_detail','disposition','event','setting'],True)
 
-
 # scrape filings and settings every Monday at 3:00 A.M. EST
 if __name__ == "__main__":
+    print("helloooo")
     sched = BlockingScheduler()
-    sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-10-12 14:49:00', timezone='US/Eastern')
+    sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-09-09 15:00:00', timezone='US/Eastern')
     sched.start()
