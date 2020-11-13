@@ -94,10 +94,10 @@ def scrape_settings():
 
 def scrape_filings_and_settings_task():
     perform_task_and_catch_errors(scrape_filings, "Scraping filings")
-    dump_to_sheets('Court_scraper_filings_archive', 'filings_archive', ['case_detail','disposition','event'])
+    gsheet.dump_to_sheets('Court_scraper_filings_archive','filings_archive',['case_detail','disposition','event'])
     perform_task_and_catch_errors(scrape_settings, "Scraping settings")
-    dump_to_sheets('Court_scraper_settings_archive', 'settings_archive', ['setting'])
-    dump_to_sheets('Court_scraper_evictions_archive', 'evictions_archive', ['case_detail','disposition','event','setting'], True)
+    gsheet.dump_to_sheets('Court_scraper_settings_archive','settings_archive',['setting']) 
+    gsheet.dump_to_sheets('Court_scraper_evictions_archive','evictions_archive',['case_detail','disposition','event','setting'],True)
 
 # scrape filings and settings every Monday at 3:00 A.M. EST
 if __name__ == "__main__":
