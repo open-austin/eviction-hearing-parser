@@ -1,1 +1,1 @@
-clock: python get_all_filings_settings_since_date.py
+clock: python clock.py
