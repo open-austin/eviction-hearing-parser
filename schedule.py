@@ -11,7 +11,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from functools import reduce
 from dotenv import load_dotenv
 
-# need this to prevent cirvular import error when running parse_hearings.py
+# need this to prevent circular import error
 if __name__ == "__main__":
     from parse_filings import parse_filings_on_cloud
     from parse_settings import parse_settings_on_cloud
@@ -99,10 +99,6 @@ def scrape_filings_and_settings_task():
     gsheet.dump_to_sheets('Court_scraper_settings_archive','settings_archive',['setting'])
     gsheet.dump_to_sheets('Court_scraper_evictions_archive','evictions_archive',['case_detail','disposition','event','setting'],True)
 
-
-from get_all_filings_settings_since_date import get_all_since_date
-get_all_since_date("1-1-2020")
-log_and_email("ALLL DONE WITH THE SINCE JANUARY 1 TASK", "ALL DONE")
 
 # scrape filings and settings every Monday at 3:00 A.M. EST
 if __name__ == "__main__":

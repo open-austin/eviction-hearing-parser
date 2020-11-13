@@ -1,7 +1,5 @@
 from datetime import date, datetime, timedelta
 from schedule import send_email
-from parse_filings import parse_filings_on_cloud
-from parse_settings import parse_settings_on_cloud
 from colorama import Fore, Style
 import logging
 import click
@@ -9,6 +7,8 @@ import sys
 logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
 logger.setLevel(logging.INFO)
+import parse_filings
+import parse_settings
 
 # dates should be strings in format (m)m-(d)d-yyyy
 def split_into_weeks(start, end):
@@ -31,8 +31,8 @@ def split_into_weeks(start, end):
 def try_to_parse(start, end, tries):
     for attempt in range(1, tries + 1):
         try:
-            parse_filings_on_cloud(start, end, get_old_active=False)
-            parse_settings_on_cloud(start, end, write_to_sheets=False)
+            parse_filings.parse_filings_on_cloud(start, end, get_old_active=False)
+            parse_settings.parse_settings_on_cloud(start, end, write_to_sheets=False)
             logger.info(Fore.GREEN + f"Successfully parsed filings between {start} and {end} on attempt {attempt}.\n" + Style.RESET_ALL)
 
             return "success"
@@ -65,12 +65,16 @@ def get_all_filings_settings_since_date(start_date):
     else:
         logger.info(Fore.GREEN + f"There were no failures when getting all filings between {start_date} and {yesterdays_date} - yay!!" + Style.RESET_ALL)
 
-@click.command()
-@click.argument("date", nargs=1)
+get_all_filings_settings_since_date("1-1-2020")
+logger.info("FINISHED WITH BACKRUN")
+send_email("Finished with backrun since 1-1-2020.", "Done With Backrun")
+exit()
 
-# date should be in format (m)m-(d)d-yyyy
-def get_all_since_date(date):
-    get_all_filings_settings_since_date(date)
-
-if __name__ == "__main__":
-    get_all_since_date()
+# if __name__ == "__main__":
+#     @click.command()
+#     @click.argument("date", nargs=1)
+#     # date should be in format (m)m-(d)d-yyyy
+#     def get_all_since_date(date):
+#         get_all_filings_settings_since_date(date)
+#
+#     get_all_since_date()
