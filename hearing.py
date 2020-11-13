@@ -9,12 +9,11 @@ import fetch_page
 import logging
 from known_statuses import known_statuses
 from schedule import log_and_email
+from dotenv import load_dotenv
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logging.basicConfig(stream=sys.stdout)
-
-
 
 
 def get_test_html_path(index: int, page_type: str) -> str:
