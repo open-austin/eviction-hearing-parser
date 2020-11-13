@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from schedule import send_email
+from email import send_email
 from colorama import Fore, Style
 import logging
 import click
@@ -65,16 +65,12 @@ def get_all_filings_settings_since_date(start_date):
     else:
         logger.info(Fore.GREEN + f"There were no failures when getting all filings between {start_date} and {yesterdays_date} - yay!!" + Style.RESET_ALL)
 
-get_all_filings_settings_since_date("1-1-2020")
-logger.info("FINISHED WITH BACKRUN")
-send_email("Finished with backrun since 1-1-2020.", "Done With Backrun")
-exit()
+if __name__ == "__main__":
+    @click.command()
+    @click.argument("date", nargs=1)
 
-# if __name__ == "__main__":
-#     @click.command()
-#     @click.argument("date", nargs=1)
-#     # date should be in format (m)m-(d)d-yyyy
-#     def get_all_since_date(date):
-#         get_all_filings_settings_since_date(date)
-#
-#     get_all_since_date()
+    # date should be in format (m)m-(d)d-yyyy
+    def get_all_since_date(date):
+        get_all_filings_settings_since_date(date)
+
+    get_all_since_date()
