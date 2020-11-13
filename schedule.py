@@ -96,8 +96,13 @@ def scrape_filings_and_settings_task():
     perform_task_and_catch_errors(scrape_filings, "Scraping filings")
     gsheet.dump_to_sheets('Court_scraper_filings_archive','filings_archive',['case_detail','disposition','event'])
     perform_task_and_catch_errors(scrape_settings, "Scraping settings")
-    gsheet.dump_to_sheets('Court_scraper_settings_archive','settings_archive',['setting']) 
+    gsheet.dump_to_sheets('Court_scraper_settings_archive','settings_archive',['setting'])
     gsheet.dump_to_sheets('Court_scraper_evictions_archive','evictions_archive',['case_detail','disposition','event','setting'],True)
+
+
+from get_all_filings_settings_since_date import get_all_since_date
+get_all_since_date("1-1-2020")
+log_and_email("ALLL DONE WITH THE SINCE JANUARY 1 TASK", "ALL DONE")
 
 # scrape filings and settings every Monday at 3:00 A.M. EST
 if __name__ == "__main__":

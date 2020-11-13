@@ -41,7 +41,7 @@ def make_setting_list(days_to_pull: List[str]) -> List[Dict[str, Any]]:
     return pulled_settings
 
 # same as parse_settings but without comman line interface and showbrowser option outputs scrape results to a gsheet:Settings_scheduler
-def parse_settings_on_cloud(afterdate, beforedate):
+def parse_settings_on_cloud(afterdate, beforedate, write_to_sheets=True):
     logger.info(f"Parsing settings between {afterdate} and {beforedate}.")
 
     days_to_pull = get_days_between_dates(afterdate=afterdate, beforedate=beforedate)
@@ -49,7 +49,8 @@ def parse_settings_on_cloud(afterdate, beforedate):
     for setting in pulled_settings:
         persist.rest_setting(setting)
 
-    gsheet.write_data(gsheet.open_sheet(gsheet.init_sheets(),"Court_scraper_eviction_scheduler","eviction_scheduler"),gsheet.combine_cols(gsheet.filter_df(gsheet.filter_df(pd.DataFrame(pulled_settings),'setting_type','Eviction'),'hearing_type','(Hearing)|(Trial)'),['case_number','setting_style'],'case_dets'))
+    if write_to_sheets:
+        gsheet.write_data(gsheet.open_sheet(gsheet.init_sheets(),"Court_scraper_eviction_scheduler","eviction_scheduler"),gsheet.combine_cols(gsheet.filter_df(gsheet.filter_df(pd.DataFrame(pulled_settings),'setting_type','Eviction'),'hearing_type','(Hearing)|(Trial)'),['case_number','setting_style'],'case_dets'))
 
 
 @click.command()

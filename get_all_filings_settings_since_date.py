@@ -32,7 +32,7 @@ def try_to_parse(start, end, tries):
     for attempt in range(1, tries + 1):
         try:
             parse_filings_on_cloud(start, end, get_old_active=False)
-            parse_settings_on_cloud(start, end)
+            parse_settings_on_cloud(start, end, write_to_sheets=False)
             logger.info(Fore.GREEN + f"Successfully parsed filings between {start} and {end} on attempt {attempt}.\n" + Style.RESET_ALL)
 
             return "success"
