@@ -99,6 +99,10 @@ def scrape_filings_and_settings_task():
     gsheet.dump_to_sheets('Court_scraper_settings_archive','settings_archive',['setting'])
     gsheet.dump_to_sheets('Court_scraper_evictions_archive','evictions_archive',['case_detail','disposition','event','setting'],True)
 
+scrape_filings_and_settings_task()
+while True:
+    pass
+
 # scrape filings and settings every Monday at 3:00 A.M. EST
 if __name__ == "__main__":
     print("helloooo")
