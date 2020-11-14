@@ -5,4 +5,5 @@ known_statuses = ["dismissed", "final status", "appealed", "active", "hearing se
                   "pending setting", "to be set", "transferred", "pending queue", "pending court action", "final disposition",
                   "fed hearing set", "abated", "pending writ", "pending judge's review", "pending response",
                   "pending jury setting", "pending settlement", "pending trial setting", "hold", "pending answer",
-                  "motion filed", "pending pretrial", "trial set", "pending hearing request", "pending judgment"]
+                  "motion filed", "pending pretrial", "trial set", "pending hearing request", "pending judgment",
+                  "pending", "pending dwop", "stayed"]
