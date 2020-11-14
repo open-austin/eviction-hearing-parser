@@ -116,9 +116,9 @@ gets all data from September 1, 2020 up until the current date.
 
 1) Fork this project's repository and clone it to your local computer.
 
-2) [Set up](database-set-up-instructions) a local PostgreSQL database.
+2) [Set up](#database-set-up-instructions) a local PostgreSQL database.
 
-3) [Create](#.env-file-instructions) your .env file
+3) [Create](#environment-variable-instructions) your .env file
 
 4) Set up a virtual environment, install requirements, and install chromedriver as described [here](#command-line-tools- instructions)
 
@@ -161,7 +161,7 @@ If you're using this scraper to get data, follow the instructions below. We're w
 1) To see the actual data, click on the Query Tool (should be on the top left, and looks like a lightning bolt). You can then query the data using SQL. For example, `SELECT * FROM setting` will show you all the data in the setting table.
 
 
-### .env File Instructions
+### Environment Variable Instructions
 Create a file named ".env" in the root directory of this project, and add the following two lines:
 ```
 LOCAL_DEV=true
