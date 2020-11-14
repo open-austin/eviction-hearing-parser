@@ -201,4 +201,4 @@ If you're a developer choosing to use the test database rather than set up a loc
 <br/><br/><br/>
 
 ### Using Heroku to Schedule Scraper Runs
-No instructions yet... try Google for now :).
+No instructions yet... try Google for now :)
