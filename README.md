@@ -7,7 +7,7 @@ Parse registers of actions for Travis County court hearings and calendar data.
 
 The data is scraped from Travis County's official [judicial records](https://odysseypa.traviscountytx.gov/JPPublicAccess/default.aspx), and is being used to create this [dashboard](https://trla.maps.arcgis.com/apps/opsdashboard/index.html#/8f5beb8367f44d30aa2ed6eeb2b3b3e4), and to support the Eviction Solidarity Network's court tracking efforts where volunteers track court hearings to ensure that tenant protections are being enforced and tenants are connected to resources.  Additionally, the data will be used to help analyze trends in evictions to target campaigns towards repeat, bad actor landlords and craft policy solutions to combat the eviction crisis. 
 
-For instructions on using the scraper, just keep reading. For instructions on contrubuting to this project, see the [instructions for developers](#instructions-for-contributing-developers). If you have any questions or experience any problems using this, contact.... who's email should I put?
+For instructions on using the scraper, just keep reading. For instructions on contrubuting to this project, see the [instructions for developers](#instructions-for-contributing-developers). If you have any questions or experience any problems using this, contact Matt (matt@openaustin.org) and/or Alex (apiazza@trla.org).
 
 
 
