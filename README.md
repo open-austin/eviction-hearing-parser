@@ -152,7 +152,7 @@ If you're using this scraper to get data, follow the instructions below. We're w
 
 1) Once you have a pgAdmin window open, click on Add New Server.
 
-1) Give the server a name under General, then go to Connection and fill out the first 5 fields (host, port, database, user, password) according to your database credentials. If it's just a local server, which it probably is unless you're accessing the [test database](#for-developers-test-database-uri), you may only have to fill out some of these fields.
+1) Give the server a name under General, then go to Connection and fill out the first 5 fields (host, port, database, user, password) according to your database credentials. If it's just a local server, which it probably is unless you're accessing the [test database](#test-database-uri), you may only have to fill out some of these fields.
 
 1) Click Save and you should see the server on the left. Click on it, then click Databases, then scroll until you find the one that matches your database name.
 
@@ -174,7 +174,7 @@ ERROR_EMAIL_ADDRESS=your_email_address
 ERROR_EMAIL_ADDRESS_PASSWORD=your_password
 ```
 
-#### For Developers - Test Database Uri
+#### Test Database Uri
 If you're a developer choosing to use the test database rather than set up a local database, set `LOCAL_DATABSE_URL` to `test_database_uri`. The URI is kind of a secret and changes periodically, so email Alex at alexpiazza2000@gmail.com to get it. The drawback of this method is that if many people are using the test database, any data you add for testing purposes may be removed / changed.
 <br/><br/><br/>
 
