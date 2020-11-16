@@ -134,7 +134,7 @@ gets all data from September 1, 2020 up until the current date.
 
 ### Database Set Up Instructions
 
-If you're using this scraper to get data, follow the instructions below. We're working on making an option to use these tools without having a database, but haven't done that quite yet. If you're a developer contributing to the project, you can also follow these instructions, or you can skip them and follow the instructions [here](#for-developers-test-database-uri), which is quicker and easier but also slightly less ideal.
+If you're using this scraper to get data, follow the instructions below. We're working on making an option to use these tools without having a database, but haven't done that quite yet. If you're a developer contributing to the project, you can also follow these instructions, or you can skip them and follow the instructions [here](#environment-variable-instructions), which is quicker and easier but also slightly less ideal.
 
 #### Setting up a Local PostgreSQL Instance
 1) Setup PostgresQL. Tutorials for MacOS users [here](https://www.postgresqltutorial.com/install-postgresql-macos/) and [here](https://www.robinwieruch.de/postgres-sql-macos-setup). For Windows users [here](https://www.postgresqltutorial.com/install-postgresql/).
