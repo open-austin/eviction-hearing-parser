@@ -20,20 +20,20 @@ First, some setup:
 
 3) [Set up](#database-set-up-instructions) a local PostgreSQL database.
 
-4) [Install](https://realpython.com/installing-python/) Python3 (3.8 suggested) if you don't already have it
+4) [Install](https://realpython.com/installing-python/) Python3 (3.8 suggested) if you don't already have it.
 
 5) Navigate to the `eviction-hearing-parser` directory in the command line using the command:
-`cd path_to_project/eviction-hearing-parser`.
+<br/>`cd path_to_project/eviction-hearing-parser`.
 
 6) Create a virtual environment using the command:
-`python3 -m venv venv` <br/>
+<br/>`python3 -m venv venv` <br/>
 If you'd rather not use a virtual environment, that should work too, and you can skip steps 6 and 7.
 
 7) Activate the virtual environment with the command:
-`source venv/bin/activate`
+<br/>`source venv/bin/activate`
 
 8) Install the required libraries with:
-`pip install -r requirements.txt`
+<br/>`pip install -r requirements.txt`
 
 One more note - web scraping can be finnicky, and we've tried to anticipate and handle any errors that may occur, but you may experience errors sometimes. When you do, just re-run the same command a few times, or try re-running it without the `--showbrowser` option, and it should work eventually. If not, or if the errors are frequent, let us know!
 
