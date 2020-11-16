@@ -5,7 +5,7 @@ Parse registers of actions for Travis County court hearings and calendar data.
 [![open-austin](https://circleci.com/gh/open-austin/eviction-hearing-parser.svg?style=svg)](https://app.circleci.com/pipelines/github/open-austin/eviction-hearing-parser)
 [![Coverage Status](https://coveralls.io/repos/github/open-austin/eviction-hearing-parser/badge.svg?branch=master)](https://coveralls.io/github/open-austin/eviction-hearing-parser?branch=master)
 
-The data is scraped from Travis County's official [judicial records](https://odysseypa.traviscountytx.gov/JPPublicAccess/default.aspx), and is being used to create this [dashboard](https://trla.maps.arcgis.com/apps/opsdashboard/index.html#/8f5beb8367f44d30aa2ed6eeb2b3b3e4), and to support the Eviction Solidarity Network's court tracking efforts where volunteers track court hearings to ensure that tenant protections are being enforced and tenants are connected to resources.  Additionally, the data will be used to help analyze trends in evictions to target campaigns towards repeat, bad actor landlords and craft policy solutions to combat the eviction crisis. 
+The data is scraped from Travis County's official [judicial records](https://odysseypa.traviscountytx.gov/JPPublicAccess/default.aspx), and is being used to create this [dashboard](https://trla.maps.arcgis.com/apps/opsdashboard/index.html#/8f5beb8367f44d30aa2ed6eeb2b3b3e4), and to support the Eviction Solidarity Network's court tracking efforts where volunteers track court hearings to ensure that tenant protections are being enforced and tenants are connected to resources. Additionally, the data will be used to help analyze trends in evictions to target campaigns towards repeat, bad actor landlords and craft policy solutions to combat the eviction crisis. 
 
 For instructions on using the scraper, just keep reading. For instructions on contrubuting to this project, see the [instructions for developers](#instructions-for-contributing-developers). If you have any questions or experience any problems using this, contact Matt (matt@openaustin.org) and/or Alex (apiazza@trla.org).
 <br/><br/><br/>
@@ -51,11 +51,11 @@ For instance, if you use the following command to scrape the three case IDs incl
 
 `python parse_hearings.py test_input.csv result.json`
 
+A new file called `result.json` will appear in your project directory with scraped data from those three cases and the data for these cases will be added to your database tables (specifically the case_detail, disposition, and event tables).
+
 If you want to see your Chrome browser in action, add the `--showbrowser` command. For example:
 
 `python parse_hearings.py test_input.csv result.json --showbrowser`
-
-3) A new file called `result.json` will appear in your project directory with scraped data from those three cases, the data for these cases will be added to your database tables (specifically the case_detail, disposition, and event tables).
 
 #### 2) Parse Settings
 This command line utility scrapes court calendar data from a specified date range using the Court Calendar link on Travis County's [website](https://odysseypa.traviscountytx.gov/JPPublicAccess/default.aspx). Only settings with category "Civil" are scraped.
@@ -88,7 +88,7 @@ This script allows you to automatically run the scraper repeatedly on a schedule
 
 `python schedule.py`
 
-will start the schedule. When the schedule is running, it will perform a "scraper run" every day at 3:00AM EST. Each scraper run performs the same exact tasks as Parse Filings and Parse Settings, except that no .json files are created and there is no `--showbrowser` option.
+will start the schedule. When the schedule is running, it will perform a "scraper run" every day at 1:00AM EST. Each scraper run performs the same exact tasks as Parse Filings and Parse Settings, except that no .json files are created and there is no `--showbrowser` option.
 
 As the code is currently set up, the scraper calls Parse Filings with today's date as the `beforedate` and seven days ago as the `afterdate`, and it calls Parse Settings with seven days ago as `afterdate` and 90 days from now as `beforedate`. These parameters, as well as the time and frequency at which the scraper runs, can be adjusted with minor adjustments to the `schedule.py` script. For example, changing
 
@@ -120,7 +120,7 @@ gets all data from September 1, 2020 up until the current date.
 
 3) [Create](#environment-variable-instructions) your .env file.
 
-4) Set up a virtual environment, install requirements, and install chromedriver as described [here](#command-line-tools- instructions).
+4) Set up a virtual environment, install requirements, and install chromedriver as described [here](#command-line-tools-instructions).
 
 5) Write code.
 
@@ -129,7 +129,7 @@ gets all data from September 1, 2020 up until the current date.
 6) Ideally, add your own tests (if it makes sense to do so).
 
 7) When you're done, make a pull request from your fork. If the PR completes a specific issue, include
-"closes #issue_number" in the description of your PR.
+"closes #{issue_number}" in the description of your PR.
 <br/><br/><br/>
 
 ### Database Set Up Instructions
