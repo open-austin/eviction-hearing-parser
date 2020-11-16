@@ -20,7 +20,7 @@ First, some setup:
 
 3) [Set up](#database-set-up-instructions) a local PostgreSQL database.
 
-4) [Install]((https://realpython.com/installing-python/)) Python3 (3.8 suggested) if you don't already have it
+4) [Install](https://realpython.com/installing-python/) Python3 (3.8 suggested) if you don't already have it
 
 5) Navigate to the `eviction-hearing-parser` directory in the command line using the command:
 `cd path_to_project/eviction-hearing-parser`.
