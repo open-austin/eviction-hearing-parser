@@ -12,6 +12,9 @@ logging.basicConfig(stream=sys.stdout)
 logger.setLevel(logging.INFO)
 
 def send_email(message, subject):
+    if local_dev:
+        return
+        
     if os.getenv("ERROR_EMAIL_ADDRESS") and os.getenv("ERROR_EMAIL_ADDRESS_PASSWORD"):
         email, password = os.getenv("ERROR_EMAIL_ADDRESS"), os.getenv("ERROR_EMAIL_ADDRESS_PASSWORD")
         port, smtp_server, context  = 465, "smtp.gmail.com", ssl.create_default_context()
