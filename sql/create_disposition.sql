@@ -6,5 +6,8 @@ CREATE TABLE DISPOSITION (
     AMOUNT TEXT,
     AWARDED_TO TEXT,
     AWARDED_AGAINST TEXT,
+    attorneys_for_plaintiffs TEXT,
+    attorneys_for_defendants TEXT,
+    judgement_for TEXT
     FOREIGN KEY(CASE_NUMBER) REFERENCES CASE_DETAIL(CASE_NUMBER)
 );

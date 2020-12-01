@@ -78,12 +78,12 @@ def rest_case(case):
         curs.execute(
             """
             INSERT INTO EVENT
-            (CASE_NUMBER, EVENT_NUMBER, DATE, TIME, OFFICER, RESULT, TYPE)
-            VALUES (%(case_num)s, %(hearing_num)s, %(hearing_date)s, %(hearing_time)s, %(hearing_officer)s, %(hearing_appeared)s, 'HR')
+            (CASE_NUMBER, EVENT_NUMBER, DATE, TIME, OFFICER, RESULT, TYPE, ALL_TEXT)
+            VALUES (%(case_num)s, %(hearing_num)s, %(hearing_date)s, %(hearing_time)s, %(hearing_officer)s, %(hearing_appeared)s, %(hearing_type)s, %(all_text)s)
             ON CONFLICT(CASE_NUMBER, EVENT_NUMBER)
             DO UPDATE SET
-            (EVENT_NUMBER, DATE, TIME, OFFICER, RESULT, TYPE) =
-            (%(hearing_num)s, %(hearing_date)s, %(hearing_time)s, %(hearing_officer)s, %(hearing_appeared)s, 'HR')
+            (EVENT_NUMBER, DATE, TIME, OFFICER, RESULT, TYPE, ALL_TEXT) =
+            (%(hearing_num)s, %(hearing_date)s, %(hearing_time)s, %(hearing_officer)s, %(hearing_appeared)s, %(hearing_type)s, %(all_text)s)
             """,
             {
                 'case_num': case["case_number"],
@@ -92,6 +92,8 @@ def rest_case(case):
                 'hearing_time': hearing["hearing_time"],
                 'hearing_officer': hearing["hearing_officer"],
                 'hearing_appeared': hearing["appeared"],
+                'hearing_type': hearing["hearing_type"],
+                'all_text': hearing["all_text"]
             },
         )
     conn.commit()

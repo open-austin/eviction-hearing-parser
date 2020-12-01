@@ -11,6 +11,7 @@ from statuses import statuses_map
 from emailing import log_and_email
 from dotenv import load_dotenv
 from fuzzywuzzy import fuzz
+from emailing import log_and_email
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -233,9 +234,10 @@ def get_hearing_tags(soup):
     """
     root = get_events_tbody_element(soup)
     hearing_ths = root.find_all(
-        "th", id=lambda id_str: id_str is not None and "RCDHR" in id_str
+        "th", id=lambda id_str: id_str is not None and id_str.startswith("RCD")
     )
     hearing_trs = [hearing_th.parent for hearing_th in hearing_ths]
+
     return hearing_trs
 
 
@@ -249,6 +251,18 @@ def get_hearing_date(hearing_tag) -> str:
     date_tag = hearing_tag.find("th")
     return date_tag.text
 
+def get_hearing_type(hearing_tag) -> str:
+    hearing_type = hearing_tag.find_all("b")[0].text
+    all_tds = hearing_tag.find_all("td")
+    all_text = all_tds[-1].text
+
+    if not all_text:
+        for td in all_tds:
+            text = td.text
+            if len(text) > 1 and text not in all_text:
+                all_text += (text + " ")
+
+    return hearing_type, all_text
 
 def get_hearing_time(hearing_tag) -> str:
     hearing_text = get_hearing_text(hearing_tag)
@@ -475,11 +489,30 @@ def was_defendant_alternative_served(soup) -> List[str]:
 
 def make_parsed_hearing(soup):
 
+    try:
+        time = get_hearing_time(soup)
+    except:
+        time = None
+
+    try:
+        officer = get_hearing_officer(soup)
+    except:
+        officer = None
+
+    try:
+        appeared = did_defendant_appear(soup)
+    except:
+        appeared = None
+
+    type, all_text = get_hearing_type(soup)
+
     return {
         "hearing_date": get_hearing_date(soup),
-        "hearing_time": get_hearing_time(soup),
-        "hearing_officer": get_hearing_officer(soup),
-        "appeared": did_defendant_appear(soup),
+        "hearing_time": time,
+        "hearing_officer": officer,
+        "appeared": appeared,
+        "hearing_type": type,
+        "all_text": all_text
     }
 
 
@@ -491,7 +524,7 @@ def match_disposition(awarded_to, plaintiff, defendant, disposition_type, status
     pj = fuzz.partial_ratio(awarded_to.upper(),plaintiff.upper())
     #print("Won: "+ awarded_to)
     #print("defendant: " + defendant  + " " + str(dj) + " plaintiff: " + plaintiff  + " " +str(pj))
-    if pj > dj: 
+    if pj > dj:
         return "Plaintiff"
     else:
         return "Defendant"
@@ -520,7 +553,7 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
         plaintiff_zip = get_zip(get_plaintiff_elements(soup)[0])
     except:
         plaintiff_zip = None
-    
+
     try:
         disp_type = get_disposition_type(disposition_tr)
     except:
@@ -529,8 +562,8 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
     try:
         winner = match_disposition(get_disposition_awarded_to(disposition_tr), plaintiff, get_defendants(soup), disp_type, status)
     except:
-        winner = None   
-    
+        winner = None
+
     return {
         "precinct_number": get_precinct_number(soup),
         "style": style,
@@ -818,4 +851,3 @@ def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str) -> List
         logger.info(f"Results: {', '.join(filings_case_nums_list)}\n")
 
     return filings_case_nums_list
-

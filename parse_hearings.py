@@ -1,13 +1,17 @@
 import csv
-import simplejson as json
 import os
-from typing import Any, Dict, List
-
 import click
 import hearing
 import fetch_page
 import persist
+import logging
+import sys
+import simplejson as json
+from typing import Any, Dict, List
 
+logger = logging.getLogger()
+logging.basicConfig(stream=sys.stdout)
+logger.setLevel(logging.INFO)
 
 def get_ids_to_parse(infile: click.File) -> List[str]:
     ids_to_parse = []
@@ -51,10 +55,17 @@ def parse_all(infile, outfile, showbrowser=False):
         fetch_page.driver = webdriver.Chrome("./chromedriver")
 
     ids_to_parse = get_ids_to_parse(infile)
-    parsed_cases = make_case_list(ids_to_parse)
-    for parsed_case in parsed_cases:
-        persist.rest_case(parsed_case)
-    json.dump(parsed_cases, outfile)
+
+    for tries in range(5):
+        try:
+            parsed_cases = make_case_list(ids_to_parse)
+            for parsed_case in parsed_cases:
+                persist.rest_case(parsed_case)
+            json.dump(parsed_cases, outfile)
+            logger.info(f"Successfully parsed hearings on attempt {tries + 1}")
+            break
+        except Exception as e:
+            logger.error(f"Failed to parse hearings on attempt {tries + 1}. Error message: {e}")
 
 
 if __name__ == "__main__":

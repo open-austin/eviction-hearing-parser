@@ -186,8 +186,6 @@ def update_features(layer_name):
     else:
         log_and_email(f"Update {layer_name} failed for at least one row, here's the info: {update_response}", "Error Updating ArcGIS CSV", error=True)
 
-update_features("JPZips")
-
 def update_all_csvs():
     overwrite_csv(ARCGIS_USERNAME, ARCGIS_PASSWORD, create_dates_df(), "JPDates")
     overwrite_csv(ARCGIS_USERNAME, ARCGIS_PASSWORD, create_jpdata_df(), "JPData2")

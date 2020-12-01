@@ -9,8 +9,8 @@ CREATE VIEW v_case AS
     cd.defendants,
     cd.plaintiff_zip,
     cd.defendant_zip,
+	cd.date_filed as date,
     d.type,
-    d.date,
     d.amount,
     d.awarded_to,
     d.awarded_against
