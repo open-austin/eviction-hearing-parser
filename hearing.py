@@ -8,7 +8,6 @@ from datetime import date, datetime, timedelta
 import fetch_page
 import logging
 from statuses import statuses_map
-from emailing import log_and_email
 from dotenv import load_dotenv
 from fuzzywuzzy import fuzz
 from emailing import log_and_email
