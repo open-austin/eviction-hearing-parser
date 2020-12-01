@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 from datetime import date, datetime, timedelta
 import fetch_page
 import logging
-from known_statuses import known_statuses
+from statuses import statuses_map
 from emailing import log_and_email
 from dotenv import load_dotenv
 
@@ -549,7 +549,7 @@ def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
     register_url = get_register_url(result_soup)
     status, type = get_status_and_type(result_soup)
 
-    if status.lower() not in known_statuses:
+    if status.lower() not in statuses_map:
         load_dotenv()
         if os.getenv("LOCAL_DEV") != "true":
             log_and_email(f"Case {case_id} has status '{status}', which is not in our list of known statuses.", "Found Unknown Status", error=True)

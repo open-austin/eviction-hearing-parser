@@ -37,7 +37,6 @@ def overwrite_csv(username, password, new_df, old_csv_name):
 
     os.remove(csv_file_name)
 
-
 def create_dates_df():
     sql_query = """
                 WITH filings_table AS (
@@ -66,16 +65,16 @@ def create_dates_df():
                 """
     return pd.read_sql(sql_query, con=engine)
 
-def create_zips_csv():
+def create_zips_df():
     sql_query = """
-                SELECT plaintiff_zip AS "ZIP_Code", COUNT(*) AS "Number_of_Filings"
+                SELECT defendant_zip AS "ZIP_Code", COUNT(*) AS "Number_of_Filings"
                 FROM case_detail
-                WHERE plaintiff_zip != ''
-                GROUP BY plaintiff_zip
+                WHERE defendant_zip != ''
+                GROUP BY defendant_zip
                 """
     return pd.read_sql(sql_query, con=engine)
 
-def create_precincts_csv():
+def create_precincts_df():
     sql_query = """
                 SELECT
                 SUBSTRING(case_number, 1, 1) || 'P-' || SUBSTRING(case_number, 2, 1) AS "Precinct_1",
@@ -86,7 +85,7 @@ def create_precincts_csv():
                 """
     return pd.read_sql(sql_query, con=engine)
 
-def create_jpdata_csv():
+def create_jpdata_df():
 
     def handle_null(expected_string):
         if pd.isnull(expected_string):
@@ -146,22 +145,51 @@ def create_jpdata_csv():
     jpdata["Month"] = jpdata.apply(lambda case: get_month_value(case), axis=1)
     jpdata = jpdata.drop(columns=["disposition_date"])
 
-    jpdata.to_csv("data.csv")
-
     return jpdata
-create_jpdata_csv()
-def overwrite_table_and_join(username, password, new_df, table_name, other_table_name, table_join_field, other_join_field, joined_table_name):
-    gis = GIS(url='https://www.arcgis.com', username=username, password=password)
-    overwrite_csv(ARCGIS_USERNAME, ARCGIS_PASSWORD, new_df, table_name)
 
-    new_table = gis.content.search(f"title: {table_name}", 'Feature Layer')[0].tables[0]
-    layer_to_join = gis.content.search(f"title: {other_table_name}", 'Feature Layer')[0].layers[0]
+def update_features(layer_name):
+    gis = GIS(url='https://www.arcgis.com', username=ARCGIS_USERNAME, password=ARCGIS_PASSWORD)
 
-    joined_layer = join_features(new_table, layer_to_join, attribute_relationship=[{"targetField": table_join_field, "joinField": other_join_field}])
-    joined_layer_df = joined_layer.query().sdf
+    feature_layer = gis.content.search(f"title: {layer_name}", 'Feature Layer')[0].tables[0]
+    feature_set = feature_layer.query()
+    all_features = [feature.as_dict for feature in feature_set.features]
 
-    overwrite_csv(ARCGIS_USERNAME, ARCGIS_PASSWORD, joined_layer_df, joined_table_name)
+    if layer_name == "JPZips":
+        new_features = create_zips_df()
+        all_zip_codes = [str(feature["attributes"]["ZIP_Code"]) for feature in all_features]
+        new_features = new_features[new_features["ZIP_Code"].isin(all_zip_codes)]
 
-# do it for zips and precincts
-# overwrite_table_and_join(ARCGIS_USERNAME, ARCGIS_PASSWORD, create_zips_csv(), "zips_test", "Travis County ZIP Codes_WFL1", "ZIP_Code", "ZCTA5CE10", "test_join_zips")
-# overwrite_table_and_join(ARCGIS_USERNAME, ARCGIS_PASSWORD, create_precincts_csv(), "precincts_test", "Justice_of_the_Peace_and_Constable_Precincts", "Precinct_1", "Precinct_1", "test_join")
+        def create_feature(i, row):
+            return {
+                    "attributes": {
+                        "Number_of_Filings": row["Number_of_Filings"],
+                        "ObjectId": [feature["attributes"]["ObjectId"] for feature in all_features if str(feature["attributes"]["ZIP_Code"]) == row["ZIP_Code"]][0]
+                        }
+                   }
+    else:
+        new_features = create_precincts_df()
+
+        def create_feature(i, row):
+            return {
+                    "attributes": {
+                        "Count_": row["Count"],
+                        "ObjectId": [feature["attributes"]["ObjectId"] for feature in all_features if int(feature["attributes"]["Preceinct"]) == int(row["Precinct"])][0]
+                        }
+                   }
+
+    features_for_update = [create_feature(i, row) for i, row in new_features.iterrows()]
+    update_response = feature_layer.edit_features(updates=features_for_update)
+    statuses = [result['success'] for result in update_response['updateResults']]
+
+    if all(statuses):
+        logger.info(f"Updating {layer_name} succeeded for all rows.")
+    else:
+        log_and_email(f"Update {layer_name} failed for at least one row, here's the info: {update_response}", "Error Updating ArcGIS CSV", error=True)
+
+update_features("JPZips")
+
+def update_all_csvs():
+    overwrite_csv(ARCGIS_USERNAME, ARCGIS_PASSWORD, create_dates_df(), "JPDates")
+    overwrite_csv(ARCGIS_USERNAME, ARCGIS_PASSWORD, create_jpdata_df(), "JPData2")
+    update_features("JPPrecincts")
+    update_features("JPZips")
