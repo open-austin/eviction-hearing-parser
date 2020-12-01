@@ -123,9 +123,9 @@ def create_jpdata_df():
 
     sql_query = """
                 SELECT DISTINCT ON (cases.case_number)
-                cases.case_number as "Case_Num", status as "Substatus", setting_date as "Hearing Date", date AS disposition_date
+                cases.case_number as "Case_Num", status as "Substatus", setting_date as "Hearing Date", date AS disposition_date, date_filed as "Date Filed"
                 FROM
-                	(SELECT c.case_number, status, date
+                	(SELECT c.case_number, status, date, date_filed
                 	 FROM case_detail AS c
                 	 INNER JOIN
                 	(SELECT
