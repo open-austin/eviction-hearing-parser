@@ -2,11 +2,14 @@
 APScheduler==3.0.0
 BeautifulSoup4
 click>=7.1.2
+fuzzywuzzy
 gspread
+numpy
 oauth2client
 pandas
 psycopg2-binary
 python-dotenv
+python-Levenshtein 
 selenium==3.14
 simplejson
 colorama

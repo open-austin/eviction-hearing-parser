@@ -27,12 +27,12 @@ def rest_case(case):
     curs.execute(
     """
     INSERT INTO CASE_DETAIL
-    (CASE_NUMBER, STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP, CASE_TYPE)
-    VALUES (%(case_num)s, %(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s, %(type)s)
+    (CASE_NUMBER, STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP, CASE_TYPE, DATE_FILED)
+    VALUES (%(case_num)s, %(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s, %(type)s, %(date_filed)s)
     ON CONFLICT(CASE_NUMBER)
     DO UPDATE SET
-    (STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP, CASE_TYPE) =
-    (%(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s, %(type)s)
+    (STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP, CASE_TYPE, DATE_FILED) =
+    (%(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s, %(type)s, %(date_filed)s)
     """,
         {
             'case_num': case["case_number"],
@@ -44,19 +44,20 @@ def rest_case(case):
             'defend': case["defendants"],
             'plaint_zip': case["plaintiff_zip"],
             'defend_zip': case["defendant_zip"],
-            'type': case["type"]
+            'type': case["type"],
+            'date_filed': case["date_filed"]
         },
     )
 
     curs.execute(
     """
     INSERT INTO DISPOSITION
-    (CASE_NUMBER, TYPE, DATE, AMOUNT, AWARDED_TO, AWARDED_AGAINST)
-    VALUES (%(case_num)s, %(disp_type)s, %(disp_date)s, %(disp_amt)s, %(disp_to)s, %(disp_against)s)
+    (CASE_NUMBER, TYPE, DATE, AMOUNT, AWARDED_TO, AWARDED_AGAINST,JUDGEMENT_FOR, ATTORNEYS_FOR_PLAINTIFFS, ATTORNEYS_FOR_DEFENDANTS)
+    VALUES (%(case_num)s, %(disp_type)s, %(disp_date)s, %(disp_amt)s, %(disp_to)s, %(disp_against)s, %(judgement_for)s, %(attorneys_for_plaintiffs)s, %(attorneys_for_defendants)s)
     ON CONFLICT(CASE_NUMBER)
     DO UPDATE SET
-    (TYPE, DATE, AMOUNT, AWARDED_TO, AWARDED_AGAINST) =
-    (%(disp_type)s, %(disp_date)s, %(disp_amt)s, %(disp_to)s, %(disp_against)s)
+    (TYPE, DATE, AMOUNT, AWARDED_TO, AWARDED_AGAINST, JUDGEMENT_FOR, ATTORNEYS_FOR_PLAINTIFFS, ATTORNEYS_FOR_DEFENDANTS) =
+    (%(disp_type)s, %(disp_date)s, %(disp_amt)s, %(disp_to)s, %(disp_against)s, %(judgement_for)s, %(attorneys_for_plaintiffs)s, %(attorneys_for_defendants)s)
     """,
         {
             'case_num': case["case_number"],
@@ -65,6 +66,10 @@ def rest_case(case):
             'disp_amt': str(case["disposition_amount"]),
             'disp_to': case["disposition_awarded_to"],
             'disp_against': case["disposition_awarded_against"],
+            'judgement_for': case["judgement_for"],
+            'attorneys_for_plaintiffs': case["attorneys_for_plaintiffs"],
+            'attorneys_for_defendants': case["attorneys_for_defendants"],
+           # 'comments': case["comments"]
         },
     )
     # TODO scrape all event types in a similar way (writs should be consolidated in)

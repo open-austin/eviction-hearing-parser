@@ -10,6 +10,7 @@ import logging
 from known_statuses import known_statuses
 from emailing import log_and_email
 from dotenv import load_dotenv
+from fuzzywuzzy import fuzz
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -150,6 +151,12 @@ def get_case_number(soup):
 
 def get_style(soup):
     elem = soup.find_all("table")[4].tbody.tr.td
+    return elem.text
+
+
+def get_date_filed(soup: BeautifulSoup) -> str:
+    """Get date filed for the case filing. """
+    elem = soup.find_all("table")[4].find("th", text="Date Filed:").find_next("b")
     return elem.text
 
 
@@ -476,6 +483,20 @@ def make_parsed_hearing(soup):
     }
 
 
+def match_disposition(awarded_to, plaintiff, defendant, disposition_type, status):
+    """The function to figure out who judgement is for"""
+    if (("Dismissed" in disposition_type) or ("Dismissed" in status)):
+        return "No Judgement"
+    dj = fuzz.partial_ratio(awarded_to.upper(),defendant.upper())
+    pj = fuzz.partial_ratio(awarded_to.upper(),plaintiff.upper())
+    #print("Won: "+ awarded_to)
+    #print("defendant: " + defendant  + " " + str(dj) + " plaintiff: " + plaintiff  + " " +str(pj))
+    if pj > dj: 
+        return "Plaintiff"
+    else:
+        return "Defendant"
+
+
 def make_parsed_case(soup, status: str = "", type: str = "", register_url: str = "") -> Dict[str, str]:
     # TODO handle multiple defendants/plaintiffs with different zips
     disposition_tr = get_disposition_tr_element(soup)
@@ -499,14 +520,24 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
         plaintiff_zip = get_zip(get_plaintiff_elements(soup)[0])
     except:
         plaintiff_zip = None
+    
+    try:
+        disp_type = get_disposition_type(disposition_tr)
+    except:
+        disp_type = None
 
+    try:
+        winner = match_disposition(get_disposition_awarded_to(disposition_tr), plaintiff, get_defendants(soup), disp_type, status)
+    except:
+        winner = None   
+    
     return {
         "precinct_number": get_precinct_number(soup),
         "style": style,
         "plaintiff": plaintiff,
         "defendants": get_defendants(soup),
-        "attorneys_for_plaintiffs": get_attorneys_for_plaintiffs(soup),
-        "attorneys_for_defendants": get_attorneys_for_defendants(soup),
+        "attorneys_for_plaintiffs": ", ".join([a for a in get_attorneys_for_plaintiffs(soup)]),
+        "attorneys_for_defendants": ", ".join([a for a in get_attorneys_for_defendants(soup)]),
         "case_number": get_case_number(soup),
         "defendant_zip": defendant_zip,
         "plaintiff_zip": plaintiff_zip,
@@ -517,7 +548,7 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
         "type": type,
         "register_url": register_url,
         "disposition_type": get_disposition_type(disposition_tr)
-        if disposition_tr is not None
+        if disp_type is not None
         else "",
         "disposition_amount": get_disposition_amount(disposition_tr)
         if disposition_tr is not None
@@ -525,8 +556,12 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
         "disposition_date": get_disposition_date(disposition_tr)
         if disposition_tr is not None
         else "",
-        "disposition_awarded_to": get_disposition_awarded_to(disposition_tr),
-        "disposition_awarded_against": get_disposition_awarded_against(disposition_tr),
+        "disposition_awarded_to": get_disposition_awarded_to(disposition_tr)
+        if get_disposition_awarded_to(disposition_tr) != "N/A"
+        else "",
+        "disposition_awarded_against": get_disposition_awarded_against(disposition_tr)
+        if get_disposition_awarded_against(disposition_tr) != "N/A"
+        else "",
         "comments": get_comments(soup),
         "writ": get_writ(soup),
         "writ_of_possession_service": get_writ_of_possession_service(soup),
@@ -535,6 +570,10 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
             soup
         ),
         "writ_returned_to_court": get_writ_returned_to_court(soup),
+        "judgement_for": winner
+        if winner is not None
+        else "",
+        "date_filed": get_date_filed(soup)
     }
 
 
@@ -779,3 +818,4 @@ def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str) -> List
         logger.info(f"Results: {', '.join(filings_case_nums_list)}\n")
 
     return filings_case_nums_list
+
