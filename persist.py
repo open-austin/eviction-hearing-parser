@@ -52,12 +52,12 @@ def rest_case(case):
     curs.execute(
     """
     INSERT INTO DISPOSITION
-    (CASE_NUMBER, TYPE, DATE, AMOUNT, AWARDED_TO, AWARDED_AGAINST,JUDGEMENT_FOR, ATTORNEYS_FOR_PLAINTIFFS, ATTORNEYS_FOR_DEFENDANTS)
-    VALUES (%(case_num)s, %(disp_type)s, %(disp_date)s, %(disp_amt)s, %(disp_to)s, %(disp_against)s, %(judgement_for)s, %(attorneys_for_plaintiffs)s, %(attorneys_for_defendants)s)
+    (CASE_NUMBER, TYPE, DATE, AMOUNT, AWARDED_TO, AWARDED_AGAINST,JUDGEMENT_FOR, ATTORNEYS_FOR_PLAINTIFFS, ATTORNEYS_FOR_DEFENDANTS, COMMENTS)
+    VALUES (%(case_num)s, %(disp_type)s, %(disp_date)s, %(disp_amt)s, %(disp_to)s, %(disp_against)s, %(judgement_for)s, %(attorneys_for_plaintiffs)s, %(attorneys_for_defendants)s, %(comments)s)
     ON CONFLICT(CASE_NUMBER)
     DO UPDATE SET
-    (TYPE, DATE, AMOUNT, AWARDED_TO, AWARDED_AGAINST, JUDGEMENT_FOR, ATTORNEYS_FOR_PLAINTIFFS, ATTORNEYS_FOR_DEFENDANTS) =
-    (%(disp_type)s, %(disp_date)s, %(disp_amt)s, %(disp_to)s, %(disp_against)s, %(judgement_for)s, %(attorneys_for_plaintiffs)s, %(attorneys_for_defendants)s)
+    (TYPE, DATE, AMOUNT, AWARDED_TO, AWARDED_AGAINST, JUDGEMENT_FOR, ATTORNEYS_FOR_PLAINTIFFS, ATTORNEYS_FOR_DEFENDANTS,COMMENTS) =
+    (%(disp_type)s, %(disp_date)s, %(disp_amt)s, %(disp_to)s, %(disp_against)s, %(judgement_for)s, %(attorneys_for_plaintiffs)s, %(attorneys_for_defendants)s,  %(comments)s)
     """,
         {
             'case_num': case["case_number"],
@@ -69,7 +69,7 @@ def rest_case(case):
             'judgement_for': case["judgement_for"],
             'attorneys_for_plaintiffs': case["attorneys_for_plaintiffs"],
             'attorneys_for_defendants': case["attorneys_for_defendants"],
-           # 'comments': case["comments"]
+            'comments': case["comments"]
         },
     )
     # TODO scrape all event types in a similar way (writs should be consolidated in)
