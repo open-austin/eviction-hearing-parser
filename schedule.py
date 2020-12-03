@@ -56,14 +56,16 @@ def scrape_settings():
 
 def scrape_filings_and_settings_task():
     perform_task_and_catch_errors(scrape_filings, "Scraping filings")
-    gsheet.dump_to_sheets('Court_scraper_filings_archive','filings_archive',"SELECT * FROM filings_archive")
     perform_task_and_catch_errors(scrape_settings, "Scraping settings")
-    gsheet.dump_to_sheets('Court_scraper_settings_archive','settings_archive',"SELECT * FROM setting")
+    gsheet.dump_to_sheets('Court_scraper_filings_archive','filings_archive',"SELECT * FROM filings_archive") #Do we need this?
+    gsheet.dump_to_sheets('Court_scraper_filings_archive','events',"SELECT * FROM filings_archive") #Do we need this?
+    gsheet.dump_to_sheets('Court_scraper_settings_archive','settings_archive',"SELECT * FROM setting") # Do we need this?
     gsheet.dump_to_sheets('Court_scraper_evictions_archive','evictions_archive',"SELECT * FROM filings_archive WHERE case_type='Eviction'")
+    gsheet.dump_to_sheets('Court_scraper_evictions_archive','events',"SELECT * FROM eviction_events")
 
 # scrape filings and settings every Monday at 3:00 A.M. EST
 if __name__ == "__main__":
     sched = BlockingScheduler()
-    sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-11-11 22:40:00', timezone='US/Eastern')
+    sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-11-11 3:00:00', timezone='US/Eastern')
     sched.start()
-
+    scrape_filings_and_settings_task()

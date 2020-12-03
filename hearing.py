@@ -113,8 +113,6 @@ def get_attorneys_for_party(
         try:
             party_name = party_element.find_next_sibling("th").text.strip()
 
-            party_element_id = party_element.get("id")
-            party_attorney_element = soup.find(
                 "td",
                 headers=lambda _headers: _headers
                 and attorneys_header_id in _headers
@@ -190,12 +188,12 @@ def get_disposition_awarded_to(disposition_tr) -> str:
     Gets the "Awarded To" field of a disposition, if one exists.
     """
     if disposition_tr is None:
-        return "N/A"
+        return None
 
     award_field = disposition_tr.find(text=re.compile(r"Awarded To:"))
 
     if award_field is None:
-        return "N/A"
+        return None
 
     return award_field.next_sibling.text.strip()
 
@@ -205,12 +203,12 @@ def get_disposition_awarded_against(disposition_tr) -> str:
     Gets the "Awarded Against" field of a disposition, if one exists.
     """
     if disposition_tr is None:
-        return "N/A"
+        return None
 
     award_field = disposition_tr.find(text=re.compile(r"Awarded Against:"))
 
     if award_field is None:
-        return "N/A"
+        return None
 
     return award_field.next_sibling.text.strip()
 
@@ -251,16 +249,17 @@ def get_hearing_date(hearing_tag) -> str:
     return date_tag.text
 
 def get_hearing_type(hearing_tag) -> str:
-    hearing_type = hearing_tag.find_all("b")[0].text
+    """Function to get all events and case type from case page section: Other Events and Hearings"""
+    hearing_type = hearing_tag.find_all("b")[0].text 
     all_tds = hearing_tag.find_all("td")
-    all_text = all_tds[-1].text
-
+    all_text = all_tds[-1].get_text(separator=' ')
+    
     if not all_text:
         for td in all_tds:
-            text = td.text
+            text = td.get_text(separator=' ')
             if len(text) > 1 and text not in all_text:
-                all_text += (text + " ")
-
+                all_text += text
+    
     return hearing_type, all_text
 
 def get_hearing_time(hearing_tag) -> str:
@@ -558,7 +557,7 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
     except:
         disp_type = None
 
-    try:
+    try: 
         winner = match_disposition(get_disposition_awarded_to(disposition_tr), plaintiff, get_defendants(soup), disp_type, status)
     except:
         winner = None
@@ -589,10 +588,10 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
         if disposition_tr is not None
         else "",
         "disposition_awarded_to": get_disposition_awarded_to(disposition_tr)
-        if get_disposition_awarded_to(disposition_tr) != "N/A"
+        if get_disposition_awarded_to(disposition_tr) is not None
         else "",
         "disposition_awarded_against": get_disposition_awarded_against(disposition_tr)
-        if get_disposition_awarded_against(disposition_tr) != "N/A"
+        if get_disposition_awarded_against(disposition_tr) is not None
         else "",
         "comments": get_comments(soup),
         "writ": get_writ(soup),
