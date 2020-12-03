@@ -42,8 +42,8 @@ def create_dates_df():
                 WITH filings_table AS (
                     SELECT count(case_number) AS filings_count, TO_DATE("date", 'MM/DD/YYYY') AS f_date
                     FROM v_case
-                    WHERE "date" != ''
-                    GROUP BY f_date )
+                    WHERE "date" != '' AND LOWER(case_type) = 'eviction'
+                    GROUP BY f_date)
 
                 SELECT filing_counts_by_date.f_date AS "DATE", filing_counts_by_date.filings_count AS "FILINGS COUNT",
                    filing_counts_by_date.cum_count AS "CUMULATIVE COUNT", judgment_counts_by_date.judgments AS "JUDGMENTS"
@@ -59,7 +59,7 @@ def create_dates_df():
                 	    ('final status', 'judgment satisfied',
                 	    'pending writ return', 'judgment released',
                 	    'final disposition', 'pending writ')
-            		     AND "date" != ''
+            		     AND "date" != '' AND LOWER(case_type) = 'eviction'
             	         GROUP BY j_date) AS judgment_counts_by_date
             	   ON filing_counts_by_date.f_date = judgment_counts_by_date.j_date
                 """
@@ -67,10 +67,10 @@ def create_dates_df():
 
 def create_zips_df():
     sql_query = """
-                SELECT defendant_zip AS "ZIP_Code", COUNT(*) AS "Number_of_Filings"
+                SELECT LEFT(defendant_zip, 5) AS "ZIP_Code", COUNT(*) AS "Number_of_Filings"
                 FROM case_detail
-                WHERE defendant_zip != ''
-                GROUP BY defendant_zip
+                WHERE defendant_zip != '' AND LOWER(case_type) = 'eviction'
+                GROUP BY "ZIP_Code"
                 """
     return pd.read_sql(sql_query, con=engine)
 
@@ -81,6 +81,7 @@ def create_precincts_df():
                 SUBSTRING(case_number, 2, 1) AS "Precinct",
                 COUNT(*) AS "Count"
                 FROM case_detail
+                WHERE LOWER(case_type) = 'eviction'
                 GROUP BY "Precinct_1", "Precinct"
                 """
     return pd.read_sql(sql_query, con=engine)
@@ -131,7 +132,8 @@ def create_jpdata_df():
                 	(SELECT
                 	 case_number, date
                 	 FROM disposition) AS d
-                	 ON c.case_number = d.case_number) AS cases
+                	 ON c.case_number = d.case_number
+                     WHERE LOWER(c.case_type) = 'eviction') AS cases
                 LEFT JOIN
                 	(SELECT setting_date, case_number
                 	 FROM setting) AS settings
@@ -158,6 +160,9 @@ def update_features(layer_name):
         new_features = create_zips_df()
         all_zip_codes = [str(feature["attributes"]["ZIP_Code"]) for feature in all_features]
         new_features = new_features[new_features["ZIP_Code"].isin(all_zip_codes)]
+
+        zips_in_our_data_but_not_travis = new_features[~new_features["ZIP_Code"].isin(all_zip_codes)]['ZIP_Code'].tolist()
+        log_and_email(f"The following zip codes are associated with eviction cases in our data but are not in our list of Travis County Zip Codes:\n {zips_in_our_data_but_not_travis}", "Zip Codes Not In Travis County")
 
         def create_feature(i, row):
             return {

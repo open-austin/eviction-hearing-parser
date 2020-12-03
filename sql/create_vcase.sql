@@ -10,6 +10,7 @@ CREATE VIEW v_case AS
     cd.plaintiff_zip,
     cd.defendant_zip,
 	cd.date_filed as date,
+    cd.case_type,
     d.type,
     d.amount,
     d.awarded_to,
