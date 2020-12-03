@@ -72,6 +72,7 @@ def create_zips_df():
                 WHERE defendant_zip != '' AND LOWER(case_type) = 'eviction'
                 GROUP BY "ZIP_Code"
                 """
+
     return pd.read_sql(sql_query, con=engine)
 
 def create_precincts_df():
@@ -157,33 +158,55 @@ def update_features(layer_name):
     all_features = [feature.as_dict for feature in feature_set.features]
 
     if layer_name == "JPZips":
+        logger.info("Updating zip codes csv...")
         new_features = create_zips_df()
+
+        def create_feature(zip_code, num_filings):
+            row_with_same_zip_id = [feature["attributes"]["ObjectId"] for feature in all_features if str(feature["attributes"]["ZIP_Code"]) == zip_code]
+            if row_with_same_zip_id:
+                assert len(row_with_same_zip_id) == 1
+                return {
+                        "attributes": {
+                            "Number_of_Filings": num_filings,
+                            "ObjectId": row_with_same_zip_id[0]
+                            }
+                       }
+            else:
+                return {
+                        "attributes": {
+                            "Number_of_Filings": num_filings,
+                            "ZIP_Code": zip_code,
+                            "GEOID_Data": "8600US" + zip_code
+                            }
+                       }
+
         all_zip_codes = [str(feature["attributes"]["ZIP_Code"]) for feature in all_features]
-        new_features = new_features[new_features["ZIP_Code"].isin(all_zip_codes)]
 
-        zips_in_our_data_but_not_travis = new_features[~new_features["ZIP_Code"].isin(all_zip_codes)]['ZIP_Code'].tolist()
-        log_and_email(f"The following zip codes are associated with eviction cases in our data but are not in our list of Travis County Zip Codes:\n {zips_in_our_data_but_not_travis}", "Zip Codes Not In Travis County")
+        features_created = [create_feature(row["ZIP_Code"], row["Number_of_Filings"]) for i, row in new_features.iterrows()]
+        for zip_code in all_zip_codes:
+            if zip_code not in new_features["ZIP_Code"].tolist():
+                features_created.append(create_feature(zip_code, 0))
 
-        def create_feature(i, row):
-            return {
-                    "attributes": {
-                        "Number_of_Filings": row["Number_of_Filings"],
-                        "ObjectId": [feature["attributes"]["ObjectId"] for feature in all_features if str(feature["attributes"]["ZIP_Code"]) == row["ZIP_Code"]][0]
-                        }
-                   }
+        features_for_update = [feature for feature in features_created if "ObjectId" in feature["attributes"]]
+        features_to_add = [feature for feature in features_created if "ZIP_Code" in feature["attributes"]]
+
+
     else:
+        logger.info("Updating precints CSV...")
         new_features = create_precincts_df()
 
-        def create_feature(i, row):
+        def create_feature(row):
             return {
                     "attributes": {
                         "Count_": row["Count"],
                         "ObjectId": [feature["attributes"]["ObjectId"] for feature in all_features if int(feature["attributes"]["Preceinct"]) == int(row["Precinct"])][0]
                         }
                    }
+                   
+        features_for_update = [create_feature(row) for i, row in new_features.iterrows()]
+        features_to_add = []
 
-    features_for_update = [create_feature(i, row) for i, row in new_features.iterrows()]
-    update_response = feature_layer.edit_features(updates=features_for_update)
+    update_response = feature_layer.edit_features(updates=features_for_update, adds=features_to_add)
     statuses = [result['success'] for result in update_response['updateResults']]
 
     if all(statuses):
@@ -192,7 +215,9 @@ def update_features(layer_name):
         log_and_email(f"Update {layer_name} failed for at least one row, here's the info: {update_response}", "Error Updating ArcGIS CSV", error=True)
 
 def update_all_csvs():
-    overwrite_csv(ARCGIS_USERNAME, ARCGIS_PASSWORD, create_dates_df(), "JPDates")
-    overwrite_csv(ARCGIS_USERNAME, ARCGIS_PASSWORD, create_jpdata_df(), "JPData2")
-    update_features("JPPrecincts")
+    # overwrite_csv(ARCGIS_USERNAME, ARCGIS_PASSWORD, create_dates_df(), "JPDates")
+    # overwrite_csv(ARCGIS_USERNAME, ARCGIS_PASSWORD, create_jpdata_df(), "JPData2")
+    # update_features("JPPrecincts")
     update_features("JPZips")
+
+update_all_csvs()
