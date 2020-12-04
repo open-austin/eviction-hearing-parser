@@ -113,7 +113,8 @@ def get_attorneys_for_party(
         try:
             party_name = party_element.find_next_sibling("th").text.strip()
 
-                "td",
+            party_element_id = party_element.get("id")
+            party_attorney_element = soup.find("td",
                 headers=lambda _headers: _headers
                 and attorneys_header_id in _headers
                 and party_element_id in _headers,
