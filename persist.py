@@ -27,12 +27,12 @@ def rest_case(case):
     curs.execute(
     """
     INSERT INTO CASE_DETAIL
-    (CASE_NUMBER, STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP, CASE_TYPE, DATE_FILED)
-    VALUES (%(case_num)s, %(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s, %(type)s, %(date_filed)s)
+    (CASE_NUMBER, STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP, CASE_TYPE, DATE_FILED, ACTIVE_OR_INACTIVE, JUDGMENT_AFTER_MORATORIUM)
+    VALUES (%(case_num)s, %(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s, %(type)s, %(date_filed)s, %(active_or_inactive)s, %(after_moraorium)s)
     ON CONFLICT(CASE_NUMBER)
     DO UPDATE SET
-    (STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP, CASE_TYPE, DATE_FILED) =
-    (%(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s, %(type)s, %(date_filed)s)
+    (STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP, CASE_TYPE, DATE_FILED, ACTIVE_OR_INACTIVE, JUDGMENT_AFTER_MORATORIUM) =
+    (%(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s, %(type)s, %(date_filed)s, %(active_or_inactive)s, %(after_moraorium)s)
     """,
         {
             'case_num': case["case_number"],
@@ -45,7 +45,9 @@ def rest_case(case):
             'plaint_zip': case["plaintiff_zip"],
             'defend_zip': case["defendant_zip"],
             'type': case["type"],
-            'date_filed': case["date_filed"]
+            'date_filed': case["date_filed"],
+            'active_or_inactive': case["active_or_inactive"],
+            'after_moraorium': case["judgment_after_moratorium"]
         },
     )
 

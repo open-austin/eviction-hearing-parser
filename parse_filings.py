@@ -26,6 +26,8 @@ def get_all_case_nums(afterdate: str, beforedate: str):
     for prefix in case_num_prefixes:
         prefix_case_nums = fetch_filings(afterdate, beforedate, prefix)
         all_case_nums += prefix_case_nums
+
+    logger.info(f"Scraped case numbers between {afterdate} and {beforedate} - found {len(all_case_nums)} of them.")
     return all_case_nums
 
 # same as parse_filings but without command line interface and showbrowser/outfile options
