@@ -251,16 +251,16 @@ def get_hearing_date(hearing_tag) -> str:
 
 def get_hearing_type(hearing_tag) -> str:
     """Function to get all events and case type from case page section: Other Events and Hearings"""
-    hearing_type = hearing_tag.find_all("b")[0].text 
+    hearing_type = hearing_tag.find_all("b")[0].text
     all_tds = hearing_tag.find_all("td")
     all_text = all_tds[-1].get_text(separator=' ')
-    
+
     if not all_text:
         for td in all_tds:
             text = td.get_text(separator=' ')
             if len(text) > 1 and text not in all_text:
                 all_text += text
-    
+
     return hearing_type, all_text
 
 def get_hearing_time(hearing_tag) -> str:
@@ -558,7 +558,7 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
     except:
         disp_type = None
 
-    try: 
+    try:
         winner = match_disposition(get_disposition_awarded_to(disposition_tr), plaintiff, get_defendants(soup), disp_type, status)
     except:
         winner = None
@@ -839,14 +839,14 @@ def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str) -> List
                 "Case details will be scraped for these results.\n"
             )
 
-    # some logging to make sure results look good - could remove
-    logger.info(f"Found {len(filings_case_nums_list)} case numbers.")
-    if len(filings_case_nums_list) > 5:
-        logger.info(
-            f"Results preview: {filings_case_nums_list[0]}, {filings_case_nums_list[1]}, "
-            f"..., {filings_case_nums_list[-1]}\n"
-        )
-    else:
-        logger.info(f"Results: {', '.join(filings_case_nums_list)}\n")
+    # # some optional logging to make sure results look good - could remove
+    # logger.info(f"Found {len(filings_case_nums_list)} case numbers.")
+    # if len(filings_case_nums_list) > 5:
+    #     logger.info(
+    #         f"Results preview: {filings_case_nums_list[0]}, {filings_case_nums_list[1]}, "
+    #         f"..., {filings_case_nums_list[-1]}\n"
+    #     )
+    # else:
+    #     logger.info(f"Results: {', '.join(filings_case_nums_list)}\n")
 
     return filings_case_nums_list
