@@ -58,7 +58,7 @@ def scrape_filings_and_settings_task():
     perform_task_and_catch_errors(scrape_filings, "Scraping filings")
     perform_task_and_catch_errors(scrape_settings, "Scraping settings")
     gsheet.dump_to_sheets('Court_scraper_filings_archive','filings_archive',"SELECT * FROM filings_archive") #Do we need this?
-    gsheet.dump_to_sheets('Court_scraper_filings_archive','events',"SELECT * FROM filings_archive") #Do we need this?
+    gsheet.dump_to_sheets('Court_scraper_filings_archive','events',"SELECT * FROM event") #Do we need this?
     gsheet.dump_to_sheets('Court_scraper_settings_archive','settings_archive',"SELECT * FROM setting") # Do we need this?
     gsheet.dump_to_sheets('Court_scraper_evictions_archive','evictions_archive',"SELECT * FROM filings_archive WHERE case_type='Eviction'")
     gsheet.dump_to_sheets('Court_scraper_evictions_archive','events',"SELECT * FROM eviction_events")
