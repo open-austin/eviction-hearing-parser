@@ -1,3 +1,4 @@
+"""Module for scraping hearing information"""
 from decimal import Decimal
 import os
 import re
@@ -333,20 +334,23 @@ def get_comments(soup: BeautifulSoup) -> List[str]:
 
     disposition_date_node = get_disposition_date_node(soup)
     if not disposition_date_node:
-        return comments
+        return None #comments
 
     disposition_label = disposition_date_node.find_next_sibling(
         "td", headers="CDisp RDISPDATE1"
     )
     if not disposition_label:
-        return comments
+        return None #comments
 
     comments = [
         nobr.text
         for nobr in disposition_label.find_all("nobr")
         if nobr.text.startswith("Comment:")
     ]
-    return comments
+    if len(comments)>=1:
+        return comments[0]
+    else:
+        return None
 
 
 def get_case_event_date_basic(soup: BeautifulSoup, event_name: str) -> Optional[str]:
@@ -521,15 +525,15 @@ def make_parsed_hearing(soup):
 def match_disposition(awarded_to, plaintiff, defendant, disposition_type, status):
     """The function to figure out who judgement is for"""
     if (("Dismissed" in disposition_type) or ("Dismissed" in status)):
-        return "No Judgement"
+        return (100,"No Judgement")
     dj = fuzz.partial_ratio(awarded_to.upper(),defendant.upper())
     pj = fuzz.partial_ratio(awarded_to.upper(),plaintiff.upper())
     #print("Won: "+ awarded_to)
     #print("defendant: " + defendant  + " " + str(dj) + " plaintiff: " + plaintiff  + " " +str(pj))
     if pj > dj:
-        return "Plaintiff"
+        return (pj,"Plaintiff")
     else:
-        return "Defendant"
+        return (dj,"Defendant")
 
 def active_or_inactive(status):
     status = status.lower()
@@ -580,9 +584,9 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
         disp_type = None
 
     try:
-        winner = match_disposition(get_disposition_awarded_to(disposition_tr), plaintiff, get_defendants(soup), disp_type, status)
+        score,winner = match_disposition(get_disposition_awarded_to(disposition_tr), plaintiff, get_defendants(soup), disp_type, status)
     except:
-        winner = None
+        score,winner = None,None
 
     disposition_date = get_disposition_date(disposition_tr)
 
@@ -619,7 +623,9 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
         "disposition_awarded_against": get_disposition_awarded_against(disposition_tr)
         if get_disposition_awarded_against(disposition_tr) is not None
         else "",
-        "comments": get_comments(soup),
+        "comments": get_comments(soup)
+        if get_comments(soup) is not None
+        else "",
         "writ": get_writ(soup),
         "writ_of_possession_service": get_writ_of_possession_service(soup),
         "writ_of_possession_requested": get_writ_of_possession_requested(soup),
@@ -629,6 +635,9 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
         "writ_returned_to_court": get_writ_returned_to_court(soup),
         "judgement_for": winner
         if winner is not None
+        else "",
+        "match_score": score
+        if score is not None
         else "",
         "date_filed": get_date_filed(soup)
     }
