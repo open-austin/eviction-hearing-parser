@@ -17,6 +17,7 @@ CREATE VIEW filings_archive AS
     disposition.awarded_to,
     disposition.awarded_against,
     disposition.judgement_for,
+    disposition.match_score,
     disposition.attorneys_for_plaintiffs,
     disposition.attorneys_for_defendants,
     disposition.comments

@@ -49,7 +49,7 @@ def parse_settings_on_cloud(afterdate, beforedate, write_to_sheets=True):
         persist.rest_setting(setting)
 #maybe make this cleaner in sql? future work
     if write_to_sheets:
-        gsheet.write_data(gsheet.open_sheet(gsheet.init_sheets(),"Court_scraper_eviction_scheduler","eviction_scheduler"),gsheet.morning_afternoon(gsheet.combine_cols(gsheet.filter_df(gsheet.filter_df(pd.DataFrame(pulled_settings),'setting_type','Eviction'),'hearing_type','(Hearing)|(Trial)'),['case_number','setting_style'],'case_dets').drop_duplicates("case_number")))
+        gsheet.write_data(gsheet.open_sheet(gsheet.init_sheets(),"Court_scraper_eviction_scheduler","eviction_scheduler"),gsheet.morning_afternoon(gsheet.combine_cols(gsheet.filter_df(gsheet.filter_df(pd.DataFrame(pulled_settings),'setting_type','Eviction'),'hearing_type','(Hearing)|(Trial)'),['case_number','setting_style'],'case_dets').drop_duplicates("case_number", keep="last")))
 
 
 @click.command()
@@ -72,7 +72,7 @@ def parse_settings(afterdate, beforedate, outfile, showbrowser=False):
     pulled_settings = make_setting_list(days_to_pull)
     for setting in pulled_settings:
         persist.rest_setting(setting)
-    gsheet.write_data(gsheet.open_sheet(gsheet.init_sheets(),"Court_scraper_eviction_scheduler","eviction_scheduler"),gsheet.morning_afternoon(gsheet.combine_cols(gsheet.filter_df(gsheet.filter_df(pd.DataFrame(pulled_settings),'setting_type','Eviction'),'hearing_type','(Hearing)|(Trial)'),['case_number','setting_style'],'case_dets').drop_duplicates("case_number")))
+    gsheet.write_data(gsheet.open_sheet(gsheet.init_sheets(),"Court_scraper_eviction_scheduler","eviction_scheduler"),gsheet.morning_afternoon(gsheet.combine_cols(gsheet.filter_df(gsheet.filter_df(pd.DataFrame(pulled_settings),'setting_type','Eviction'),'hearing_type','(Hearing)|(Trial)'),['case_number','setting_style'],'case_dets').drop_duplicates("case_number", keep="last")))
     json.dump(pulled_settings, outfile)
 
 if __name__ == "__main__":
