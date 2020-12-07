@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 from emailing import log_and_email
 import parse_filings
 import parse_settings
+import persist
 
 load_dotenv()
 local_dev = os.getenv("LOCAL_DEV") == "true"
@@ -54,9 +55,15 @@ def scrape_settings():
     seven_days_ago = get_date_from_today("-", 7, "past")
     parse_settings.parse_settings_on_cloud(seven_days_ago, ninety_days_later)
 
+def update_first_court_apperance():
+    persist.update_first_court_apperance_column()
+
+
 def scrape_filings_and_settings_task():
     perform_task_and_catch_errors(scrape_filings, "Scraping filings")
     perform_task_and_catch_errors(scrape_settings, "Scraping settings")
+    perform_task_and_catch_errors(update_first_court_apperance, "Updating first_court_appearance column")
+
     gsheet.dump_to_sheets('Court_scraper_filings_archive','filings_archive',"SELECT * FROM filings_archive") #Do we need this?
     gsheet.dump_to_sheets('Court_scraper_filings_archive','events',"SELECT * FROM event") #Do we need this?
     gsheet.dump_to_sheets('Court_scraper_settings_archive','settings_archive',"SELECT * FROM setting") # Do we need this?
@@ -65,8 +72,7 @@ def scrape_filings_and_settings_task():
 
 # scrape filings and settings every Monday at 3:00 A.M. EST
 if __name__ == "__main__":
-#    sched = BlockingScheduler()
-#    sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-11-11 3:00:00', timezone='US/Eastern')
-#    sched.start()
-    gsheet.dump_to_sheets('Court_scraper_evictions_archive','evictions_archive',"SELECT * FROM filings_archive WHERE case_type='Eviction'")
-    
+    sched = BlockingScheduler()
+    sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-11-11 3:00:00', timezone='US/Eastern')
+    sched.start()
+

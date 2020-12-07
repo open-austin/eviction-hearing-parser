@@ -11,6 +11,7 @@ CREATE VIEW filings_archive AS
     case_detail.date_filed,
     case_detail.active_or_inactive,
     case_detail.judgment_after_moratorium,
+    case_detail.first_court_appearance,
     disposition.type,
     disposition.date,
     disposition.amount,

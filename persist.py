@@ -169,3 +169,24 @@ def drop_rows_from_table(table_name: str, case_ids: list):
     conn.commit()
     curs.close()
     conn.close()
+
+def update_first_court_apperance_column():
+    update_query = """
+                   UPDATE case_detail
+                   SET first_court_appearance =
+                        (SELECT MIN
+                            (TO_DATE("date", 'MM/DD/YYYY')) FROM event WHERE
+                                (event.case_number = case_detail.case_number) AND
+                                (LOWER(event.type) IN
+                                    ('appearance', 'default hearing', 'eviction hearing', 'exparte hearing', 'hearing',
+                                     'indigency hearing', 'motion for dj hearing', 'motion hearing', 'pre-trial hearing',
+                                     'trial before court', 'writ hearing'))
+                        )
+                   """
+
+    conn = get_database_connection(local_dev=local_dev)
+    curs = conn.cursor()
+    curs.execute(update_query)
+    conn.commit()
+    curs.close()
+    conn.close()
