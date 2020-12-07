@@ -1,3 +1,4 @@
+"""Module for scraping hearing information"""
 from decimal import Decimal
 import os
 import re
