@@ -9,6 +9,8 @@ CREATE VIEW filings_archive AS
     case_detail.defendant_zip,
     case_detail.case_type,
     case_detail.date_filed,
+    case_detail.active_or_inactive,
+    case_detail.judgment_after_moratorium,
     disposition.type,
     disposition.date,
     disposition.amount,

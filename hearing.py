@@ -252,16 +252,16 @@ def get_hearing_date(hearing_tag) -> str:
 
 def get_hearing_type(hearing_tag) -> str:
     """Function to get all events and case type from case page section: Other Events and Hearings"""
-    hearing_type = hearing_tag.find_all("b")[0].text 
+    hearing_type = hearing_tag.find_all("b")[0].text
     all_tds = hearing_tag.find_all("td")
     all_text = all_tds[-1].get_text(separator=' ')
-    
+
     if not all_text:
         for td in all_tds:
             text = td.get_text(separator=' ')
             if len(text) > 1 and text not in all_text:
                 all_text += text
-    
+
     return hearing_type, all_text
 
 def get_hearing_time(hearing_tag) -> str:
@@ -278,7 +278,10 @@ def get_hearing_officer(hearing_tag) -> str:
 
 
 def get_disposition_date_node(soup) -> BeautifulSoup:
-    return soup.find("th", id="RDISPDATE1")
+    try:
+        return soup.find("th", id="RDISPDATE1")
+    except:
+        return None
 
 
 def get_disposition_date(soup) -> Optional[str]:
@@ -529,6 +532,24 @@ def match_disposition(awarded_to, plaintiff, defendant, disposition_type, status
     else:
         return "Defendant"
 
+def active_or_inactive(status):
+    status = status.lower()
+    if status in statuses_map:
+        return "Active" if statuses_map[status]["is_active"] else "Inactive"
+    else:
+        log_and_email(f"Can't figure out whether case with substatus '{status}' is active or inactive because '{status}' is not in our statuses map dictionary.", "Encountered Unknown Substatus", error=True)
+        return ""
+
+def judgment_after_moratorium(disposition_date, substatus):
+    substatus = substatus.lower()
+    if (not disposition_date) or (substatus not in statuses_map):
+        return ""
+
+    disposition_date = datetime.strptime(disposition_date, "%m/%d/%Y")
+    march_14 = datetime(2020, 3, 14)
+
+    return "Y" if ((disposition_date >= march_14) and (statuses_map[substatus]["status"] == "Judgment")) else "N"
+
 
 def make_parsed_case(soup, status: str = "", type: str = "", register_url: str = "") -> Dict[str, str]:
     # TODO handle multiple defendants/plaintiffs with different zips
@@ -559,15 +580,19 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
     except:
         disp_type = None
 
-    try: 
+    try:
         winner = match_disposition(get_disposition_awarded_to(disposition_tr), plaintiff, get_defendants(soup), disp_type, status)
     except:
         winner = None
+
+    disposition_date = get_disposition_date(disposition_tr)
 
     return {
         "precinct_number": get_precinct_number(soup),
         "style": style,
         "plaintiff": plaintiff,
+        "active_or_inactive": active_or_inactive(status),
+        "judgment_after_moratorium": judgment_after_moratorium(disposition_date, status),
         "defendants": get_defendants(soup),
         "attorneys_for_plaintiffs": ", ".join([a for a in get_attorneys_for_plaintiffs(soup)]),
         "attorneys_for_defendants": ", ".join([a for a in get_attorneys_for_defendants(soup)]),
@@ -586,7 +611,7 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
         "disposition_amount": get_disposition_amount(disposition_tr)
         if disposition_tr is not None
         else "",
-        "disposition_date": get_disposition_date(disposition_tr)
+        "disposition_date": disposition_date
         if disposition_tr is not None
         else "",
         "disposition_awarded_to": get_disposition_awarded_to(disposition_tr)
@@ -806,11 +831,6 @@ def split_date_range(afterdate: str, beforedate: str) -> Tuple[str, str]:
 def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str) -> List[str]:
     "Get filing case numbers between afterdate and beforedate and starting with case_num_prefix."
 
-    logger.info(
-        f"Scraping case numbers between {afterdate} and {beforedate} "
-        f"for prefix {case_num_prefix}..."
-    )
-
     for tries in range(1, 11):
         try:
             filings_page_content = fetch_page.query_filings(
@@ -840,14 +860,14 @@ def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str) -> List
                 "Case details will be scraped for these results.\n"
             )
 
-    # some logging to make sure results look good - could remove
-    logger.info(f"Found {len(filings_case_nums_list)} case numbers.")
-    if len(filings_case_nums_list) > 5:
-        logger.info(
-            f"Results preview: {filings_case_nums_list[0]}, {filings_case_nums_list[1]}, "
-            f"..., {filings_case_nums_list[-1]}\n"
-        )
-    else:
-        logger.info(f"Results: {', '.join(filings_case_nums_list)}\n")
+    # # some optional logging to make sure results look good - could remove
+    # logger.info(f"Found {len(filings_case_nums_list)} case numbers.")
+    # if len(filings_case_nums_list) > 5:
+    #     logger.info(
+    #         f"Results preview: {filings_case_nums_list[0]}, {filings_case_nums_list[1]}, "
+    #         f"..., {filings_case_nums_list[-1]}\n"
+    #     )
+    # else:
+    #     logger.info(f"Results: {', '.join(filings_case_nums_list)}\n")
 
     return filings_case_nums_list

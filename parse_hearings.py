@@ -35,9 +35,12 @@ def parse_all_from_parse_filings(case_nums, showbrowser=False):
         fetch_page.driver = webdriver.Chrome("./chromedriver")
 
     parsed_cases = make_case_list(case_nums)
+    logger.info(f"Finished making case list, now will all {len(parsed_cases)} cases to SQL.")
 
     for parsed_case in parsed_cases:
         persist.rest_case(parsed_case)
+
+    logger.info("Finished sending cases to SQL.")
 
     return parsed_cases
 
