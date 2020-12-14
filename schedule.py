@@ -11,6 +11,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from functools import reduce
 from dotenv import load_dotenv
 from emailing import log_and_email
+from overwrite_arcgis_csvs import update_all_csvs
 import parse_filings
 import parse_settings
 import persist
@@ -63,18 +64,13 @@ def scrape_filings_and_settings_task():
     perform_task_and_catch_errors(scrape_filings, "Scraping filings")
     perform_task_and_catch_errors(scrape_settings, "Scraping settings")
     perform_task_and_catch_errors(update_first_court_apperance, "Updating first_court_appearance column")
+    perform_task_and_catch_errors(update_all_csvs, "Updating arcGIS csvs")
 
     gsheet.dump_to_sheets('Court_scraper_filings_archive','filings_archive',"SELECT * FROM filings_archive") #Do we need this?
     gsheet.dump_to_sheets('Court_scraper_filings_archive','events',"SELECT * FROM event") #Do we need this?
     gsheet.dump_to_sheets('Court_scraper_settings_archive','settings_archive',"SELECT * FROM setting") # Do we need this?
     gsheet.dump_to_sheets('Court_scraper_evictions_archive','evictions_archive',"SELECT * FROM filings_archive WHERE case_type='Eviction'")
     gsheet.dump_to_sheets('Court_scraper_evictions_archive','events',"SELECT * FROM eviction_events")
-
-print("ABOUT TO START")
-scrape_filings()
-print("DONE")
-while True:
-    pass
 
 # scrape filings and settings every Monday at 3:00 A.M. EST
 if __name__ == "__main__":
