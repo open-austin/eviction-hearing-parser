@@ -231,13 +231,16 @@ def get_hearing_tags(soup):
     """
     Returns <tr> elements in the Events and Hearings section of a CaseDetail document that represent a hearing record.
     """
-    root = get_events_tbody_element(soup)
-    hearing_ths = root.find_all(
-        "th", id=lambda id_str: id_str is not None and id_str.startswith("RCD")
-    )
-    hearing_trs = [hearing_th.parent for hearing_th in hearing_ths]
+    try:
+        root = get_events_tbody_element(soup)
+        hearing_ths = root.find_all(
+            "th", id=lambda id_str: id_str is not None and id_str.startswith("RCD")
+        )
+        hearing_trs = [hearing_th.parent for hearing_th in hearing_ths]
 
-    return hearing_trs
+        return hearing_trs
+    except:
+        return []
 
 
 def get_hearing_text(hearing_tag) -> str:
@@ -496,7 +499,7 @@ def was_defendant_alternative_served(soup) -> List[str]:
 def make_parsed_hearing(soup):
 
     try:
-        time = get_hearing_time(soup)
+        time = _time(soup)
     except:
         time = None
 
