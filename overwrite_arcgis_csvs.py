@@ -79,8 +79,7 @@ def create_precincts_df():
     sql_query = """
                 SELECT
                 SUBSTRING(case_number, 1, 1) || 'P-' || SUBSTRING(case_number, 2, 1) AS "Precinct_1",
-                SUBSTRING(case_number, 2, 1) AS "Precinct",
-                COUNT(*) AS "Count"
+                SUBSTRING(case_number, 2, 1) AS "Precinct", COUNT(*) AS "Count"
                 FROM case_detail
                 WHERE LOWER(case_type) = 'eviction'
                 GROUP BY "Precinct_1", "Precinct"
@@ -182,6 +181,8 @@ def update_features(layer_name):
 
         all_zip_codes = [str(feature["attributes"]["ZIP_Code"]) for feature in all_features]
 
+        # compare zip codes in our data to zip codes in the to_join file. any zip codes in our data that aren't in the to_join file we should get and report / keep track of
+
         features_created = [create_feature(row["ZIP_Code"], row["Number_of_Filings"]) for i, row in new_features.iterrows()]
         for zip_code in all_zip_codes:
             if zip_code not in new_features["ZIP_Code"].tolist():
@@ -202,7 +203,7 @@ def update_features(layer_name):
                         "ObjectId": [feature["attributes"]["ObjectId"] for feature in all_features if int(feature["attributes"]["Preceinct"]) == int(row["Precinct"])][0]
                         }
                    }
-                   
+
         features_for_update = [create_feature(row) for i, row in new_features.iterrows()]
         features_to_add = []
 
