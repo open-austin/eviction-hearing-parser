@@ -64,7 +64,7 @@ def scrape_filings_and_settings_task():
     perform_task_and_catch_errors(scrape_filings, "Scraping filings")
     perform_task_and_catch_errors(scrape_settings, "Scraping settings")
     perform_task_and_catch_errors(update_first_court_apperance, "Updating first_court_appearance column")
-    perform_task_and_catch_errors(update_all_csvs, "Updating arcGIS csvs")
+    # perform_task_and_catch_errors(update_all_csvs, "Updating arcGIS csvs")
 
     gsheet.dump_to_sheets('Court_scraper_filings_archive','filings_archive',"SELECT * FROM filings_archive") #Do we need this?
     gsheet.dump_to_sheets('Court_scraper_filings_archive','events',"SELECT * FROM event") #Do we need this?
