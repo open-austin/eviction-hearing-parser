@@ -56,7 +56,7 @@ def create_dates_df():
                 	SELECT COUNT(status) AS judgments, to_date("date_filed", 'MM/DD/YYYY') AS j_date
                 	FROM filings_archive
                 	WHERE LOWER(status) IN
-                	('final status', 'judgment satisfied',
+                	('final status', 'judgment satisfied', 'appealed',
                 	'pending writ return', 'judgment released',
                 	'final disposition', 'pending writ')
                 	 AND "date_filed" != '' AND LOWER(case_type) = 'eviction'
@@ -131,9 +131,7 @@ def create_jpdata_df():
 
     return jpdata
 
-create_zips_df().to_excel("jpzips.xlsx")
-create_jpdata_df().to_excel("jpdata.xlsx")
-create_precincts_df().to_excel("precincts.xlsx")
+create_dates_df().to_excel("jpdates.xlsx")
 
 
 def update_features(layer_name):
