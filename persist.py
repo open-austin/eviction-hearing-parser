@@ -21,8 +21,6 @@ def rest_case(case):
     Takes a dictionary representation of a case and maps it in to a PostgreSQL DB
     """
     conn = get_database_connection(local_dev=local_dev)
-    # conn.execute("pragma journal_mode=wal")
-
     curs = conn.cursor()
     curs.execute(
     """

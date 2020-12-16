@@ -40,30 +40,32 @@ def overwrite_csv(username, password, new_df, old_csv_name):
 def create_dates_df():
     sql_query = """
                 WITH filings_table AS (
-                    SELECT count(case_number) AS filings_count, TO_DATE("date_filed", 'MM/DD/YYYY') AS f_date
-                    FROM filings_archive
-                    WHERE "date_filed" != '' AND LOWER(case_type) = 'eviction'
-                    GROUP BY f_date)
+                SELECT count(case_number) AS filings_count, TO_DATE("date_filed", 'MM/DD/YYYY') AS f_date
+                FROM filings_archive
+                WHERE "date_filed" != '' AND LOWER(case_type) = 'eviction'
+                GROUP BY f_date)
 
                 SELECT filing_counts_by_date.f_date AS "DATE", filing_counts_by_date.filings_count AS "FILINGS COUNT",
-                   filing_counts_by_date.cum_count AS "CUMULIATIVE COUNT", judgment_counts_by_date.judgments AS "JUDGMENTS"
-                   FROM (
-                	    SELECT
-                	    f_date, filings_count,
-                	    SUM(filings_count) OVER (ORDER BY f_date ASC rows BETWEEN unbounded preceding AND current row) AS cum_count
-                	    FROM filings_table) AS filing_counts_by_date
-            	   JOIN (
-            	        SELECT COUNT(status) AS judgments, to_date("date_filed", 'MM/DD/YYYY') AS j_date
-            		    FROM filings_archive
-            	        WHERE LOWER(status) IN
-                	    ('final status', 'judgment satisfied',
-                	    'pending writ return', 'judgment released',
-                	    'final disposition', 'pending writ')
-            		     AND "date_filed" != '' AND LOWER(case_type) = 'eviction'
-            	         GROUP BY j_date) AS judgment_counts_by_date
-            	   ON filing_counts_by_date.f_date = judgment_counts_by_date.j_date
+                filing_counts_by_date.cum_count AS "CUMULIATIVE COUNT", COALESCE(judgment_counts_by_date.judgments, 0) AS "JUDGMENTS"
+                FROM (
+                	SELECT
+                	f_date, filings_count,
+                	SUM(filings_count) OVER (ORDER BY f_date ASC rows BETWEEN unbounded preceding AND current row) AS cum_count
+                	FROM filings_table) AS filing_counts_by_date
+                LEFT JOIN (
+                	SELECT COUNT(status) AS judgments, to_date("date_filed", 'MM/DD/YYYY') AS j_date
+                	FROM filings_archive
+                	WHERE LOWER(status) IN
+                	('final status', 'judgment satisfied',
+                	'pending writ return', 'judgment released',
+                	'final disposition', 'pending writ')
+                	 AND "date_filed" != '' AND LOWER(case_type) = 'eviction'
+                	 GROUP BY j_date) AS judgment_counts_by_date
+                ON filing_counts_by_date.f_date = judgment_counts_by_date.j_date
                 """
     return pd.read_sql(sql_query, con=engine)
+
+
 
 def create_zips_df():
     sql_query = """
@@ -124,9 +126,15 @@ def create_jpdata_df():
 
     jpdata = pd.read_sql(sql_query, con=engine)
     jpdata["Status"] = jpdata.apply(lambda case: get_case_status(case), axis=1)
+    jpdata["Precinct"] = jpdata.apply(lambda case: case["Case_Num"][1], axis=1)
     jpdata = jpdata.drop(columns=["disposition_date"])
 
     return jpdata
+
+create_zips_df().to_excel("jpzips.xlsx")
+create_jpdata_df().to_excel("jpdata.xlsx")
+create_precincts_df().to_excel("precincts.xlsx")
+
 
 def update_features(layer_name):
     gis = GIS(url='https://www.arcgis.com', username=ARCGIS_USERNAME, password=ARCGIS_PASSWORD)
@@ -199,6 +207,7 @@ def update_features(layer_name):
         logger.info(f"Updating {layer_name} succeeded for all rows.")
     else:
         log_and_email(f"Updating {layer_name} failed for at least one row, here's the info: {update_response}", "Error Updating ArcGIS CSV", error=True)
+
 
 def update_all_csvs():
     overwrite_csv(ARCGIS_USERNAME, ARCGIS_PASSWORD, create_dates_df(), "JPDates")

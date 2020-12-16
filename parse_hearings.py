@@ -8,6 +8,7 @@ import logging
 import sys
 import simplejson as json
 from typing import Any, Dict, List
+from emailing import log_and_email
 
 logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
@@ -22,10 +23,18 @@ def get_ids_to_parse(infile: click.File) -> List[str]:
 
 
 def make_case_list(ids_to_parse: List[str]) -> List[Dict[str, Any]]:
-    parsed_cases = []
+    parsed_cases, failed_ids = [], []
     for id_to_parse in ids_to_parse:
-        new_case = hearing.fetch_parsed_case(id_to_parse)
-        parsed_cases.append(new_case)
+        try:
+            new_case = hearing.fetch_parsed_case(id_to_parse)
+            parsed_cases.append(new_case)
+        except:
+            failed_ids.append(id_to_parse)
+
+    if failed_ids:
+        error_message = f"Failed to scrape data for {len(failed_ids)} case numbers. Here they are:\n{', '.join(failed_ids)}"
+        log_and_email(error_message, "Failed Case Numbers", error=True)
+
     return parsed_cases
 
 # same as parse_all but takes a list of case_nums rather than a csv
@@ -35,11 +44,18 @@ def parse_all_from_parse_filings(case_nums, showbrowser=False):
         fetch_page.driver = webdriver.Chrome("./chromedriver")
 
     parsed_cases = make_case_list(case_nums)
-    logger.info(f"Finished making case list, now will all {len(parsed_cases)} cases to SQL.")
+    logger.info(f"Finished making case list, now will send all {len(parsed_cases)} cases to SQL.")
 
+    failed_cases = []
     for parsed_case in parsed_cases:
-        persist.rest_case(parsed_case)
+        try:
+            persist.rest_case(parsed_case)
+        except:
+            failed_cases.append(parsed_case["case_number"])
 
+    if failed_cases:
+        error_message = f"Failed to send the following case numbers to SQL:\n{', '.join(failed_cases)}"
+        log_and_email(error_message, "Case Numbers for Which Sending to SQL Failed", error=True)
     logger.info("Finished sending cases to SQL.")
 
     return parsed_cases
