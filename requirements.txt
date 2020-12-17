@@ -9,7 +9,8 @@ oauth2client
 pandas
 psycopg2-binary
 python-dotenv
-python-Levenshtein 
+python-Levenshtein
 selenium==3.14
 simplejson
 colorama
+arcgis
