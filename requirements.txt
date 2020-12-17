@@ -14,3 +14,4 @@ selenium==3.14
 simplejson
 colorama
 arcgis
+openpyxl
