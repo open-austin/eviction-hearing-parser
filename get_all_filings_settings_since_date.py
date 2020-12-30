@@ -1,15 +1,16 @@
 from datetime import date, datetime, timedelta
-from emailing import send_email
-from colorama import Fore, Style
-import logging
-import click
 import sys
-logger = logging.getLogger()
-logging.basicConfig(stream=sys.stdout)
-logger.setLevel(logging.INFO)
+import logging
+from colorama import Fore, Style
+import click
+from emailing import send_email
+import gsheet
 import parse_filings
 import parse_settings
 
+logger = logging.getLogger()
+logging.basicConfig(stream=sys.stdout)
+logger.setLevel(logging.INFO)
 # dates should be strings in format (m)m-(d)d-yyyy
 def split_into_weeks(start, end):
     start_date = datetime.strptime(start, "%m-%d-%Y").date()
@@ -74,3 +75,10 @@ if __name__ == "__main__":
         get_all_filings_settings_since_date(date)
 
     get_all_since_date()
+    #dump to sheets
+    gsheet.dump_to_sheets('Court_scraper_filings_archive','filings_archive',"SELECT "+ cols + " FROM filings_archive")
+    gsheet.dump_to_sheets('Court_scraper_filings_archive','events',"SELECT * FROM event")
+    gsheet.dump_to_sheets('Court_scraper_settings_archive','settings_archive',"SELECT * FROM setting")
+    gsheet.dump_to_sheets('Court_scraper_evictions_archive','evictions_archive',"SELECT "+ cols +" FROM filings_archive WHERE case_type='Eviction'") #Convert Date to Text
+    gsheet.dump_to_sheets('Court_scraper_evictions_archive','events',"SELECT * FROM eviction_events")
+

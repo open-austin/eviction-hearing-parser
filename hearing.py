@@ -527,12 +527,16 @@ def make_parsed_hearing(soup):
 
 def match_disposition(awarded_to, plaintiff, defendant, disposition_type, status):
     """The function to figure out who judgement is for"""
-    if (("Dismissed" in disposition_type) or ("Dismissed" in status)):
+    if "Dismissed" in status: #
         return (100,"No Judgement")
+    if "DWOP" in status: #
+        return (100,"No Judgement")
+    if "Dismissed" in disposition_type: #
+        return (100,"No Judgement")
+    if "Default" in disposition_type:
+        return (100,"Plaintiff")
     dj = fuzz.partial_ratio(awarded_to.upper(),defendant.upper())
     pj = fuzz.partial_ratio(awarded_to.upper(),plaintiff.upper())
-    #print("Won: "+ awarded_to)
-    #print("defendant: " + defendant  + " " + str(dj) + " plaintiff: " + plaintiff  + " " +str(pj))
     if pj > dj:
         return (pj,"Plaintiff")
     else:
@@ -586,13 +590,13 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
     except:
         disp_type = None
 
-    try:
-        score,winner = match_disposition(get_disposition_awarded_to(disposition_tr), plaintiff, get_defendants(soup), disp_type, status)
-    except:
+    try: 
+        score,winner = match_disposition(disposition_tr, plaintiff, get_defendants(soup), disp_type, status)
+    except Exception as e:
+        print(e)
         score,winner = None,None
 
     disposition_date = get_disposition_date(disposition_tr)
-
     return {
         "precinct_number": get_precinct_number(soup),
         "style": style,
