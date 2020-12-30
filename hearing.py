@@ -527,20 +527,30 @@ def make_parsed_hearing(soup):
 
 def match_disposition(awarded_to, plaintiff, defendant, disposition_type, status):
     """The function to figure out who judgement is for"""
-    if "Dismissed" in status: #
-        return (100,"No Judgement")
-    if "DWOP" in status: #
-        return (100,"No Judgement")
-    if "Dismissed" in disposition_type: #
-        return (100,"No Judgement")
-    if "Default" in disposition_type:
-        return (100,"Plaintiff")
-    dj = fuzz.partial_ratio(awarded_to.upper(),defendant.upper())
-    pj = fuzz.partial_ratio(awarded_to.upper(),plaintiff.upper())
-    if pj > dj:
-        return (pj,"Plaintiff")
+    if status is not None: 
+        if "Dismissed" in status: #
+            return (100,"No Judgement")
+        if "DWOP" in status: #
+            return (100,"No Judgement")
+
+    if disposition_type is not None:
+        if "Dismissed" in disposition_type: #
+            return (100,"No Judgement")
+        if "Default" in disposition_type:
+            return (100,"Plaintiff")
+
+    if awarded_to != "": 
+        awarded_to_list = awarded_to.split()
+        dj = fuzz.partial_ratio(awarded_to.upper(),defendant.upper())
+        pj = fuzz.partial_ratio(awarded_to.upper(),plaintiff.upper())
+        if pj > dj:
+            return (pj,"Plaintiff")
+        else:
+            return (dj,"Defendant")
     else:
-        return (dj,"Defendant")
+        #return(0,"Unknown")
+        return(None,None)
+
 
 def active_or_inactive(status):
     status = status.lower()
@@ -549,6 +559,7 @@ def active_or_inactive(status):
     else:
         log_and_email(f"Can't figure out whether case with substatus '{status}' is active or inactive because '{status}' is not in our statuses map dictionary.", "Encountered Unknown Substatus", error=True)
         return ""
+
 
 def judgment_after_moratorium(disposition_date, substatus):
     substatus = substatus.lower()
@@ -591,7 +602,10 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
         disp_type = None
 
     try: 
-        score,winner = match_disposition(disposition_tr, plaintiff, get_defendants(soup), disp_type, status)
+        if soup is not None and disposition_tr is not None:
+            score,winner = match_disposition(get_disposition_awarded_to(disposition_tr), plaintiff, get_defendants(soup), disp_type, status)
+        else:
+            score,winner = match_disposition("", plaintiff, "", disp_type, status)
     except Exception as e:
         print(e)
         score,winner = None,None

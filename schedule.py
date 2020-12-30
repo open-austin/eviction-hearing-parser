@@ -75,7 +75,14 @@ def scrape_filings_and_settings_task():
     
 # scrape filings and settings every Monday at 3:00 A.M. EST
 if __name__ == "__main__":
-    sched = BlockingScheduler()
-    sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-11-11 3:00:00', timezone='US/Eastern')
-    sched.start()
+#    sched = BlockingScheduler()
+#    sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-11-11 3:00:00', timezone='US/Eastern')
+#    sched.start()
+
+    cols = "case_number, status, precinct, style, plaintiff, defendants, plaintiff_zip, defendant_zip, case_type, date_filed, active_or_inactive, judgment_after_moratorium, CAST(first_court_appearance AS text), type, date, amount, awarded_to, awarded_against, judgement_for, match_score, attorneys_for_plaintiffs, attorneys_for_defendants, comments"
+   # gsheet.dump_to_sheets('Court_scraper_filings_archive','filings_archive',"SELECT "+ cols + " FROM filings_archive") 
+   # gsheet.dump_to_sheets('Court_scraper_filings_archive','events',"SELECT * FROM event") 
+   # gsheet.dump_to_sheets('Court_scraper_settings_archive','settings_archive',"SELECT * FROM setting") 
+    gsheet.dump_to_sheets('Court_scraper_evictions_archive','evictions_archive',"SELECT "+ cols +" FROM filings_archive WHERE case_type='Eviction'") #Convert Date to Text
+    #gsheet.dump_to_sheets('Court_scraper_evictions_archive','events',"SELECT * FROM eviction_events")
     
