@@ -540,7 +540,14 @@ def match_disposition(awarded_to, plaintiff, defendant, disposition_type, status
             return (100,"Plaintiff")
 
     if awarded_to != "": 
-        awarded_to_list = awarded_to.split()
+        #a_l = [x.strip(",") for x in awarded_to.split()]
+        #p_l = [x.strip(",") for x in plaintiff.split()]
+        #d_l = [x.strip(",") for x in defendant.split()]
+#        import itertools
+#       ap_l = [x for x in itertools.product(a_l,p_l)] 
+#       dp_l = [x for x in itertools.product(a_l,d_l)] 
+#       [set(i) for i in ap_l] #test length to see if there is full match?
+
         dj = fuzz.partial_ratio(awarded_to.upper(),defendant.upper())
         pj = fuzz.partial_ratio(awarded_to.upper(),plaintiff.upper())
         if pj > dj:
