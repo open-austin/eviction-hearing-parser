@@ -550,41 +550,40 @@ def match_wordwise(awarded_to,plaintiff,defendant):
     #Calculate full matches
     #pj = [len(j) for j in [set(i) for i in ap_l]].count(1) 
     #dj = [len(j) for j in [set(i) for i in ad_l]].count(1) 
-    print(ap_l)
-    print(ad_l)
     #Calculate fuzzy matches (>THRES)
     pj = list(map(lt,list(map(fuzzy,ap_l))))
     dj = list(map(lt,list(map(fuzzy,ad_l))))
-    print(pj)
-    print(dj)
     pj = sum(pj)
     dj = sum(dj)
     return(pj,dj)
 
 
-def match_disposition(awarded_to, plaintiff, defendant, disposition_type, status):
+def match_disposition(awarded_against, awarded_to, plaintiff, defendant, disposition_type, status):
     """The function to figure out who judgement is for"""
     if status is not None: 
         if "Dismissed" in status: #
             return (100,"No Judgement")
         if "DWOP" in status: #
             return (100,"No Judgement")
-
     if disposition_type is not None:
         if "Dismissed" in disposition_type: #
             return (100,"No Judgement")
         if "Default" in disposition_type:
             return (100,"Plaintiff")
-
-    if awarded_to is not None and plaintiff is not None and defendant is not None:
+    if awarded_to is not None and plaintiff is not None and defendant is not None: #awarded_to and awarded_against will always be not None together
         dj = fuzz.partial_ratio(awarded_to.upper(),defendant.upper())
         pj = fuzz.partial_ratio(awarded_to.upper(),plaintiff.upper())
+        pj,dj = match_wordwise(awarded_to.upper(),plaintiff.upper(),defendant.upper())
         if pj > dj:
             return (pj,"Plaintiff")
         elif dj > pj:
             return (dj,"Defendant")
         else: #pj=dj manual review
-            return (0,"MANUAL REVIEW")
+            pj,dj = match_wordwise(awarded_against.upper(),plaintiff.upper(),defendant.upper())
+            if pj < dj:
+                return (pj,"Plaintiff")
+            elif dj < pj:
+                return (dj,"Defendant")
     return (None,None)
 
 
@@ -638,7 +637,7 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
         disp_type = None
 
     try: 
-        score,winner = match_disposition(get_disposition_awarded_to(disposition_tr), plaintiff, get_defendants(soup), disp_type, status)
+        score,winner = match_disposition(get_disposition_awarded_against(disposition_tr),get_disposition_awarded_to(disposition_tr), plaintiff, get_defendants(soup), disp_type, status)
     except Exception as e:
         print(e)
         score,winner = None,None
