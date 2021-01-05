@@ -3,6 +3,7 @@ from decimal import Decimal
 import os
 import re
 import sys
+import itertools
 from typing import Dict, List, Optional, Tuple
 from bs4 import BeautifulSoup
 from datetime import date, datetime, timedelta
@@ -525,6 +526,42 @@ def make_parsed_hearing(soup):
     }
 
 
+THRESH = 75
+def lt(i):
+    if i > THRESH:
+        return i
+    else: 
+        return 0
+
+
+def fuzzy(i):
+    j = fuzz.partial_ratio(i[0].upper(),i[1].upper())
+    return j
+
+
+def match_wordwise(awarded_to,plaintiff,defendant):
+    #Split into word lists
+    a_l = [x.strip(",") for x in awarded_to.split()]
+    p_l = [x.strip(",") for x in plaintiff.split()]
+    d_l = [x.strip(",") for x in defendant.split()]
+    #Build word pairs to match
+    ap_l = [x for x in itertools.product(a_l,p_l)] 
+    ad_l = [x for x in itertools.product(a_l,d_l)] 
+    #Calculate full matches
+    #pj = [len(j) for j in [set(i) for i in ap_l]].count(1) 
+    #dj = [len(j) for j in [set(i) for i in ad_l]].count(1) 
+    print(ap_l)
+    print(ad_l)
+    #Calculate fuzzy matches (>THRES)
+    pj = list(map(lt,list(map(fuzzy,ap_l))))
+    dj = list(map(lt,list(map(fuzzy,ad_l))))
+    print(pj)
+    print(dj)
+    pj = sum(pj)
+    dj = sum(dj)
+    return(pj,dj)
+
+
 def match_disposition(awarded_to, plaintiff, defendant, disposition_type, status):
     """The function to figure out who judgement is for"""
     if status is not None: 
@@ -539,24 +576,16 @@ def match_disposition(awarded_to, plaintiff, defendant, disposition_type, status
         if "Default" in disposition_type:
             return (100,"Plaintiff")
 
-    if awarded_to != "": 
-        #a_l = [x.strip(",") for x in awarded_to.split()]
-        #p_l = [x.strip(",") for x in plaintiff.split()]
-        #d_l = [x.strip(",") for x in defendant.split()]
-#        import itertools
-#       ap_l = [x for x in itertools.product(a_l,p_l)] 
-#       dp_l = [x for x in itertools.product(a_l,d_l)] 
-#       [set(i) for i in ap_l] #test length to see if there is full match?
-
+    if awarded_to is not None and plaintiff is not None and defendant is not None:
         dj = fuzz.partial_ratio(awarded_to.upper(),defendant.upper())
         pj = fuzz.partial_ratio(awarded_to.upper(),plaintiff.upper())
         if pj > dj:
             return (pj,"Plaintiff")
-        else:
+        elif dj > pj:
             return (dj,"Defendant")
-    else:
-        #return(0,"Unknown")
-        return(None,None)
+        else: #pj=dj manual review
+            return (0,"MANUAL REVIEW")
+    return (None,None)
 
 
 def active_or_inactive(status):
@@ -609,10 +638,7 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
         disp_type = None
 
     try: 
-        if soup is not None and disposition_tr is not None:
-            score,winner = match_disposition(get_disposition_awarded_to(disposition_tr), plaintiff, get_defendants(soup), disp_type, status)
-        else:
-            score,winner = match_disposition("", plaintiff, "", disp_type, status)
+        score,winner = match_disposition(get_disposition_awarded_to(disposition_tr), plaintiff, get_defendants(soup), disp_type, status)
     except Exception as e:
         print(e)
         score,winner = None,None
