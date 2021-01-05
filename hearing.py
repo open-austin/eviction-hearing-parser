@@ -571,14 +571,14 @@ def match_disposition(awarded_against, awarded_to, plaintiff, defendant, disposi
         if "Default" in disposition_type:
             return (100,"Plaintiff")
     if awarded_to is not None and plaintiff is not None and defendant is not None: #awarded_to and awarded_against will always be not None together
-        dj = fuzz.partial_ratio(awarded_to.upper(),defendant.upper())
-        pj = fuzz.partial_ratio(awarded_to.upper(),plaintiff.upper())
+      #  dj = fuzz.partial_ratio(awarded_to.upper(),defendant.upper())
+      #  pj = fuzz.partial_ratio(awarded_to.upper(),plaintiff.upper())
         pj,dj = match_wordwise(awarded_to.upper(),plaintiff.upper(),defendant.upper())
         if pj > dj:
             return (pj,"Plaintiff")
         elif dj > pj:
             return (dj,"Defendant")
-        else: #pj=dj manual review
+        else: 
             pj,dj = match_wordwise(awarded_against.upper(),plaintiff.upper(),defendant.upper())
             if pj < dj:
                 return (pj,"Plaintiff")
