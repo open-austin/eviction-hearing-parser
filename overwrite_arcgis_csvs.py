@@ -65,8 +65,6 @@ def create_dates_df():
                 """
     return pd.read_sql(sql_query, con=engine)
 
-
-
 def create_zips_df():
     sql_query = """
                 SELECT LEFT(defendant_zip, 5) AS "ZIP_Code", COUNT(*) AS "Number_of_Filings"
@@ -130,8 +128,6 @@ def create_jpdata_df():
     jpdata = jpdata.drop(columns=["disposition_date"])
 
     return jpdata
-
-create_dates_df().to_excel("jpdates.xlsx")
 
 
 def update_features(layer_name):
@@ -205,7 +201,6 @@ def update_features(layer_name):
         logger.info(f"Updating {layer_name} succeeded for all rows.")
     else:
         log_and_email(f"Updating {layer_name} failed for at least one row, here's the info: {update_response}", "Error Updating ArcGIS CSV", error=True)
-
 
 def update_all_csvs():
     overwrite_csv(ARCGIS_USERNAME, ARCGIS_PASSWORD, create_dates_df(), "JPDates")
