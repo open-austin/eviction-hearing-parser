@@ -3,6 +3,7 @@ from decimal import Decimal
 import os
 import re
 import sys
+import itertools
 from typing import Dict, List, Optional, Tuple
 from bs4 import BeautifulSoup
 from datetime import date, datetime, timedelta
@@ -525,18 +526,66 @@ def make_parsed_hearing(soup):
     }
 
 
-def match_disposition(awarded_to, plaintiff, defendant, disposition_type, status):
+THRESH = 75
+def lt(i):
+    if i > THRESH:
+        return i
+    else: 
+        return 0
+
+
+def fuzzy(i):
+    j = fuzz.partial_ratio(i[0].upper(),i[1].upper())
+    return j
+
+
+def match_wordwise(awarded_to,plaintiff,defendant):
+    #Split into word lists
+    a_l = [x.strip(",") for x in awarded_to.split()]
+    p_l = [x.strip(",") for x in plaintiff.split()]
+    d_l = [x.strip(",") for x in defendant.split()]
+    #Build word pairs to match
+    ap_l = [x for x in itertools.product(a_l,p_l)] 
+    ad_l = [x for x in itertools.product(a_l,d_l)] 
+    #Calculate full matches
+    #pj = [len(j) for j in [set(i) for i in ap_l]].count(1) 
+    #dj = [len(j) for j in [set(i) for i in ad_l]].count(1) 
+    #Calculate fuzzy matches (>THRES)
+    pj = list(map(lt,list(map(fuzzy,ap_l))))
+    dj = list(map(lt,list(map(fuzzy,ad_l))))
+    pj = sum(pj)
+    dj = sum(dj)
+    return(pj,dj)
+
+
+def match_disposition(awarded_against, awarded_to, plaintiff, defendant, disposition_type, status):
     """The function to figure out who judgement is for"""
-    if (("Dismissed" in disposition_type) or ("Dismissed" in status)):
-        return (100,"No Judgement")
-    dj = fuzz.partial_ratio(awarded_to.upper(),defendant.upper())
-    pj = fuzz.partial_ratio(awarded_to.upper(),plaintiff.upper())
-    #print("Won: "+ awarded_to)
-    #print("defendant: " + defendant  + " " + str(dj) + " plaintiff: " + plaintiff  + " " +str(pj))
-    if pj > dj:
-        return (pj,"Plaintiff")
-    else:
-        return (dj,"Defendant")
+    if status is not None: 
+        if "Dismissed" in status: #
+            return (100,"No Judgement")
+        if "DWOP" in status: #
+            return (100,"No Judgement")
+    if disposition_type is not None:
+        if "Dismissed" in disposition_type: #
+            return (100,"No Judgement")
+        if "Default" in disposition_type:
+            return (100,"Plaintiff")
+    if awarded_to is not None and plaintiff is not None and defendant is not None: #awarded_to and awarded_against will always be not None together
+      #  dj = fuzz.partial_ratio(awarded_to.upper(),defendant.upper())
+      #  pj = fuzz.partial_ratio(awarded_to.upper(),plaintiff.upper())
+        pj,dj = match_wordwise(awarded_to.upper(),plaintiff.upper(),defendant.upper())
+        if pj > dj:
+            return (pj,"Plaintiff")
+        elif dj > pj:
+            return (dj,"Defendant")
+        else: 
+            pj,dj = match_wordwise(awarded_against.upper(),plaintiff.upper(),defendant.upper())
+            if pj < dj:
+                return (pj,"Plaintiff")
+            elif dj < pj:
+                return (dj,"Defendant")
+    return (None,None)
+
 
 def active_or_inactive(status):
     status = status.lower()
@@ -545,6 +594,7 @@ def active_or_inactive(status):
     else:
         log_and_email(f"Can't figure out whether case with substatus '{status}' is active or inactive because '{status}' is not in our statuses map dictionary.", "Encountered Unknown Substatus", error=True)
         return ""
+
 
 def judgment_after_moratorium(disposition_date, substatus):
     substatus = substatus.lower()
@@ -586,13 +636,13 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
     except:
         disp_type = None
 
-    try:
-        score,winner = match_disposition(get_disposition_awarded_to(disposition_tr), plaintiff, get_defendants(soup), disp_type, status)
-    except:
+    try: 
+        score,winner = match_disposition(get_disposition_awarded_against(disposition_tr),get_disposition_awarded_to(disposition_tr), plaintiff, get_defendants(soup), disp_type, status)
+    except Exception as e:
+        print(e)
         score,winner = None,None
 
     disposition_date = get_disposition_date(disposition_tr)
-
     return {
         "precinct_number": get_precinct_number(soup),
         "style": style,

@@ -1,15 +1,15 @@
 from datetime import date, datetime, timedelta
-from emailing import send_email
-from colorama import Fore, Style
-import logging
-import click
 import sys
-logger = logging.getLogger()
-logging.basicConfig(stream=sys.stdout)
-logger.setLevel(logging.INFO)
+import logging
+from colorama import Fore, Style
+import click
+from emailing import send_email
 import parse_filings
 import parse_settings
 
+logger = logging.getLogger()
+logging.basicConfig(stream=sys.stdout)
+logger.setLevel(logging.INFO)
 # dates should be strings in format (m)m-(d)d-yyyy
 def split_into_weeks(start, end):
     start_date = datetime.strptime(start, "%m-%d-%Y").date()
