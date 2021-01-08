@@ -112,7 +112,7 @@ def query_case_id(case_id: str):
             EC.presence_of_element_located((By.ID, "PIr11"))
         )
     except:
-        logger.error(f"Could not load register of actions for case {case_id}")
+        # logger.error(f"Could not load register of actions for case {case_id}")
         return None
     finally:
         register_page_content = search_page.page_source
