@@ -61,6 +61,7 @@ def update_first_court_apperance():
 
 
 def scrape_filings_and_settings_task():
+    logger.info("STARTING DAILY TASKS...")
     perform_task_and_catch_errors(scrape_filings, "Scraping filings")
     perform_task_and_catch_errors(scrape_settings, "Scraping settings")
     perform_task_and_catch_errors(update_first_court_apperance, "Updating first_court_appearance column")
@@ -72,6 +73,8 @@ def scrape_filings_and_settings_task():
     gsheet.dump_to_sheets('Court_scraper_settings_archive','settings_archive',"SELECT * FROM setting")
     gsheet.dump_to_sheets('Court_scraper_evictions_archive','evictions_archive',"SELECT "+ cols +" FROM filings_archive WHERE case_type='Eviction'") #Convert Date to Text
     gsheet.dump_to_sheets('Court_scraper_evictions_archive','events',"SELECT * FROM eviction_events")
+    logger.info("FINISHED DAILY TASKS.\n\n")
+
 
 # scrape filings and settings every Monday at 3:00 A.M. EST
 if __name__ == "__main__":
