@@ -207,3 +207,6 @@ def update_all_csvs():
     overwrite_csv(ARCGIS_USERNAME, ARCGIS_PASSWORD, create_jpdata_df(), "JPData2")
     update_features("JPPrecincts")
     update_features("JPZips")
+
+if __name__ == '__main__':
+    update_all_csvs()
