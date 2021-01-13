@@ -38,13 +38,13 @@ def get_date_from_today(sep, number_of_days, past_or_future):
 def perform_task_and_catch_errors(task_function, task_name, error=False):
     before = time.time()
     logger.info(f"\n{task_name}...")
-    for tries in range(1, 6):
+    for tries in range(1, 2):
         try:
             task_function()
             logger.info(f"Finished {task_name} in {round(time.time() - before, 2)} seconds.")
             return
         except Exception as error:
-            logger.error(f"Unanticipated Error {task_name} on attempt {tries} of 5:\n{str(error)}")
+            logger.error(f"Unanticipated Error {task_name} on attempt {tries} of 1:\n{str(error)}")
     log_and_email(f"{task_name} failed on every attempt. Check Heroku logs for more details.", f"{task_name} failed", error=True)
 
 def scrape_filings():
@@ -78,6 +78,10 @@ def scrape_filings_and_settings_task():
 
 # scrape filings and settings every Monday at 3:00 A.M. EST
 if __name__ == "__main__":
+    scrape_filings_and_settings_task()
+    print("all done...")
+    while True:
+        pass
     sched = BlockingScheduler()
     sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-11-11 3:00:00', timezone='US/Eastern')
     sched.start()

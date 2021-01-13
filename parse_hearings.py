@@ -51,7 +51,11 @@ def parse_all_from_parse_filings(case_nums, showbrowser=False):
         try:
             persist.rest_case(parsed_case)
         except:
-            failed_cases.append(parsed_case["case_number"])
+            try:
+                failed_cases.append(parsed_case["case_number"])
+            except:
+                logger.error("A case failed to be parsed but it doesn't have a case number.")
+
 
     if failed_cases:
         error_message = f"Failed to send the following case numbers to SQL:\n{', '.join(failed_cases)}"

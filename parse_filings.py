@@ -39,7 +39,7 @@ def parse_filings_on_cloud(afterdate, beforedate, get_old_active=True):
     else:
         all_case_nums = get_all_case_nums(afterdate, beforedate)
 
-    logger.info(f"Found {len(all_case_nums)} case numbers.")
+    logger.info(f"Found {len(all_case_nums)} case numbers (including old active ones).")
     parse_all_from_parse_filings(all_case_nums)
 
 @click.command()

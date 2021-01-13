@@ -81,7 +81,7 @@ def query_case_id(case_id: str):
         )
         case_radio_button.click()
     except:
-        logger.error(f"Could not click button to search for case {case_id}")
+        # logger.error(f"Could not click button to search for case {case_id}")
         return None
 
     try:
@@ -89,7 +89,7 @@ def query_case_id(case_id: str):
             EC.presence_of_element_located((By.ID, "CaseSearchValue"))
         )
     except:
-        logger.error(f"Could not type query to search for case {case_id}")
+        # logger.error(f"Could not type query to search for case {case_id}")
         return None
     finally:
         search_box.send_keys(case_id)
@@ -104,7 +104,7 @@ def query_case_id(case_id: str):
         )
         register_link.click()
     except:
-        logger.error(f"Could not click search result for case {case_id}")
+        # logger.error(f"Could not click search result for case {case_id}")
         return None
 
     try:
