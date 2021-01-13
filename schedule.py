@@ -78,6 +78,9 @@ def scrape_filings_and_settings_task():
 
 # scrape filings and settings every Monday at 3:00 A.M. EST
 if __name__ == "__main__":
+    scrape_filings_and_settings_task()
+    while True:
+        pass
     sched = BlockingScheduler()
     sched.add_job(scrape_filings_and_settings_task, 'interval', days=1, start_date='2020-11-11 3:00:00', timezone='US/Eastern')
     sched.start()
