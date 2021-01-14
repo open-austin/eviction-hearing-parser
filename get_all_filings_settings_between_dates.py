@@ -1,3 +1,5 @@
+"""Script to get all filings and settings between two dates. To use: python get_all_filings_settings_between_dates.py mm-dd-yyy mm-dd-yyyy"""
+
 import logging
 import click
 import sys
@@ -10,9 +12,11 @@ logging.basicConfig(stream=sys.stdout)
 logger.setLevel(logging.INFO)
 
 
-# gets all filings since a given date but splits it up by week, tells you which weeks failed
+#
 # date should be string in format (m)m-(d)d-yyyy
-def get_all_filings_settings_between_dates(start_date, end_date):
+def get_all_filings_settings_between_dates(start_date: str, end_date: str):
+    """Gets all filings and settings between `start_date` and `end_date` but splits it up by week. Logs the weeks that failed."""
+
     weeks = split_into_weeks(start_date, end_date)
     logger.info(f"Will get all filings and settings between {start_date} and {end_date}\n")
 

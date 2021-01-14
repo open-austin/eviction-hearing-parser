@@ -1,3 +1,5 @@
+"""Module to create DataFrames from PostgreSQL database and use these to overwrite existing csvs on arcGIS"""
+
 import os
 import sys
 import logging
@@ -19,10 +21,14 @@ load_dotenv()
 engine = get_database_connection(local_dev=False)
 ARCGIS_USERNAME, ARCGIS_PASSWORD = os.getenv("ARCGIS_USERNAME"), os.getenv("ARCGIS_PASSWORD")
 
-# overwrites the table/feature layer named old_csv_name using new_df
-# only works if new_df has the same columns as the old feature/table
-# create an existing feature layer by manually uploading a csv to arcGIS and selecting the "Publish this file as a hosted layer" option
-def overwrite_csv(username, password, new_df, old_csv_name):
+
+def overwrite_csv(username: str, password: str, new_df: DataFrame, old_csv_name: str):
+    """
+    Overwrites the existing table/feature layer named `old_csv_name` using `new_df`
+    Only works if `new_df` has the same columns as the old feature/table
+    (Create an existing table/feature layer by manually uploading a csv to arcGIS and selecting the "Publish this file as a hosted layer" option)
+    """
+
     gis = GIS(url='https://www.arcgis.com', username=username, password=password)
 
     csv_file_name = f"{old_csv_name}.csv"
@@ -37,7 +43,9 @@ def overwrite_csv(username, password, new_df, old_csv_name):
 
     os.remove(csv_file_name)
 
-def create_dates_df():
+def create_dates_df() -> DataFrame:
+    """Creates a DataFrame with filings and judgments counts by date"""
+
     sql_query = """
                 WITH filings_table AS (
                 SELECT count(case_number) AS filings_count, TO_DATE("date_filed", 'MM/DD/YYYY') AS f_date
@@ -65,7 +73,9 @@ def create_dates_df():
                 """
     return pd.read_sql(sql_query, con=engine)
 
-def create_zips_df():
+def create_zips_df() -> DataFrame:
+    """Creates a DataFrame with filings count by zip code"""
+
     sql_query = """
                 SELECT LEFT(defendant_zip, 5) AS "ZIP_Code", COUNT(*) AS "Number_of_Filings"
                 FROM case_detail
@@ -75,7 +85,9 @@ def create_zips_df():
 
     return pd.read_sql(sql_query, con=engine)
 
-def create_precincts_df():
+def create_precincts_df() -> DataFrame:
+    """Creates a DataFrame with filings count by precinct."""
+
     sql_query = """
                 SELECT
                 SUBSTRING(case_number, 1, 1) || 'P-' || SUBSTRING(case_number, 2, 1) AS "Precinct_1",
@@ -86,15 +98,16 @@ def create_precincts_df():
                 """
     return pd.read_sql(sql_query, con=engine)
 
-def create_jpdata_df():
+def create_jpdata_df() -> DataFrame:
+    """Creates a DataFrame with various fields to replicate the JPData2 csv on arcGIS"""
 
-    def handle_null(expected_string):
+    def handle_null(expected_string: str) -> str:
         if pd.isnull(expected_string):
             return ""
         else:
             return expected_string
 
-    def get_case_status(case):
+    def get_case_status(case: str):
         substatus = handle_null(case["Substatus"]).lower()
         if substatus in statuses_map:
             return statuses_map[substatus]["status"]
@@ -130,7 +143,9 @@ def create_jpdata_df():
     return jpdata
 
 
-def update_features(layer_name):
+def update_features(layer_name: str):
+    """Handles updating of features for JPPrecincts and JPZips layers because we can't just overwrite them (doing so ruins the joins associated with them on arcGIS)"""
+
     gis = GIS(url='https://www.arcgis.com', username=ARCGIS_USERNAME, password=ARCGIS_PASSWORD)
 
     feature_layer = gis.content.search(f"title: {layer_name}", 'Feature Layer')[0].tables[0]
@@ -203,6 +218,8 @@ def update_features(layer_name):
         log_and_email(f"Updating {layer_name} failed for at least one row, here's the info: {update_response}", "Error Updating ArcGIS CSV", error=True)
 
 def update_all_csvs():
+    """Updates all 4 of our arcGIS csvs"""
+
     overwrite_csv(ARCGIS_USERNAME, ARCGIS_PASSWORD, create_dates_df(), "JPDates")
     overwrite_csv(ARCGIS_USERNAME, ARCGIS_PASSWORD, create_jpdata_df(), "JPData2")
     update_features("JPPrecincts")

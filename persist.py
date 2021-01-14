@@ -1,3 +1,5 @@
+"""Module for writing data to and reading from PostgreSQL database"""
+
 import os
 from dotenv import load_dotenv
 from connect_to_database import get_database_connection
@@ -5,7 +7,7 @@ from connect_to_database import get_database_connection
 load_dotenv()
 local_dev = os.getenv("LOCAL_DEV") == "true"
 
-def get_case(case_id: str):
+def get_case(case_id: str) -> Dict:
     conn = get_database_connection(local_dev=local_dev)
 
     # conn.row_factory = sqlite3.Row
@@ -16,10 +18,12 @@ def get_case(case_id: str):
     return dict(case)
 
 
-def rest_case(case):
+def rest_case(case: Dict):
     """
-    Takes a dictionary representation of a case and maps it in to a PostgreSQL DB
+    Takes a dictionary representation of a case and maps it into the CASE_DETAIL, DISPOSITION,
+    and EVENT table of the PostgreSQL database
     """
+
     conn = get_database_connection(local_dev=local_dev)
     curs = conn.cursor()
     curs.execute(
@@ -101,10 +105,9 @@ def rest_case(case):
     curs.close()
     conn.close()
 
-def rest_setting(setting):
-    """
-    Takes a dictionary representation of a setting and maps it in to a sqlite DB
-    """
+def rest_setting(setting: Dict):
+    """Takes a dictionary representation of a setting and maps it into the SETTING table of the PostgreSQL database"""
+
     conn = get_database_connection(local_dev=local_dev)
     curs = conn.cursor()
     curs.execute(
@@ -130,10 +133,9 @@ def rest_setting(setting):
     curs.close()
     conn.close()
 
-def get_old_active_case_nums():
-    """
-    Retrurns list of case nums in CASE_DETAIL table that are still active.
-    """
+def get_old_active_case_nums() -> List[str]:
+    """Returns list of case numbers in CASE_DETAIL table that are still active (as determined by the STATUS column)."""
+
     conn = get_database_connection(local_dev=local_dev)
     curs = conn.cursor()
 
@@ -148,9 +150,8 @@ def get_old_active_case_nums():
 
 # not currently being used for anything
 def drop_rows_from_table(table_name: str, case_ids: list):
-    """
-    Drops all rows with case number in case_ids from table table_name - works for CASE_DETAIL, DISPOSITION, and EVENT tables
-    """
+    """Drops all rows with case number in case_ids from table `table_name` - works for CASE_DETAIL, DISPOSITION, and EVENT tables"""
+
     if len(case_ids) == 1:
         case_ids = str(tuple(case_ids)).replace(",", "")
     else:
@@ -169,6 +170,8 @@ def drop_rows_from_table(table_name: str, case_ids: list):
     conn.close()
 
 def update_first_court_apperance_column():
+    """Updates the first_court_appearance column of the CASE_DETAIL table in PostgreSQL using the latest database data."""
+
     update_query = """
                    UPDATE case_detail
                    SET first_court_appearance =

@@ -1,3 +1,5 @@
+"""Module for sending emails using the account specified by the environment variables"""
+
 import os
 import sys
 import logging
@@ -11,10 +13,12 @@ logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
 logger.setLevel(logging.INFO)
 
-def send_email(message, subject):
+def send_email(message: str, subject: str):
+    """Sends email with specified message and subject"""
+
     if local_dev:
         return
-        
+
     if os.getenv("ERROR_EMAIL_ADDRESS") and os.getenv("ERROR_EMAIL_ADDRESS_PASSWORD"):
         email, password = os.getenv("ERROR_EMAIL_ADDRESS"), os.getenv("ERROR_EMAIL_ADDRESS_PASSWORD")
         port, smtp_server, context  = 465, "smtp.gmail.com", ssl.create_default_context()
@@ -24,7 +28,9 @@ def send_email(message, subject):
     else:
         logger.error("Cannot send email because the necessary environment variables (ERROR_EMAIL_ADDRESS and ERROR_EMAIL_ADDRESS_PASSWORD) do not exist.")
 
-def log_and_email(message, subject, error=False):
+def log_and_email(message: str, subject: str, error=False):
+    """Sends email with specified message and subject and prints the message to logs"""
+
     if error:
         logger.error(f"{subject}:\n{message}")
     else:

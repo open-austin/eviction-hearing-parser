@@ -1,4 +1,10 @@
-statuses_map = {"dismissed": {"is_active": False, "status": "Dismissed"},
+"""
+Maps substatuses to their active / inactive state and in progress / dismissed / judgment state
+To be updated whenever we encounter a new substatus
+"""
+
+statuses_map = {
+                "dismissed": {"is_active": False, "status": "Dismissed"},
                 "final status": {"is_active": False, "status": "Judgment"},
                 "appealed": {"is_active": False, "status": "Judgment"},
                 "active": {"is_active": True, "status": "In Progress"},

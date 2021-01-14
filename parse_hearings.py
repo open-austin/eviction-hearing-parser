@@ -1,3 +1,8 @@
+"""
+Module to get case details given case numbers.
+To perform a scraper run, use: python parse_hearings.py name_of_csv_with_case_numbers
+"""
+
 import csv
 import os
 import click
@@ -15,6 +20,8 @@ logging.basicConfig(stream=sys.stdout)
 logger.setLevel(logging.INFO)
 
 def get_ids_to_parse(infile: click.File) -> List[str]:
+    """Gets a list of case numbers from the csv `infile`"""
+
     ids_to_parse = []
     reader = csv.reader(infile)
     for row in reader:
@@ -23,6 +30,8 @@ def get_ids_to_parse(infile: click.File) -> List[str]:
 
 
 def make_case_list(ids_to_parse: List[str]) -> List[Dict[str, Any]]:
+    """Gets case details for each case number in `ids_to_pars`"""
+
     parsed_cases, failed_ids = [], []
     for id_to_parse in ids_to_parse:
         try:
@@ -37,8 +46,12 @@ def make_case_list(ids_to_parse: List[str]) -> List[Dict[str, Any]]:
 
     return parsed_cases
 
-# same as parse_all but takes a list of case_nums rather than a csv
-def parse_all_from_parse_filings(case_nums, showbrowser=False):
+def parse_all_from_parse_filings(case_nums: List[str], showbrowser=False) -> List[Dict[str, Any]]:
+    """
+    Gets case details for each case number in `case_nums` and sends the data to PostgreSQL.
+    Logs any case numbers for which getting data failed.
+    """
+
     if showbrowser:
         from selenium import webdriver
         fetch_page.driver = webdriver.Chrome("./chromedriver")
@@ -72,6 +85,8 @@ def parse_all_from_parse_filings(case_nums, showbrowser=False):
 @click.option('--showbrowser / --headless', default=False, help='whether to operate in headless mode or not')
 
 def parse_all(infile, outfile, showbrowser=False):
+    """Same as `parse_all_from_parse_filings()` but takes in a csv of case numbers instead of a list."""
+
     # If showbrowser is True, use the default selenium driver
     if showbrowser:
         from selenium import webdriver
