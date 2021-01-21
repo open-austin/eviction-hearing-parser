@@ -4,7 +4,7 @@ import os
 import sys
 import logging
 import pandas as pd
-from datetime import datetime
+from datetime import datetime,timedelta
 from dotenv import load_dotenv
 from arcgis import join_features
 from arcgis.gis import GIS
@@ -22,7 +22,7 @@ engine = get_database_connection(local_dev=False)
 ARCGIS_USERNAME, ARCGIS_PASSWORD = os.getenv("ARCGIS_USERNAME"), os.getenv("ARCGIS_PASSWORD")
 
 
-def overwrite_csv(username: str, password: str, new_df: DataFrame, old_csv_name: str):
+def overwrite_csv(username: str, password: str, new_df: pd.DataFrame, old_csv_name: str):
     """
     Overwrites the existing table/feature layer named `old_csv_name` using `new_df`
     Only works if `new_df` has the same columns as the old feature/table
@@ -43,7 +43,7 @@ def overwrite_csv(username: str, password: str, new_df: DataFrame, old_csv_name:
 
     os.remove(csv_file_name)
 
-def create_dates_df() -> DataFrame:
+def create_dates_df() -> pd.DataFrame:
     """Creates a DataFrame with filings and judgments counts by date"""
 
     sql_query = """
@@ -73,7 +73,7 @@ def create_dates_df() -> DataFrame:
                 """
     return pd.read_sql(sql_query, con=engine)
 
-def create_zips_df() -> DataFrame:
+def create_zips_df() -> pd.DataFrame:
     """Creates a DataFrame with filings count by zip code"""
 
     sql_query = """
@@ -85,7 +85,7 @@ def create_zips_df() -> DataFrame:
 
     return pd.read_sql(sql_query, con=engine)
 
-def create_precincts_df() -> DataFrame:
+def create_precincts_df() -> pd.DataFrame:
     """Creates a DataFrame with filings count by precinct."""
 
     sql_query = """
@@ -98,7 +98,7 @@ def create_precincts_df() -> DataFrame:
                 """
     return pd.read_sql(sql_query, con=engine)
 
-def create_jpdata_df() -> DataFrame:
+def create_jpdata_df() -> pd.DataFrame:
     """Creates a DataFrame with various fields to replicate the JPData2 csv on arcGIS"""
 
     def handle_null(expected_string: str) -> str:
@@ -136,11 +136,13 @@ def create_jpdata_df() -> DataFrame:
                 """
 
     jpdata = pd.read_sql(sql_query, con=engine)
+    jpdata["DATE FORMATTED"] = pd.to_datetime(jpdata["Hearing Date"]).apply(lambda x: x + timedelta(days=1)) #this is kinda hacky bc arcGIS for some reason pushes dates back a day?
     jpdata["Status"] = jpdata.apply(lambda case: get_case_status(case), axis=1)
     jpdata["Precinct"] = jpdata.apply(lambda case: case["Case_Num"][1], axis=1)
     jpdata = jpdata.drop(columns=["disposition_date"])
 
     return jpdata
+
 
 
 def update_features(layer_name: str):
