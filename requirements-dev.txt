@@ -3,4 +3,3 @@ flake8
 mypy
 pytest
 pytest-cov
-pytest-vcr
