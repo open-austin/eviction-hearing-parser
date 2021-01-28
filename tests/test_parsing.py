@@ -71,7 +71,10 @@ class TestParseHTML:
             (3, "National Landlords, LLC vs. Lois Lewis,Louis Lewis"),
             (6, "Land Lorde vs. Ten Ant"),
             (7, "LAND LORDE, DBA LORDE vs. TEN ANT AND ALL OTHER OCCUPANTS"),
-            (8, "THE HOUSING AUTHORITY OF THE CITY OF AUSTIN vs. TEN ANT AND ALL OTHER OCCUPANTS"),
+            (
+                8,
+                "THE HOUSING AUTHORITY OF THE CITY OF AUSTIN vs. TEN ANT AND ALL OTHER OCCUPANTS",
+            ),
             (9, "Proper Tea LLC vs. Wren Ter"),
             (10, "Proper Tea LLC vs. Wren Ter"),
             (11, "Wren A Ter,Wren B Ter vs. Wren Ter and all other occupants"),
@@ -334,7 +337,8 @@ class TestParseHTML:
         assert served.get(defendant) == expected
 
     @pytest.mark.parametrize(
-        "index, expected", [
+        "index, expected",
+        [
             (0, []),
             (1, ["05/05/2020"]),
             (2, ["01/22/2020"]),
@@ -405,20 +409,20 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
-            (0, "N/A"),
-            (1, "N/A"),
-            (2, "N/A"),
-            (3, "N/A"),
+            (0, None),
+            (1, None),
+            (2, None),
+            (3, None),
             (4, "We Sue You, Llc"),
             (5, "LESS SORE LLC"),
             (6, "Les See"),
             (7, "LAND LORDE, DBA LORDE"),
             (8, "THE HOUSING AUTHORITY OF THE CITY OF AUSTIN"),
-            (9, "N/A"),
+            (9, None),
             (10, "Wren Ter"),
-            (11, "N/A"),
+            (11, None),
             (12, "Wren A Ter, et al"),
-            (13, "N/A"),
+            (13, None),
         ],
     )
     def test_disposition_awarded_to(self, index, expected):
@@ -430,20 +434,20 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
-            (0, "N/A"),
-            (1, "N/A"),
-            (2, "N/A"),
-            (3, "N/A"),
+            (0, None),
+            (1, None),
+            (2, None),
+            (3, None),
             (4, "David Tenant"),
             (5, "LES SEE"),
             (6, "Land Lorde"),
             (7, "Ten Ant"),
             (8, "TEN ANT AND ALL OTHER OCCUPANTS"),
-            (9, "N/A"),
+            (9, None),
             (10, "Proper Tea LLC"),
-            (11, "N/A"),
+            (11, None),
             (12, "Proper Tea LLC"),
-            (13, "N/A"),
+            (13, None),
         ],
     )
     def test_disposition_awarded_against(self, index, expected):
@@ -489,13 +493,22 @@ class TestParseHTML:
             (3, None),
             (4, None),
             (5, None),
-            (6, "Comment: PLTF TAKE NOTHING. APPEAL DATE: 01/21/2020. BOND AMT: $500.00. EMAILED JDMT TO BOTH PARTIES."),
+            (
+                6,
+                "Comment: PLTF TAKE NOTHING. APPEAL DATE: 01/21/2020. BOND AMT: $500.00. EMAILED JDMT TO BOTH PARTIES.",
+            ),
             (7, "Comment: EMAILED TO BOTH. KD"),
             (8, None),
             (9, None),
-            (10, "Comment: PLTF TAKE NOTHING. APPEAL DATE: 12/16/2019. BOND AMT: $25.00. EMAILED JDMT TO BOTH PARTIES."),
+            (
+                10,
+                "Comment: PLTF TAKE NOTHING. APPEAL DATE: 12/16/2019. BOND AMT: $25.00. EMAILED JDMT TO BOTH PARTIES.",
+            ),
             (11, None),
-            (12, "Comment: + INT @ 5.25%. JGMT FOR DEFS, PLF TAKE NOTHING. APPEAL BOND $500.00."),
+            (
+                12,
+                "Comment: + INT @ 5.25%. JGMT FOR DEFS, PLF TAKE NOTHING. APPEAL BOND $500.00.",
+            ),
             (13, None),
         ],
     )
@@ -521,7 +534,7 @@ class TestParseHTML:
                     "served_date": "02/01/2020",
                     "served_subject": "Ant, Ten",
                     "returned_date": "02/13/2020",
-                }
+                },
             ),
             (
                 8,
@@ -529,7 +542,7 @@ class TestParseHTML:
                     "case_event_date": "02/19/2020",
                     "served_date": "02/12/2020",
                     "served_subject": "ANT AND ALL OTHER OCCUPANTS, TEN",
-                }
+                },
             ),
             (9, {}),
             (10, {}),
@@ -562,7 +575,9 @@ class TestParseHTML:
             (13, {}),
         ],
     )
-    def test_get_writ_of_possession_service(self, test_html_file_index, expected_event_details):
+    def test_get_writ_of_possession_service(
+        self, test_html_file_index, expected_event_details
+    ):
         soup = hearing.get_test_soup(test_html_file_index)
         event_details = hearing.get_writ_of_possession_service(soup)
         assert event_details == expected_event_details
@@ -586,7 +601,9 @@ class TestParseHTML:
             (13, {}),
         ],
     )
-    def test_get_writ_of_possession_requested(self, test_html_file_index, expected_event_details):
+    def test_get_writ_of_possession_requested(
+        self, test_html_file_index, expected_event_details
+    ):
         soup = hearing.get_test_soup(test_html_file_index)
         event_details = hearing.get_writ_of_possession_requested(soup)
         assert event_details == expected_event_details
@@ -610,7 +627,9 @@ class TestParseHTML:
             (13, {}),
         ],
     )
-    def test_get_writ_of_possession_sent_to_constable(self, test_html_file_index, expected_event_details):
+    def test_get_writ_of_possession_sent_to_constable(
+        self, test_html_file_index, expected_event_details
+    ):
         soup = hearing.get_test_soup(test_html_file_index)
         event_details = hearing.get_writ_of_possession_sent_to_constable(soup)
         assert event_details == expected_event_details
@@ -634,7 +653,9 @@ class TestParseHTML:
             (13, {}),
         ],
     )
-    def test_get_writ_returned_to_court(self, test_html_file_index, expected_event_details):
+    def test_get_writ_returned_to_court(
+        self, test_html_file_index, expected_event_details
+    ):
         soup = hearing.get_test_soup(test_html_file_index)
         event_details = hearing.get_writ_returned_to_court(soup)
         assert event_details == expected_event_details
@@ -658,7 +679,9 @@ class TestParseHTML:
             (13, {"MARISSA M LATTA": ["Ter, Wren B"]}),
         ],
     )
-    def test_get_attorneys_for_defendants(self, test_html_file_index, expected_attorneys):
+    def test_get_attorneys_for_defendants(
+        self, test_html_file_index, expected_attorneys
+    ):
         soup = hearing.get_test_soup(test_html_file_index)
         attorneys = hearing.get_attorneys_for_defendants(soup)
         assert attorneys == expected_attorneys
@@ -682,7 +705,9 @@ class TestParseHTML:
             (13, {"JAMES N. FLOYD": ["Proper Tea LLC"]}),
         ],
     )
-    def test_get_attorneys_for_plaintiffs(self, test_html_file_index, expected_attorneys):
+    def test_get_attorneys_for_plaintiffs(
+        self, test_html_file_index, expected_attorneys
+    ):
         soup = hearing.get_test_soup(test_html_file_index)
         attorneys = hearing.get_attorneys_for_plaintiffs(soup)
         assert attorneys == expected_attorneys
@@ -690,11 +715,11 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, plaintiff, disposition_date",
         [
-            (0, "XYZ Group LLC", ''),
+            (0, "XYZ Group LLC", ""),
             (5, "LESS SORE LLC", "03/13/2020"),
             (6, "Lorde, Land", "01/14/2020"),
-            ]
-            )
+        ],
+    )
     def test_make_parsed_case(self, test_html_file_index, plaintiff, disposition_date):
         soup = hearing.get_test_soup(test_html_file_index)
         parsed_case = hearing.make_parsed_case(soup=soup)
