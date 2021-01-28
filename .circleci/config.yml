@@ -3,6 +3,7 @@ jobs:
     docker:
       - image: circleci/python:3.8.5-browsers
     steps:
+      - browser-tools/install-browser-tools
       - checkout
       - restore_cache:
           key: deps1-{{ .Branch }}-{{ checksum "requirements.txt" }}
@@ -25,7 +26,9 @@ jobs:
             pytest --cov=. --cov-report=term-missing
             coveralls
 workflows:
-  version: 2
+  orbs:
+    browser-tools: circleci/browser-tools@1.1.1
+  version: 2.1
   build_and_test:
     jobs:
       - build
