@@ -14,7 +14,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
 options = Options()
-options.add_argument('--no-sandbox')
+options.add_argument("--no-sandbox")
 options.add_argument("window-size=1920,1080")
 options.headless = True
 
@@ -27,10 +27,12 @@ local_dev = os.getenv("LOCAL_DEV") == "true"
 if local_dev:
     driver = webdriver.Chrome("./chromedriver", options=options)
 else:
-    driver_path, chrome_bin = os.getenv('CHROMEDRIVER_PATH'), os.getenv('GOOGLE_CHROME_BIN')
+    driver_path, chrome_bin = (
+        os.getenv("CHROMEDRIVER_PATH"),
+        os.getenv("GOOGLE_CHROME_BIN"),
+    )
     options.binary_location = chrome_bin
-    driver = webdriver.Chrome(executable_path=driver_path , options=options)
-
+    driver = webdriver.Chrome(executable_path=driver_path, options=options)
 
 
 def close_driver():
