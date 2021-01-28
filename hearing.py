@@ -7,7 +7,6 @@ import itertools
 from typing import Dict, List, Optional, Tuple
 from bs4 import BeautifulSoup
 from datetime import date, datetime, timedelta
-import fetch_page
 import logging
 from statuses import statuses_map
 from dotenv import load_dotenv
@@ -724,35 +723,6 @@ def make_parsed_case(
     }
 
 
-def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
-    query_result = fetch_page.query_case_id(case_id)
-    if query_result is None:
-        return None
-    result_page, register_page = query_result
-    result_soup = BeautifulSoup(result_page, "html.parser")
-    register_soup = BeautifulSoup(register_page, "html.parser")
-
-    register_url = get_register_url(result_soup)
-    status, type = get_status_and_type(result_soup)
-
-    if status.lower() not in statuses_map:
-        load_dotenv()
-        if os.getenv("LOCAL_DEV") != "true":
-            log_and_email(
-                f"Case {case_id} has status '{status}', which is not in our list of known statuses.",
-                "Found Unknown Status",
-                error=True,
-            )
-        else:
-            logger.info(
-                f"Case {case_id} has status '{status}', which is not in our list of known statuses."
-            )
-
-    return make_parsed_case(
-        soup=register_soup, status=status, type=type, register_url=register_url
-    )
-
-
 def get_setting(soup):
     "get setting as a dict from a row of the table"
     setting_details: Dict[str, str] = {}
@@ -836,26 +806,6 @@ def get_setting_list(calendar_soup):
     return setting_list
 
 
-def fetch_settings(afterdate: str, beforedate: str) -> Tuple[str, str]:
-
-    for tries in range(1, 11):
-        try:
-            "fetch all settings as a list of dicts"
-            calendar_page_content = fetch_page.query_settings(afterdate, beforedate)
-            if calendar_page_content is None:
-                return None
-            calendar_soup = BeautifulSoup(calendar_page_content, "html.parser")
-            setting_list = get_setting_list(calendar_soup)
-            break
-        except:
-            if tries == 10:
-                logger.error(
-                    f"Failed to get setting list between {afterdate} and {beforedate} on all 10 attempts."
-                )
-
-    return setting_list
-
-
 def get_filing_case_nums(filing_soup) -> Tuple[List[str], bool]:
     "returns list of case numbers given soup of search results"
     # get all tables
@@ -925,48 +875,3 @@ def split_date_range(afterdate: str, beforedate: str) -> Tuple[str, str]:
 
     return end_of_first_range, start_of_second_range
 
-
-def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str) -> List[str]:
-    "Get filing case numbers between afterdate and beforedate and starting with case_num_prefix."
-
-    for tries in range(1, 11):
-        try:
-            filings_page_content = fetch_page.query_filings(
-                afterdate, beforedate, case_num_prefix
-            )
-            filings_soup = BeautifulSoup(filings_page_content, "html.parser")
-            filings_case_nums_list, query_needs_splitting = get_filing_case_nums(
-                filings_soup
-            )
-            break
-        except:
-            if tries == 10:
-                logger.error(f"Failed to find case numbers on all 10 attempts.")
-
-    # handle case of too many results (200 results means that the search cut off)
-    if query_needs_splitting:
-        try:
-            end_of_first_range, start_of_second_range = split_date_range(
-                afterdate, beforedate
-            )
-            filings_case_nums_list = fetch_filings(
-                afterdate, end_of_first_range, case_num_prefix
-            ) + fetch_filings(start_of_second_range, beforedate, case_num_prefix)
-        except ValueError:
-            logger.error(
-                f"The search returned {len(filings_case_nums_list)} results but there's nothing "
-                "the code can do because beforedate and afterdate are the same.\n"
-                "Case details will be scraped for these results.\n"
-            )
-
-    # # some optional logging to make sure results look good - could remove
-    # logger.info(f"Found {len(filings_case_nums_list)} case numbers.")
-    # if len(filings_case_nums_list) > 5:
-    #     logger.info(
-    #         f"Results preview: {filings_case_nums_list[0]}, {filings_case_nums_list[1]}, "
-    #         f"..., {filings_case_nums_list[-1]}\n"
-    #     )
-    # else:
-    #     logger.info(f"Results: {', '.join(filings_case_nums_list)}\n")
-
-    return filings_case_nums_list

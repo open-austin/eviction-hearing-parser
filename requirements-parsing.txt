@@ -1,0 +1,7 @@
+click>=7.1.2
+colorama
+fuzzywuzzy
+python-dotenv
+python-Levenshtein
+simplejson
+colorama
