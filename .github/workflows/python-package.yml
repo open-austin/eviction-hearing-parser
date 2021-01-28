@@ -1,6 +1,14 @@
 name: Python package
 
-on: [push]
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 jobs:
   build:
@@ -23,7 +31,8 @@ jobs:
           pip install pytest
           pip install pytest-cov
           pip install coveralls
-      - run: |
+      - name: Selenium
+        run: |
           export DISPLAY=:99
           chromedriver --url-base=/wd/hub &
           sudo Xvfb -ac :99 -screen 0 1280x1024x24 > /dev/null 2>&1 & # optional
