@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.7, 3.8]
+        python-version: [3.8]
 
     steps:
       - uses: actions/checkout@v2
@@ -29,5 +29,5 @@ jobs:
           pip install coveralls
       - name: Test with pytest
         run: |
-          pytest --cov=. --cov-report=term-missing
+          pytest tests/ --cov=. --cov-report=term-missing
           coveralls
