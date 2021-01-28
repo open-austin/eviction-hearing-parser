@@ -1,9 +1,3 @@
-"""
-Module to get data for all cases between two dates
-To perform a scraper run, use: python parse_filings.py afterdate beforedate
-(dates in format mm-dd-yyyy)
-"""
-
 import os
 import sys
 import json
@@ -18,9 +12,8 @@ import logging
 logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
 
-def get_all_case_nums(afterdate: str, beforedate: str) -> List[str]:
-    """Gets list of all case numbers between `afterdate` and `beforedate` (dates are in format mm-dd-yyyy)"""
-
+# returns list of all case nums for all prefixes between afterdate and beforedate - dates are in format mm-dd-yyyy
+def get_all_case_nums(afterdate: str, beforedate: str):
     aferdate_year = afterdate.split("-")[-1][-2:]
     beforedate_year = beforedate.split("-")[-1][-2:]
 
@@ -33,13 +26,10 @@ def get_all_case_nums(afterdate: str, beforedate: str) -> List[str]:
     for prefix in case_num_prefixes:
         prefix_case_nums = fetch_filings(afterdate, beforedate, prefix)
         all_case_nums += prefix_case_nums
-
-    logger.info(f"Scraped case numbers between {afterdate} and {beforedate} - found {len(all_case_nums)} of them.")
     return all_case_nums
 
-def parse_filings_on_cloud(afterdate: str, beforedate: str, get_old_active=True):
-    """Same as `parse_filings()` (see below) but without command line interface and showbrowser/outfile options"""
-
+# same as parse_filings but without command line interface and showbrowser/outfile options
+def parse_filings_on_cloud(afterdate, beforedate, get_old_active=True):
     logger.info(f"Parsing filings between {afterdate} and {beforedate}.")
 
     if get_old_active:
@@ -47,7 +37,7 @@ def parse_filings_on_cloud(afterdate: str, beforedate: str, get_old_active=True)
     else:
         all_case_nums = get_all_case_nums(afterdate, beforedate)
 
-    logger.info(f"Found {len(all_case_nums)} case numbers (including old active ones).")
+    logger.info(f"Found {len(all_case_nums)} case numbers.")
     parse_all_from_parse_filings(all_case_nums)
 
 @click.command()
@@ -56,14 +46,10 @@ def parse_filings_on_cloud(afterdate: str, beforedate: str, get_old_active=True)
 @click.argument("outfile", type=click.File(mode="w"), default="result.json")
 @click.option('--showbrowser / --headless', default=False, help='whether to operate in headless mode or not')
 
-
+# Performs a full 'scraper run' between afterdate and beforedate - gets case details, events, and dispositions for all case nums between
+# afterdate and beforedate. Example of date format - 9-1-2020. Also updates rows in event/disposition/case_detail table that are still active
 def parse_filings(afterdate, beforedate, outfile, showbrowser=False):
-    """
-    Performs a full 'scraper run' between `afterdate` and `beforedate` - gets case details, events, and dispositions for all case numbers between
-    `afterdate` and `beforedate`. Example of date format: 9-1-2020. Also updates rows in event/disposition/case_detail table that are still active
-    """
-
-    # use default chrome browser (rather than headless) is showbrowser is True
+    # use default firefox browser (rather than headless) is showbrowser is True
     if showbrowser:
         fetch_page.driver = webdriver.Chrome("./chromedriver")
 

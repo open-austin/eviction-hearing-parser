@@ -1,5 +1,3 @@
-"""Module for writing data to and reading from PostgreSQL database"""
-
 import os
 from dotenv import load_dotenv
 from connect_to_database import get_database_connection
@@ -7,7 +5,7 @@ from connect_to_database import get_database_connection
 load_dotenv()
 local_dev = os.getenv("LOCAL_DEV") == "true"
 
-def get_case(case_id: str) -> Dict:
+def get_case(case_id: str):
     conn = get_database_connection(local_dev=local_dev)
 
     # conn.row_factory = sqlite3.Row
@@ -18,23 +16,23 @@ def get_case(case_id: str) -> Dict:
     return dict(case)
 
 
-def rest_case(case: Dict):
+def rest_case(case):
     """
-    Takes a dictionary representation of a case and maps it into the CASE_DETAIL, DISPOSITION,
-    and EVENT table of the PostgreSQL database
+    Takes a dictionary representation of a case and maps it in to a PostgreSQL DB
     """
-
     conn = get_database_connection(local_dev=local_dev)
+    # conn.execute("pragma journal_mode=wal")
+
     curs = conn.cursor()
     curs.execute(
     """
     INSERT INTO CASE_DETAIL
-    (CASE_NUMBER, STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP, CASE_TYPE, DATE_FILED, ACTIVE_OR_INACTIVE, JUDGMENT_AFTER_MORATORIUM)
-    VALUES (%(case_num)s, %(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s, %(type)s, %(date_filed)s, %(active_or_inactive)s, %(after_moraorium)s)
+    (CASE_NUMBER, STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP, CASE_TYPE)
+    VALUES (%(case_num)s, %(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s, %(type)s)
     ON CONFLICT(CASE_NUMBER)
     DO UPDATE SET
-    (STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP, CASE_TYPE, DATE_FILED, ACTIVE_OR_INACTIVE, JUDGMENT_AFTER_MORATORIUM) =
-    (%(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s, %(type)s, %(date_filed)s, %(active_or_inactive)s, %(after_moraorium)s)
+    (STATUS, REGISTER_URL, PRECINCT, STYLE, PLAINTIFF, DEFENDANTS, PLAINTIFF_ZIP, DEFENDANT_ZIP, CASE_TYPE) =
+    (%(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s, %(type)s)
     """,
         {
             'case_num': case["case_number"],
@@ -46,22 +44,19 @@ def rest_case(case: Dict):
             'defend': case["defendants"],
             'plaint_zip': case["plaintiff_zip"],
             'defend_zip': case["defendant_zip"],
-            'type': case["type"],
-            'date_filed': case["date_filed"],
-            'active_or_inactive': case["active_or_inactive"],
-            'after_moraorium': case["judgment_after_moratorium"]
+            'type': case["type"]
         },
     )
 
     curs.execute(
     """
     INSERT INTO DISPOSITION
-    (CASE_NUMBER, TYPE, DATE, AMOUNT, AWARDED_TO, AWARDED_AGAINST,JUDGEMENT_FOR,MATCH_SCORE,ATTORNEYS_FOR_PLAINTIFFS, ATTORNEYS_FOR_DEFENDANTS, COMMENTS)
-    VALUES (%(case_num)s, %(disp_type)s, %(disp_date)s, %(disp_amt)s, %(disp_to)s, %(disp_against)s, %(judgement_for)s,%(match_score)s,%(attorneys_for_plaintiffs)s, %(attorneys_for_defendants)s, %(comments)s)
+    (CASE_NUMBER, TYPE, DATE, AMOUNT, AWARDED_TO, AWARDED_AGAINST)
+    VALUES (%(case_num)s, %(disp_type)s, %(disp_date)s, %(disp_amt)s, %(disp_to)s, %(disp_against)s)
     ON CONFLICT(CASE_NUMBER)
     DO UPDATE SET
-    (TYPE, DATE, AMOUNT, AWARDED_TO, AWARDED_AGAINST, JUDGEMENT_FOR, MATCH_SCORE,ATTORNEYS_FOR_PLAINTIFFS, ATTORNEYS_FOR_DEFENDANTS,COMMENTS) =
-    (%(disp_type)s, %(disp_date)s, %(disp_amt)s, %(disp_to)s, %(disp_against)s, %(judgement_for)s,%(match_score)s, %(attorneys_for_plaintiffs)s, %(attorneys_for_defendants)s,  %(comments)s)
+    (TYPE, DATE, AMOUNT, AWARDED_TO, AWARDED_AGAINST) =
+    (%(disp_type)s, %(disp_date)s, %(disp_amt)s, %(disp_to)s, %(disp_against)s)
     """,
         {
             'case_num': case["case_number"],
@@ -70,11 +65,6 @@ def rest_case(case: Dict):
             'disp_amt': str(case["disposition_amount"]),
             'disp_to': case["disposition_awarded_to"],
             'disp_against': case["disposition_awarded_against"],
-            'judgement_for': case["judgement_for"],
-            'match_score': case["match_score"],
-            'attorneys_for_plaintiffs': case["attorneys_for_plaintiffs"],
-            'attorneys_for_defendants': case["attorneys_for_defendants"],
-            'comments': case["comments"]
         },
     )
     # TODO scrape all event types in a similar way (writs should be consolidated in)
@@ -83,12 +73,12 @@ def rest_case(case: Dict):
         curs.execute(
             """
             INSERT INTO EVENT
-            (CASE_NUMBER, EVENT_NUMBER, DATE, TIME, OFFICER, RESULT, TYPE, ALL_TEXT)
-            VALUES (%(case_num)s, %(hearing_num)s, %(hearing_date)s, %(hearing_time)s, %(hearing_officer)s, %(hearing_appeared)s, %(hearing_type)s, %(all_text)s)
+            (CASE_NUMBER, EVENT_NUMBER, DATE, TIME, OFFICER, RESULT, TYPE)
+            VALUES (%(case_num)s, %(hearing_num)s, %(hearing_date)s, %(hearing_time)s, %(hearing_officer)s, %(hearing_appeared)s, 'HR')
             ON CONFLICT(CASE_NUMBER, EVENT_NUMBER)
             DO UPDATE SET
-            (EVENT_NUMBER, DATE, TIME, OFFICER, RESULT, TYPE, ALL_TEXT) =
-            (%(hearing_num)s, %(hearing_date)s, %(hearing_time)s, %(hearing_officer)s, %(hearing_appeared)s, %(hearing_type)s, %(all_text)s)
+            (EVENT_NUMBER, DATE, TIME, OFFICER, RESULT, TYPE) =
+            (%(hearing_num)s, %(hearing_date)s, %(hearing_time)s, %(hearing_officer)s, %(hearing_appeared)s, 'HR')
             """,
             {
                 'case_num': case["case_number"],
@@ -97,17 +87,16 @@ def rest_case(case: Dict):
                 'hearing_time': hearing["hearing_time"],
                 'hearing_officer': hearing["hearing_officer"],
                 'hearing_appeared': hearing["appeared"],
-                'hearing_type': hearing["hearing_type"],
-                'all_text': hearing["all_text"]
             },
         )
     conn.commit()
     curs.close()
     conn.close()
 
-def rest_setting(setting: Dict):
-    """Takes a dictionary representation of a setting and maps it into the SETTING table of the PostgreSQL database"""
-
+def rest_setting(setting):
+    """
+    Takes a dictionary representation of a setting and maps it in to a sqlite DB
+    """
     conn = get_database_connection(local_dev=local_dev)
     curs = conn.cursor()
     curs.execute(
@@ -133,9 +122,10 @@ def rest_setting(setting: Dict):
     curs.close()
     conn.close()
 
-def get_old_active_case_nums() -> List[str]:
-    """Returns list of case numbers in CASE_DETAIL table that are still active (as determined by the STATUS column)."""
-
+def get_old_active_case_nums():
+    """
+    Retrurns list of case nums in CASE_DETAIL table that are still active.
+    """
     conn = get_database_connection(local_dev=local_dev)
     curs = conn.cursor()
 
@@ -150,8 +140,9 @@ def get_old_active_case_nums() -> List[str]:
 
 # not currently being used for anything
 def drop_rows_from_table(table_name: str, case_ids: list):
-    """Drops all rows with case number in case_ids from table `table_name` - works for CASE_DETAIL, DISPOSITION, and EVENT tables"""
-
+    """
+    Drops all rows with case number in case_ids from table table_name - works for CASE_DETAIL, DISPOSITION, and EVENT tables
+    """
     if len(case_ids) == 1:
         case_ids = str(tuple(case_ids)).replace(",", "")
     else:
@@ -165,29 +156,6 @@ def drop_rows_from_table(table_name: str, case_ids: list):
     else:
         curs.execute("DELETE FROM %s WHERE CASE_NUMBER IN %s", (table_name, case_ids))
 
-    conn.commit()
-    curs.close()
-    conn.close()
-
-def update_first_court_apperance_column():
-    """Updates the first_court_appearance column of the CASE_DETAIL table in PostgreSQL using the latest database data."""
-
-    update_query = """
-                   UPDATE case_detail
-                   SET first_court_appearance =
-                        (SELECT MIN
-                            (TO_DATE("date", 'MM/DD/YYYY')) FROM event WHERE
-                                (event.case_number = case_detail.case_number) AND
-                                (LOWER(event.type) IN
-                                    ('appearance', 'default hearing', 'eviction hearing', 'exparte hearing', 'hearing',
-                                     'indigency hearing', 'motion for dj hearing', 'motion hearing', 'pre-trial hearing',
-                                     'trial before court', 'writ hearing'))
-                        )
-                   """
-
-    conn = get_database_connection(local_dev=local_dev)
-    curs = conn.cursor()
-    curs.execute(update_query)
     conn.commit()
     curs.close()
     conn.close()
