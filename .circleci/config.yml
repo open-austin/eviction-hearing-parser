@@ -26,9 +26,7 @@ jobs:
             pytest --cov=. --cov-report=term-missing
             coveralls
 workflows:
-  orbs:
-    browser-tools: circleci/browser-tools@1.1.1
-  version: 2.1
+  version: 2
   build_and_test:
     jobs:
       - build
