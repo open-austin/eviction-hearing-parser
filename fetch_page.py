@@ -1,3 +1,5 @@
+"""Module for executing searches using Selenium"""
+
 import sys
 import logging
 import atexit
@@ -12,7 +14,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
 options = Options()
-# options.add_argument('--disable-gpu')
 options.add_argument('--no-sandbox')
 options.add_argument("window-size=1920,1080")
 options.headless = True
@@ -58,8 +59,9 @@ def load_search_page():
     return None
 
 
-# clicks into Case Records search page
 def load_case_records_search_page():
+    """Clicks into Case Records search page"""
+
     start_page = load_start_page()
     try:
         element = WebDriverWait(start_page, 10).until(
@@ -81,7 +83,7 @@ def query_case_id(case_id: str):
         )
         case_radio_button.click()
     except:
-        logger.error(f"Could not click button to search for case {case_id}")
+        # logger.error(f"Could not click button to search for case {case_id}")
         return None
 
     try:
@@ -89,7 +91,7 @@ def query_case_id(case_id: str):
             EC.presence_of_element_located((By.ID, "CaseSearchValue"))
         )
     except:
-        logger.error(f"Could not type query to search for case {case_id}")
+        # logger.error(f"Could not type query to search for case {case_id}")
         return None
     finally:
         search_box.send_keys(case_id)
@@ -104,7 +106,7 @@ def query_case_id(case_id: str):
         )
         register_link.click()
     except:
-        logger.error(f"Could not click search result for case {case_id}")
+        # logger.error(f"Could not click search result for case {case_id}")
         return None
 
     try:
@@ -112,7 +114,7 @@ def query_case_id(case_id: str):
             EC.presence_of_element_located((By.ID, "PIr11"))
         )
     except:
-        logger.error(f"Could not load register of actions for case {case_id}")
+        # logger.error(f"Could not load register of actions for case {case_id}")
         return None
     finally:
         register_page_content = search_page.page_source
@@ -120,7 +122,8 @@ def query_case_id(case_id: str):
 
 
 def load_court_calendar():
-    # open the court calendar, to scrape Settings
+    """Opens the court calendar to scrape settings"""
+
     start_page = load_start_page()
     try:
         element = WebDriverWait(start_page, 10).until(
@@ -133,6 +136,8 @@ def load_court_calendar():
 
 
 def query_settings(afterdate: str, beforedate: str):
+    """Executes search for case settings between beforedate and afterdate for, returns content of resulting page"""
+
     for tries in range(5):
         # select Date Range radiobutton for search
         try:
@@ -194,8 +199,9 @@ def query_settings(afterdate: str, beforedate: str):
         return calendar_page_content
 
 
-# executes search for case filings between beforedate and afterdate for case_num_prefix, returns content of resulting page
 def query_filings(afterdate: str, beforedate: str, case_num_prefix: str):
+    """Executes search for case filings between beforedate and afterdate for case_num_prefix, returns content of resulting page"""
+
     for tries in range(5):
         # select case in search by
         try:

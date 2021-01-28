@@ -1,0 +1,47 @@
+"""
+Maps substatuses to their active / inactive state and in progress / dismissed / judgment state
+To be updated whenever we encounter a new substatus
+"""
+
+statuses_map = {
+                "dismissed": {"is_active": False, "status": "Dismissed"},
+                "final status": {"is_active": False, "status": "Judgment"},
+                "appealed": {"is_active": False, "status": "Judgment"},
+                "active": {"is_active": True, "status": "In Progress"},
+                "hearing set": {"is_active": True, "status": "In Progress"},
+                "judgment satisfied": {"is_active": False, "status": "Judgment"},
+                "eviction set": {"is_active": True, "status": "In Progress"},
+                "pending citation return": {"is_active": True, "status": "In Progress"},
+                "pending writ return": {"is_active": True, "status": "Judgment"},
+                "pending trial action": {"is_active": True, "status": "In Progress"},
+                "judgment released": {"is_active": False, "status": "Judgment"},
+                "trial/hearing set": {"is_active": True, "status": "In Progress"},
+                "bankruptcy": {"is_active": False, "status": "In Progress"},
+                "pending dismissal": {"is_active": True, "status": "Dismissed"},
+                "pending citation": {"is_active": True, "status": "In Progress"},
+                "pending setting": {"is_active": True, "status": "In Progress"},
+                "to be set": {"is_active": True, "status": "In Progress"},
+                "transferred": {"is_active": False, "status": "In Progress"},
+                "pending queue": {"is_active": True, "status": "In Progress"},
+                "pending court action": {"is_active": True, "status": "In Progress"},
+                "final disposition": {"is_active": False, "status": "Judgment"},
+                "fed hearing set": {"is_active": True, "status": "In Progress"},
+                "abated": {"is_active": True, "status": "In Progress"},
+                "pending writ": {"is_active": True, "status": "Judgment"},
+                "pending judge's review": {"is_active": True, "status": "In Progress"},
+                "pending response": {"is_active": True, "status": "In Progress"},
+                "pending jury setting": {"is_active": True, "status": "In Progress"},
+                "pending answer": {"is_active": True, "status": "In Progress"},
+                "hold": {"is_active": True, "status": "In Progress"},
+                "trial set": {"is_active": True, "status": "In Progress"},
+                "pending": {"is_active": True, "status": "In Progress"},
+                "motion filed": {"is_active": True, "status": "In Progress"},
+                "pending trial setting": {"is_active": True, "status": "In Progress"},
+                "pending judgment": {"is_active": True, "status": "In Progress"},
+                "pending hearing request": {"is_active": True, "status": "In Progress"},
+                "pending dwop": {"is_active": True, "status": "In Progress"},
+                "pending settlement": {"is_active": True, "status": "In Progress"},
+                "pending pretrial": {"is_active": True, "status": "In Progress"},
+                "stayed": {"is_active": True, "status": "In Progress"},
+                "pending jury trial": {"is_active": True, "status": "In Progress"}
+                }
