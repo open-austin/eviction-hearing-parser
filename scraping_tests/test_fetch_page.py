@@ -20,7 +20,7 @@ class TestFetchCaseNumbers:
 
         The scraper will need to split this into multiple queries and combine the results.
         """
-        numbers = hearing.fetch_filings(
+        numbers = fetch_page.fetch_filings(
             afterdate="1-1-2020", beforedate="1-30-2020", case_num_prefix="J1-CV-20*"
         )
         assert "J1-CV-20-000001" in numbers
@@ -45,7 +45,7 @@ class TestFetchSearchPage:
 
 class TestDataFromScrapedPage:
     def test_url_for_register(self):
-        parsed = hearing.fetch_parsed_case("J1-CV-20-001590")
+        parsed = fetch_page.fetch_parsed_case("J1-CV-20-001590")
         assert (
             parsed["register_url"]
             == "https://odysseypa.traviscountytx.gov/JPPublicAccess/CaseDetail.aspx?CaseID=2286743"

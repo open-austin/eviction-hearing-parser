@@ -35,7 +35,7 @@ def make_case_list(ids_to_parse: List[str]) -> List[Dict[str, Any]]:
 
     parsed_cases, failed_ids = [], []
     for id_to_parse in ids_to_parse:
-        new_case = hearing.fetch_parsed_case(id_to_parse)
+        new_case = fetch_page.fetch_parsed_case(id_to_parse)
         if new_case:
             parsed_cases.append(new_case)
         else:

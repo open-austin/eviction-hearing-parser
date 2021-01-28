@@ -241,6 +241,19 @@ def get_hearing_tags(soup) -> List:
     return hearing_trs or []
 
 
+def get_hearing_and_event_tags(soup) -> List:
+    """
+    Returns <tr> elements in the Events and Hearings section of a CaseDetail document.
+    """
+    root = get_events_tbody_element(soup)
+    hearing_or_event_ths = root.find_all(
+        "th", id=lambda id_str: id_str is not None and id_str.startswith("RCD")
+    )
+    hearing_or_event_trs = [hearing_th.parent for hearing_th in hearing_or_event_ths]
+
+    return hearing_or_event_trs or []
+
+
 def get_hearing_text(hearing_tag) -> str:
     return hearing_tag.find("b").next_sibling if hearing_tag is not None else ""
 

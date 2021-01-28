@@ -184,6 +184,29 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
+            (0, "Original Petition"),
+            (1, "Original Petition"),
+            (2, "Original Petition"),
+            (3, "Original Petition"),
+            (6, "Original Petition"),
+            (7, "Original Petition"),
+            (8, "Citation Issued"),
+            (9, "Original Petition"),
+            (10, "Original Petition"),
+            (11, "Original Petition"),
+            (12, "Original Petition"),
+            (13, "Defendant's SCRA Received"),
+        ],
+    )
+    def test_get_first_event(self, index, expected):
+        soup = hearing.get_test_soup(index)
+        hearing_tags = hearing.get_hearing_and_event_tags(soup)
+        hearing_tag = hearing_tags[0] if len(hearing_tags) > 0 else None
+        assert expected in hearing_tag.text
+
+    @pytest.mark.parametrize(
+        "index, expected",
+        [
             (0, "Williams, Yvonne M."),
             (1, "Slagle, Randall"),
             (2, "Gonzalez, Raul Arturo"),
