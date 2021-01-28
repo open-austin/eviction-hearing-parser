@@ -229,20 +229,17 @@ def get_events_tbody_element(soup):
     return tbody
 
 
-def get_hearing_tags(soup):
+def get_hearing_tags(soup) -> List:
     """
     Returns <tr> elements in the Events and Hearings section of a CaseDetail document that represent a hearing record.
     """
-    try:
-        root = get_events_tbody_element(soup)
-        hearing_ths = root.find_all(
-            "th", id=lambda id_str: id_str is not None and id_str.startswith("RCD")
-        )
-        hearing_trs = [hearing_th.parent for hearing_th in hearing_ths]
+    root = get_events_tbody_element(soup)
+    hearing_ths = root.find_all(
+        "th", id=lambda id_str: id_str is not None and id_str.startswith("RCDHR")
+    )
+    hearing_trs = [hearing_th.parent for hearing_th in hearing_ths]
 
-        return hearing_trs
-    except:
-        return []
+    return hearing_trs or []
 
 
 def get_hearing_text(hearing_tag) -> str:

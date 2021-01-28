@@ -19,6 +19,7 @@ logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
 logger.setLevel(logging.INFO)
 
+
 def get_ids_to_parse(infile: click.File) -> List[str]:
     """Gets a list of case numbers from the csv `infile`"""
 
@@ -34,10 +35,10 @@ def make_case_list(ids_to_parse: List[str]) -> List[Dict[str, Any]]:
 
     parsed_cases, failed_ids = [], []
     for id_to_parse in ids_to_parse:
-        try:
-            new_case = hearing.fetch_parsed_case(id_to_parse)
+        new_case = hearing.fetch_parsed_case(id_to_parse)
+        if new_case:
             parsed_cases.append(new_case)
-        except:
+        else:
             failed_ids.append(id_to_parse)
 
     if failed_ids:
@@ -46,7 +47,10 @@ def make_case_list(ids_to_parse: List[str]) -> List[Dict[str, Any]]:
 
     return parsed_cases
 
-def parse_all_from_parse_filings(case_nums: List[str], showbrowser=False) -> List[Dict[str, Any]]:
+
+def parse_all_from_parse_filings(
+    case_nums: List[str], showbrowser=False
+) -> List[Dict[str, Any]]:
     """
     Gets case details for each case number in `case_nums` and sends the data to PostgreSQL.
     Logs any case numbers for which getting data failed.
@@ -54,10 +58,13 @@ def parse_all_from_parse_filings(case_nums: List[str], showbrowser=False) -> Lis
 
     if showbrowser:
         from selenium import webdriver
+
         fetch_page.driver = webdriver.Chrome("./chromedriver")
 
     parsed_cases = make_case_list(case_nums)
-    logger.info(f"Finished making case list, now will send all {len(parsed_cases)} cases to SQL.")
+    logger.info(
+        f"Finished making case list, now will send all {len(parsed_cases)} cases to SQL."
+    )
 
     failed_cases = []
     for parsed_case in parsed_cases:
@@ -67,29 +74,37 @@ def parse_all_from_parse_filings(case_nums: List[str], showbrowser=False) -> Lis
             try:
                 failed_cases.append(parsed_case["case_number"])
             except:
-                logger.error("A case failed to be parsed but it doesn't have a case number.")
-
+                logger.error(
+                    "A case failed to be parsed but it doesn't have a case number."
+                )
 
     if failed_cases:
         error_message = f"Failed to send the following case numbers to SQL:\n{', '.join(failed_cases)}"
-        log_and_email(error_message, "Case Numbers for Which Sending to SQL Failed", error=True)
+        log_and_email(
+            error_message, "Case Numbers for Which Sending to SQL Failed", error=True
+        )
     logger.info("Finished sending cases to SQL.")
 
     return parsed_cases
+
 
 @click.command()
 @click.argument(
     "infile", type=click.File(mode="r"),
 )
 @click.argument("outfile", type=click.File(mode="w"), default="result.json")
-@click.option('--showbrowser / --headless', default=False, help='whether to operate in headless mode or not')
-
+@click.option(
+    "--showbrowser / --headless",
+    default=False,
+    help="whether to operate in headless mode or not",
+)
 def parse_all(infile, outfile, showbrowser=False):
     """Same as `parse_all_from_parse_filings()` but takes in a csv of case numbers instead of a list."""
 
     # If showbrowser is True, use the default selenium driver
     if showbrowser:
         from selenium import webdriver
+
         fetch_page.driver = webdriver.Chrome("./chromedriver")
 
     ids_to_parse = get_ids_to_parse(infile)
@@ -103,7 +118,9 @@ def parse_all(infile, outfile, showbrowser=False):
             logger.info(f"Successfully parsed hearings on attempt {tries + 1}")
             break
         except Exception as e:
-            logger.error(f"Failed to parse hearings on attempt {tries + 1}. Error message: {e}")
+            logger.error(
+                f"Failed to parse hearings on attempt {tries + 1}. Error message: {e}"
+            )
 
 
 if __name__ == "__main__":
