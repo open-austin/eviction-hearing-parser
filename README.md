@@ -2,7 +2,6 @@
 
 Parse registers of actions for Travis County court hearings and calendar data.
 
-[![open-austin](https://circleci.com/gh/open-austin/eviction-hearing-parser.svg?style=svg)](https://app.circleci.com/pipelines/github/open-austin/eviction-hearing-parser)
 [![Coverage Status](https://coveralls.io/repos/github/open-austin/eviction-hearing-parser/badge.svg?branch=master)](https://coveralls.io/github/open-austin/eviction-hearing-parser?branch=master)
 
 The data is scraped from Travis County's official [judicial records](https://odysseypa.traviscountytx.gov/JPPublicAccess/default.aspx), and is being used to create this [dashboard](https://trla.maps.arcgis.com/apps/opsdashboard/index.html#/8f5beb8367f44d30aa2ed6eeb2b3b3e4), and to support the Eviction Solidarity Network's court tracking efforts where volunteers track court hearings to ensure that tenant protections are being enforced and tenants are connected to resources. Additionally, the data will be used to help analyze trends in evictions to target campaigns towards repeat, bad actor landlords and craft policy solutions to combat the eviction crisis. 

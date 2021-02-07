@@ -7,7 +7,6 @@ import itertools
 from typing import Dict, List, Optional, Tuple
 from bs4 import BeautifulSoup
 from datetime import date, datetime, timedelta
-import fetch_page
 import logging
 from statuses import statuses_map
 from dotenv import load_dotenv
@@ -116,7 +115,8 @@ def get_attorneys_for_party(
             party_name = party_element.find_next_sibling("th").text.strip()
 
             party_element_id = party_element.get("id")
-            party_attorney_element = soup.find("td",
+            party_attorney_element = soup.find(
+                "td",
                 headers=lambda _headers: _headers
                 and attorneys_header_id in _headers
                 and party_element_id in _headers,
@@ -228,20 +228,30 @@ def get_events_tbody_element(soup):
     return tbody
 
 
-def get_hearing_tags(soup):
+def get_hearing_tags(soup) -> List:
     """
     Returns <tr> elements in the Events and Hearings section of a CaseDetail document that represent a hearing record.
     """
-    try:
-        root = get_events_tbody_element(soup)
-        hearing_ths = root.find_all(
-            "th", id=lambda id_str: id_str is not None and id_str.startswith("RCD")
-        )
-        hearing_trs = [hearing_th.parent for hearing_th in hearing_ths]
+    root = get_events_tbody_element(soup)
+    hearing_ths = root.find_all(
+        "th", id=lambda id_str: id_str is not None and id_str.startswith("RCDHR")
+    )
+    hearing_trs = [hearing_th.parent for hearing_th in hearing_ths]
 
-        return hearing_trs
-    except:
-        return []
+    return hearing_trs or []
+
+
+def get_hearing_and_event_tags(soup) -> List:
+    """
+    Returns <tr> elements in the Events and Hearings section of a CaseDetail document.
+    """
+    root = get_events_tbody_element(soup)
+    hearing_or_event_ths = root.find_all(
+        "th", id=lambda id_str: id_str is not None and id_str.startswith("RCD")
+    )
+    hearing_or_event_trs = [hearing_th.parent for hearing_th in hearing_or_event_ths]
+
+    return hearing_or_event_trs or []
 
 
 def get_hearing_text(hearing_tag) -> str:
@@ -254,19 +264,21 @@ def get_hearing_date(hearing_tag) -> str:
     date_tag = hearing_tag.find("th")
     return date_tag.text
 
+
 def get_hearing_type(hearing_tag) -> str:
     """Function to get all events and case type from case page section: Other Events and Hearings"""
     hearing_type = hearing_tag.find_all("b")[0].text
     all_tds = hearing_tag.find_all("td")
-    all_text = all_tds[-1].get_text(separator=' ')
+    all_text = all_tds[-1].get_text(separator=" ")
 
     if not all_text:
         for td in all_tds:
-            text = td.get_text(separator=' ')
+            text = td.get_text(separator=" ")
             if len(text) > 1 and text not in all_text:
                 all_text += text
 
     return hearing_type, all_text
+
 
 def get_hearing_time(hearing_tag) -> str:
     hearing_text = get_hearing_text(hearing_tag)
@@ -326,32 +338,32 @@ def get_status_and_type(status_soup) -> str:
     status, type = divs[1].text, divs[0].text
     return status, type
 
+
 def get_register_url(status_soup) -> str:
     link_tag = status_soup.find(style="color: blue")
     relative_link = link_tag.get("href")
     return "https://odysseypa.traviscountytx.gov/JPPublicAccess/" + relative_link
 
 
-def get_comments(soup: BeautifulSoup) -> List[str]:
+def get_comments(soup: BeautifulSoup) -> Optional[str]:
     """Get comments from case page."""
-    comments: List[str] = []
 
     disposition_date_node = get_disposition_date_node(soup)
     if not disposition_date_node:
-        return None #comments
+        return None  # comments
 
     disposition_label = disposition_date_node.find_next_sibling(
         "td", headers="CDisp RDISPDATE1"
     )
     if not disposition_label:
-        return None #comments
+        return None  # comments
 
     comments = [
         nobr.text
         for nobr in disposition_label.find_all("nobr")
         if nobr.text.startswith("Comment:")
     ]
-    if len(comments)>=1:
+    if len(comments) >= 1:
         return comments[0]
     else:
         return None
@@ -522,69 +534,79 @@ def make_parsed_hearing(soup):
         "hearing_officer": officer,
         "appeared": appeared,
         "hearing_type": type,
-        "all_text": all_text
+        "all_text": all_text,
     }
 
 
 THRESH = 75
+
+
 def lt(i):
     if i > THRESH:
         return i
-    else: 
+    else:
         return 0
 
 
 def fuzzy(i):
-    j = fuzz.partial_ratio(i[0].upper(),i[1].upper())
+    j = fuzz.partial_ratio(i[0].upper(), i[1].upper())
     return j
 
 
-def match_wordwise(awarded_to,plaintiff,defendant):
-    #Split into word lists
+def match_wordwise(awarded_to, plaintiff, defendant):
+    # Split into word lists
     a_l = [x.strip(",") for x in awarded_to.split()]
     p_l = [x.strip(",") for x in plaintiff.split()]
     d_l = [x.strip(",") for x in defendant.split()]
-    #Build word pairs to match
-    ap_l = [x for x in itertools.product(a_l,p_l)] 
-    ad_l = [x for x in itertools.product(a_l,d_l)] 
-    #Calculate full matches
-    #pj = [len(j) for j in [set(i) for i in ap_l]].count(1) 
-    #dj = [len(j) for j in [set(i) for i in ad_l]].count(1) 
-    #Calculate fuzzy matches (>THRES)
-    pj = list(map(lt,list(map(fuzzy,ap_l))))
-    dj = list(map(lt,list(map(fuzzy,ad_l))))
+    # Build word pairs to match
+    ap_l = [x for x in itertools.product(a_l, p_l)]
+    ad_l = [x for x in itertools.product(a_l, d_l)]
+    # Calculate full matches
+    # pj = [len(j) for j in [set(i) for i in ap_l]].count(1)
+    # dj = [len(j) for j in [set(i) for i in ad_l]].count(1)
+    # Calculate fuzzy matches (>THRES)
+    pj = list(map(lt, list(map(fuzzy, ap_l))))
+    dj = list(map(lt, list(map(fuzzy, ad_l))))
     pj = sum(pj)
     dj = sum(dj)
-    return(pj,dj)
+    return (pj, dj)
 
 
-def match_disposition(awarded_against, awarded_to, plaintiff, defendant, disposition_type, status):
+def match_disposition(
+    awarded_against, awarded_to, plaintiff, defendant, disposition_type, status
+):
     """The function to figure out who judgement is for"""
-    if status is not None: 
-        if "Dismissed" in status: #
-            return (100,"No Judgement")
-        if "DWOP" in status: #
-            return (100,"No Judgement")
+    if status is not None:
+        if "Dismissed" in status:  #
+            return (100, "No Judgement")
+        if "DWOP" in status:  #
+            return (100, "No Judgement")
     if disposition_type is not None:
-        if "Dismissed" in disposition_type: #
-            return (100,"No Judgement")
+        if "Dismissed" in disposition_type:  #
+            return (100, "No Judgement")
         if "Default" in disposition_type:
-            return (100,"Plaintiff")
-    if awarded_to is not None and plaintiff is not None and defendant is not None: #awarded_to and awarded_against will always be not None together
-      #  dj = fuzz.partial_ratio(awarded_to.upper(),defendant.upper())
-      #  pj = fuzz.partial_ratio(awarded_to.upper(),plaintiff.upper())
-        pj,dj = match_wordwise(awarded_to.upper(),plaintiff.upper(),defendant.upper())
+            return (100, "Plaintiff")
+    if (
+        awarded_to is not None and plaintiff is not None and defendant is not None
+    ):  # awarded_to and awarded_against will always be not None together
+        #  dj = fuzz.partial_ratio(awarded_to.upper(),defendant.upper())
+        #  pj = fuzz.partial_ratio(awarded_to.upper(),plaintiff.upper())
+        pj, dj = match_wordwise(
+            awarded_to.upper(), plaintiff.upper(), defendant.upper()
+        )
         if pj > dj:
-            return (pj,"Plaintiff")
+            return (pj, "Plaintiff")
         elif dj > pj:
-            return (dj,"Defendant")
-        else: 
-            pj,dj = match_wordwise(awarded_against.upper(),plaintiff.upper(),defendant.upper())
+            return (dj, "Defendant")
+        else:
+            pj, dj = match_wordwise(
+                awarded_against.upper(), plaintiff.upper(), defendant.upper()
+            )
             if pj < dj:
-                return (pj,"Plaintiff")
+                return (pj, "Plaintiff")
             elif dj < pj:
-                return (dj,"Defendant")
-    return (None,None)
+                return (dj, "Defendant")
+    return (None, None)
 
 
 def active_or_inactive(status):
@@ -592,7 +614,11 @@ def active_or_inactive(status):
     if status in statuses_map:
         return "Active" if statuses_map[status]["is_active"] else "Inactive"
     else:
-        log_and_email(f"Can't figure out whether case with substatus '{status}' is active or inactive because '{status}' is not in our statuses map dictionary.", "Encountered Unknown Substatus", error=True)
+        log_and_email(
+            f"Can't figure out whether case with substatus '{status}' is active or inactive because '{status}' is not in our statuses map dictionary.",
+            "Encountered Unknown Substatus",
+            error=True,
+        )
         return ""
 
 
@@ -604,10 +630,19 @@ def judgment_after_moratorium(disposition_date, substatus):
     disposition_date = datetime.strptime(disposition_date, "%m/%d/%Y")
     march_14 = datetime(2020, 3, 14)
 
-    return "Y" if ((disposition_date >= march_14) and (statuses_map[substatus]["status"] == "Judgment")) else "N"
+    return (
+        "Y"
+        if (
+            (disposition_date >= march_14)
+            and (statuses_map[substatus]["status"] == "Judgment")
+        )
+        else "N"
+    )
 
 
-def make_parsed_case(soup, status: str = "", type: str = "", register_url: str = "") -> Dict[str, str]:
+def make_parsed_case(
+    soup, status: str = "", type: str = "", register_url: str = ""
+) -> Dict[str, str]:
     # TODO handle multiple defendants/plaintiffs with different zips
     disposition_tr = get_disposition_tr_element(soup)
 
@@ -636,11 +671,18 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
     except:
         disp_type = None
 
-    try: 
-        score,winner = match_disposition(get_disposition_awarded_against(disposition_tr),get_disposition_awarded_to(disposition_tr), plaintiff, get_defendants(soup), disp_type, status)
+    try:
+        score, winner = match_disposition(
+            get_disposition_awarded_against(disposition_tr),
+            get_disposition_awarded_to(disposition_tr),
+            plaintiff,
+            get_defendants(soup),
+            disp_type,
+            status,
+        )
     except Exception as e:
         print(e)
-        score,winner = None,None
+        score, winner = None, None
 
     disposition_date = get_disposition_date(disposition_tr)
     return {
@@ -648,10 +690,16 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
         "style": style,
         "plaintiff": plaintiff,
         "active_or_inactive": active_or_inactive(status),
-        "judgment_after_moratorium": judgment_after_moratorium(disposition_date, status),
+        "judgment_after_moratorium": judgment_after_moratorium(
+            disposition_date, status
+        ),
         "defendants": get_defendants(soup),
-        "attorneys_for_plaintiffs": ", ".join([a for a in get_attorneys_for_plaintiffs(soup)]),
-        "attorneys_for_defendants": ", ".join([a for a in get_attorneys_for_defendants(soup)]),
+        "attorneys_for_plaintiffs": ", ".join(
+            [a for a in get_attorneys_for_plaintiffs(soup)]
+        ),
+        "attorneys_for_defendants": ", ".join(
+            [a for a in get_attorneys_for_defendants(soup)]
+        ),
         "case_number": get_case_number(soup),
         "defendant_zip": defendant_zip,
         "plaintiff_zip": plaintiff_zip,
@@ -667,18 +715,14 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
         "disposition_amount": get_disposition_amount(disposition_tr)
         if disposition_tr is not None
         else "",
-        "disposition_date": disposition_date
-        if disposition_tr is not None
-        else "",
+        "disposition_date": disposition_date if disposition_tr is not None else "",
         "disposition_awarded_to": get_disposition_awarded_to(disposition_tr)
         if get_disposition_awarded_to(disposition_tr) is not None
         else "",
         "disposition_awarded_against": get_disposition_awarded_against(disposition_tr)
         if get_disposition_awarded_against(disposition_tr) is not None
         else "",
-        "comments": get_comments(soup)
-        if get_comments(soup) is not None
-        else "",
+        "comments": get_comments(soup) if get_comments(soup) is not None else "",
         "writ": get_writ(soup),
         "writ_of_possession_service": get_writ_of_possession_service(soup),
         "writ_of_possession_requested": get_writ_of_possession_requested(soup),
@@ -686,37 +730,10 @@ def make_parsed_case(soup, status: str = "", type: str = "", register_url: str =
             soup
         ),
         "writ_returned_to_court": get_writ_returned_to_court(soup),
-        "judgement_for": winner
-        if winner is not None
-        else "",
-        "match_score": score
-        if score is not None
-        else "",
-        "date_filed": get_date_filed(soup)
+        "judgement_for": winner if winner is not None else "",
+        "match_score": score if score is not None else "",
+        "date_filed": get_date_filed(soup),
     }
-
-
-def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
-    query_result = fetch_page.query_case_id(case_id)
-    if query_result is None:
-        return None
-    result_page, register_page = query_result
-    result_soup = BeautifulSoup(result_page, "html.parser")
-    register_soup = BeautifulSoup(register_page, "html.parser")
-
-    register_url = get_register_url(result_soup)
-    status, type = get_status_and_type(result_soup)
-
-    if status.lower() not in statuses_map:
-        load_dotenv()
-        if os.getenv("LOCAL_DEV") != "true":
-            log_and_email(f"Case {case_id} has status '{status}', which is not in our list of known statuses.", "Found Unknown Status", error=True)
-        else:
-            logger.info(f"Case {case_id} has status '{status}', which is not in our list of known statuses.")
-
-    return make_parsed_case(
-        soup=register_soup, status=status, type=type, register_url=register_url
-    )
 
 
 def get_setting(soup):
@@ -802,24 +819,6 @@ def get_setting_list(calendar_soup):
     return setting_list
 
 
-def fetch_settings(afterdate: str, beforedate: str) -> Tuple[str, str]:
-
-    for tries in range(1, 11):
-        try:
-            "fetch all settings as a list of dicts"
-            calendar_page_content = fetch_page.query_settings(afterdate, beforedate)
-            if calendar_page_content is None:
-                return None
-            calendar_soup = BeautifulSoup(calendar_page_content, "html.parser")
-            setting_list = get_setting_list(calendar_soup)
-            break
-        except:
-            if tries == 10:
-                logger.error(f"Failed to get setting list between {afterdate} and {beforedate} on all 10 attempts.")
-
-    return setting_list
-
-
 def get_filing_case_nums(filing_soup) -> Tuple[List[str], bool]:
     "returns list of case numbers given soup of search results"
     # get all tables
@@ -889,46 +888,3 @@ def split_date_range(afterdate: str, beforedate: str) -> Tuple[str, str]:
 
     return end_of_first_range, start_of_second_range
 
-def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str) -> List[str]:
-    "Get filing case numbers between afterdate and beforedate and starting with case_num_prefix."
-
-    for tries in range(1, 11):
-        try:
-            filings_page_content = fetch_page.query_filings(
-                afterdate, beforedate, case_num_prefix
-            )
-            filings_soup = BeautifulSoup(filings_page_content, "html.parser")
-            filings_case_nums_list, query_needs_splitting = get_filing_case_nums(filings_soup)
-            break
-        except:
-            if tries == 10:
-                logger.error(f"Failed to find case numbers on all 10 attempts.")
-
-
-    # handle case of too many results (200 results means that the search cut off)
-    if query_needs_splitting:
-        try:
-            end_of_first_range, start_of_second_range = split_date_range(
-                afterdate, beforedate
-            )
-            filings_case_nums_list = fetch_filings(
-                afterdate, end_of_first_range, case_num_prefix
-            ) + fetch_filings(start_of_second_range, beforedate, case_num_prefix)
-        except ValueError:
-            logger.error(
-                f"The search returned {len(filings_case_nums_list)} results but there's nothing "
-                "the code can do because beforedate and afterdate are the same.\n"
-                "Case details will be scraped for these results.\n"
-            )
-
-    # # some optional logging to make sure results look good - could remove
-    # logger.info(f"Found {len(filings_case_nums_list)} case numbers.")
-    # if len(filings_case_nums_list) > 5:
-    #     logger.info(
-    #         f"Results preview: {filings_case_nums_list[0]}, {filings_case_nums_list[1]}, "
-    #         f"..., {filings_case_nums_list[-1]}\n"
-    #     )
-    # else:
-    #     logger.info(f"Results: {', '.join(filings_case_nums_list)}\n")
-
-    return filings_case_nums_list
