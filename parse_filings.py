@@ -7,9 +7,11 @@ To perform a scraper run, use: python parse_filings.py afterdate beforedate
 import os
 import sys
 import json
+from typing import List, Dict
+
 import click
 import fetch_page
-from hearing import fetch_filings
+from fetch_page import fetch_filings
 from parse_hearings import parse_all_from_parse_filings
 from persist import get_old_active_case_nums
 from selenium import webdriver

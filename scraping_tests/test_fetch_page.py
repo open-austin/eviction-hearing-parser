@@ -5,7 +5,6 @@ import hearing
 
 
 class TestFetchFilingsPage:
-    @pytest.mark.vcr
     def test_fetch_filings_page(self):
         fetched = fetch_page.query_filings(
             afterdate="6-1-2020", beforedate="6-30-2020", case_num_prefix="J1-CV-20*"
