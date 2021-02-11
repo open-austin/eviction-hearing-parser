@@ -4,7 +4,7 @@ import parse_hearings
 
 
 class TestCLI:
-    @pytest.mark.vcr
+
     def test_make_case_list(self):
         ids_to_parse = ["J1-CV-20-001590"]
         cases = parse_hearings.make_case_list(ids_to_parse)

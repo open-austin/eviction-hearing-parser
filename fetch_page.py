@@ -5,7 +5,7 @@ import logging
 import atexit
 import os
 from dotenv import load_dotenv
-from typing import List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from bs4 import BeautifulSoup
 from selenium import webdriver
@@ -298,7 +298,7 @@ def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
     )
 
 
-def fetch_settings(afterdate: str, beforedate: str) -> Tuple[str, str]:
+def fetch_settings(afterdate: str, beforedate: str) -> [List[Optional[Dict[str, str]]]]:
 
     for tries in range(1, 11):
         try:
@@ -307,15 +307,14 @@ def fetch_settings(afterdate: str, beforedate: str) -> Tuple[str, str]:
             if calendar_page_content is None:
                 return None
             calendar_soup = BeautifulSoup(calendar_page_content, "html.parser")
-            setting_list = hearing.get_setting_list(calendar_soup)
-            break
+            return hearing.get_setting_list(calendar_soup)
         except:
             if tries == 10:
                 logger.error(
                     f"Failed to get setting list between {afterdate} and {beforedate} on all 10 attempts."
                 )
 
-    return setting_list
+    return []
 
 
 def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str) -> List[str]:
