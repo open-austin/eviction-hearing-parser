@@ -7,7 +7,12 @@ To perform a scraper run, use: python parse_filings.py afterdate beforedate
 import os
 import sys
 import json
+<<<<<<< HEAD
 from typing import List,Dict
+=======
+from typing import List, Dict
+
+>>>>>>> 5c382a2c6a4a430b8e3d651dc90eb03b773da90e
 import click
 import fetch_page
 from fetch_page import fetch_filings

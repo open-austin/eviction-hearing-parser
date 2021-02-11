@@ -736,7 +736,7 @@ def make_parsed_case(
     }
 
 
-def get_setting(soup):
+def get_setting(soup) -> Optional[Dict[str, str]]:
     "get setting as a dict from a row of the table"
     setting_details: Dict[str, str] = {}
     td_list = soup.find_all("td")
@@ -791,7 +791,7 @@ def get_setting(soup):
     return setting_details
 
 
-def get_setting_list(calendar_soup):
+def get_setting_list(calendar_soup) -> List[Optional[Dict[str, str]]]:
     "gets all settings from calendar soup table, as a list of dicts"
     # get all tables
     table_list = calendar_soup.find_all("table")
@@ -895,4 +895,3 @@ def split_date_range(afterdate: str, beforedate: str) -> Tuple[str, str]:
         start_of_second_range = start_of_second_range_date.strftime("%#m-%#d-%Y")
 
     return end_of_first_range, start_of_second_range
-
