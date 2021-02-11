@@ -883,8 +883,16 @@ def split_date_range(afterdate: str, beforedate: str) -> Tuple[str, str]:
     end_of_first_range_date = afterdate_date + timedelta(days=days_to_add)
     start_of_second_range_date = end_of_first_range_date + timedelta(days=1)
 
-    end_of_first_range = end_of_first_range_date.strftime("%-m-%-d-%Y")
-    start_of_second_range = start_of_second_range_date.strftime("%-m-%-d-%Y")
+    # https://stackoverflow.com/a/2073189/15014986
+    # To remove leading zeroes, we use '-' on Linux and '#' on Windows. Just check for both.
+    try:
+        # For Linux
+        end_of_first_range = end_of_first_range_date.strftime("%-m-%-d-%Y")
+        start_of_second_range = start_of_second_range_date.strftime("%-m-%-d-%Y")
+    except ValueError:
+        # For Windows
+        end_of_first_range = end_of_first_range_date.strftime("%#m-%#d-%Y")
+        start_of_second_range = start_of_second_range_date.strftime("%#m-%#d-%Y")
 
     return end_of_first_range, start_of_second_range
 
