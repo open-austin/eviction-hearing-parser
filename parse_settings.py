@@ -42,7 +42,7 @@ def make_setting_list(days_to_pull: List[str]) -> List[Dict[str, Any]]:
 
     pulled_settings = []
     for setting_day in days_to_pull:
-        day_settings = hearing.fetch_settings(afterdate=setting_day, beforedate=setting_day)
+        day_settings = fetch_page.fetch_settings(afterdate=setting_day, beforedate=setting_day)
         pulled_settings.extend(day_settings)
     return pulled_settings
 
