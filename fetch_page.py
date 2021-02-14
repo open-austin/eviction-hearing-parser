@@ -298,7 +298,7 @@ def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
     )
 
 
-def fetch_settings(afterdate: str, beforedate: str) -> [List[Optional[Dict[str, str]]]]:
+def fetch_settings(afterdate: str, beforedate: str) -> List[Optional[Dict[str, str]]]:
 
     for tries in range(1, 11):
         try:

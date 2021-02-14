@@ -24,6 +24,12 @@ def get_test_html_path(index: int, page_type: str) -> str:
     return test_filepath
 
 
+def get_test_calendar_path() -> str:
+    this_directory = os.path.dirname(os.path.realpath(__file__))
+    test_filepath = os.path.join(this_directory, "test_search_pages", "calendar.html")
+    return test_filepath
+
+
 def get_test_filing_search_path() -> str:
     """Used for testing the separate module "parse_filings.py"."""
     this_directory = os.path.dirname(os.path.realpath(__file__))
@@ -37,6 +43,11 @@ def load_soup_from_filepath(filepath: str) -> BeautifulSoup:
     with open(filepath) as fp:
         soup = BeautifulSoup(fp, "html.parser")
     return soup
+
+
+def get_test_calendar() -> BeautifulSoup:
+    filepath = get_test_calendar_path()
+    return load_soup_from_filepath(filepath)
 
 
 def get_test_soup(index: int) -> BeautifulSoup:
@@ -57,6 +68,11 @@ def get_test_filings_search_page() -> BeautifulSoup:
     Possibly the functions being tested can be consolidated.
     """
     filepath = get_test_filing_search_path()
+    return load_soup_from_filepath(filepath)
+
+
+def get_test_calendar_page() -> BeautifulSoup:
+    filepath = get_test_calendar_path()
     return load_soup_from_filepath(filepath)
 
 
@@ -807,16 +823,9 @@ def get_setting_list(calendar_soup) -> List[Optional[Dict[str, str]]]:
     # get the header row, and all next siblings as a list
     header_row = settings_table.find_all("tr")[0]
     tablerow_list = header_row.find_next_siblings("tr")
-    if len(tablerow_list) == 0:
-        return []
 
-    # go row by row, get setting
-    setting_list = []
-    for tablerow in tablerow_list:
-        setting = get_setting(tablerow)
-        if setting is not None:
-            setting_list.append(get_setting(tablerow))
-    return setting_list
+    setting_list = [get_setting(tablerow) for tablerow in tablerow_list]
+    return [setting for setting in setting_list if setting is not None]
 
 
 def get_filing_case_nums(filing_soup) -> Tuple[List[str], bool]:
