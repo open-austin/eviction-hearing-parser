@@ -29,6 +29,9 @@ logging.basicConfig(stream=sys.stdout)
 load_dotenv()
 local_dev = os.getenv("LOCAL_DEV") == "true"
 
+#supported values for county: travis, williamson
+county = os.getenv("COUNTY").lower()
+
 if local_dev:
     driver = webdriver.Chrome("./chromedriver", options=options)
 else:
@@ -47,28 +50,16 @@ def close_driver():
 atexit.register(close_driver)
 
 
-def load_start_page():
-    driver.get("https://odysseypa.traviscountytx.gov/JPPublicAccess/default.aspx")
+def load_start_page(county):
+    homepage = {
+        'travis' : "https://odysseypa.traviscountytx.gov/JPPublicAccess/default.aspx",
+        'williamson' : "https://judicialrecords.wilco.org/PublicAccess/default.aspx",
+    }
+    driver.get(homepage[county])
     return driver
 
 
 def load_search_page():
-    start_page = load_start_page()
-    try:
-        element = WebDriverWait(start_page, 10).until(
-            EC.presence_of_element_located(
-                (By.LINK_TEXT, "Civil, Family & Probate Case Records")
-            )
-        )
-    finally:
-        element.click()
-        return start_page
-    return None
-
-
-def load_case_records_search_page():
-    """Clicks into Case Records search page"""
-
     start_page = load_start_page()
     try:
         element = WebDriverWait(start_page, 10).until(
