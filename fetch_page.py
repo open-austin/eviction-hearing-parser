@@ -119,10 +119,10 @@ def query_case_id(case_id: str):
         return search_page_content, register_page_content
 
 
-def load_court_calendar():
+def load_court_calendar(county):
     """Opens the court calendar to scrape settings"""
 
-    start_page = load_start_page()
+    start_page = load_start_page(county)
     try:
         element = WebDriverWait(start_page, 10).until(
             EC.presence_of_element_located((By.LINK_TEXT, "Court Calendar"))
