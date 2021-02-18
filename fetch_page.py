@@ -4,7 +4,7 @@ import sys
 import logging
 import atexit
 import os
-from dotenv import load_dotenv
+import config
 from typing import Dict, List, Optional, Tuple
 
 from bs4 import BeautifulSoup
@@ -26,13 +26,8 @@ options.headless = True
 logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
 
-load_dotenv()
-local_dev = os.getenv("LOCAL_DEV") == "true"
 
-#supported values for county: travis, williamson
-county = os.getenv("COUNTY").lower()
-
-if local_dev:
+if config.local_dev:
     driver = webdriver.Chrome("./chromedriver", options=options)
 else:
     driver_path, chrome_bin = (
@@ -50,21 +45,27 @@ def close_driver():
 atexit.register(close_driver)
 
 
-def load_start_page(county):
+def load_start_page():
     homepage = {
         'travis' : "https://odysseypa.traviscountytx.gov/JPPublicAccess/default.aspx",
         'williamson' : "https://judicialrecords.wilco.org/PublicAccess/default.aspx",
     }
-    driver.get(homepage[county])
+    print(config.county)
+    driver.get(homepage[config.county])
     return driver
 
 
 def load_search_page():
     start_page = load_start_page()
+
+    search_page_text = {
+        'travis' : "Civil, Family & Probate Case Records",
+        'williamson' : "Civil, Family & Probate Case Records",
+    }
     try:
         element = WebDriverWait(start_page, 10).until(
             EC.presence_of_element_located(
-                (By.LINK_TEXT, "Civil, Family & Probate Case Records")
+                (By.LINK_TEXT, search_page_text[config.county])
             )
         )
     finally:
@@ -74,6 +75,7 @@ def load_search_page():
 
 
 def query_case_id(case_id: str):
+    #this is the same for travis and williamson. 
     search_page = load_search_page()
     try:
         case_radio_button = WebDriverWait(search_page, 10).until(
@@ -119,10 +121,10 @@ def query_case_id(case_id: str):
         return search_page_content, register_page_content
 
 
-def load_court_calendar(county):
+def load_court_calendar():
     """Opens the court calendar to scrape settings"""
 
-    start_page = load_start_page(county)
+    start_page = load_start_page()
     try:
         element = WebDriverWait(start_page, 10).until(
             EC.presence_of_element_located((By.LINK_TEXT, "Court Calendar"))
@@ -272,8 +274,7 @@ def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
     status, type = hearing.get_status_and_type(result_soup)
 
     if status.lower() not in hearing.statuses_map:
-        load_dotenv()
-        if os.getenv("LOCAL_DEV") != "true":
+        if config.local_dev:
             log_and_email(
                 f"Case {case_id} has status '{status}', which is not in our list of known statuses.",
                 "Found Unknown Status",

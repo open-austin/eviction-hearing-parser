@@ -12,6 +12,7 @@ from statuses import statuses_map
 from dotenv import load_dotenv
 from fuzzywuzzy import fuzz
 from emailing import log_and_email
+import config
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -112,10 +113,13 @@ def get_defendants(soup):
 
 def get_attorneys_header_id(soup: BeautifulSoup) -> Optional[str]:
     """Get the HTML ID attribute for the "Attorneys" column header."""
-    element = soup.find("th", text="Attorneys")
+    elemnt = None
+    if config.county == "travis":
+        element = soup.find("th", text="Attorneys")
+    if config.county == "williamson": 
+        element = soup.find("th", text="Lead Attorneys")
     if not element:
         return None
-
     return element.get("id")
 
 
@@ -343,9 +347,16 @@ def get_precinct_number(soup) -> int:
 
     location_heading = soup.find(text="Location:").parent
     precinct_name = location_heading.find_next_sibling("td").text
-    precinct_number = precinct_name.split("Precinct ")[1]
-
-    return word_to_number[precinct_number]
+    print(precinct_name)
+    if config.county == "travis":
+        precinct_number = precinct_name.split("Precinct ")[1]
+        return word_to_number[precinct_number]
+    if config.county == "williamson":
+        #returns last number of precinct, JP1, JP2, etc
+        return int(precinct_name[-1])
+    else:
+        return None
+    
 
 
 def get_status_and_type(status_soup) -> str:
@@ -657,7 +668,7 @@ def judgment_after_moratorium(disposition_date, substatus):
 
 
 def make_parsed_case(
-    soup, status: str = "", type: str = "", register_url: str = ""
+    soup, status: str = "", type: str = "", register_url: str = "", county: str="travis"
 ) -> Dict[str, str]:
     # TODO handle multiple defendants/plaintiffs with different zips
     disposition_tr = get_disposition_tr_element(soup)
