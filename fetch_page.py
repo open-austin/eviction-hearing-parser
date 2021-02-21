@@ -21,7 +21,7 @@ options = Options()
 options.add_argument("--no-sandbox")
 options.add_argument("--headless")
 options.add_argument("window-size=1920,1080")
-options.headless = True
+options.headless = False
 
 logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
@@ -205,7 +205,7 @@ def query_filings(afterdate: str, beforedate: str, case_num_prefix: str):
     for tries in range(5):
         # select case in search by
         try:
-            court_records = load_case_records_search_page()
+            court_records = load_court_calendar()
             case_button = WebDriverWait(court_records, 10).until(
                 EC.presence_of_element_located((By.ID, "Case"))
             )

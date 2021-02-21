@@ -4,7 +4,7 @@ import fetch_page
 import hearing
 import config
 
-config.county = "travis"
+config.county = "williamson"
 
 class TestFetchFilingsPage:
     def test_fetch_filings_page(self):
