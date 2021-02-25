@@ -229,7 +229,10 @@ class BaseParser:
         hearing_text = self.get_hearing_text(hearing_tag)
         officer_groups = hearing_text.split("Judicial Officer")
         name = officer_groups[1] if len(officer_groups) > 1 else ""
-        return name.strip().strip(")")
+        result = name.strip().strip(")".replace("\n", ""))
+        while "  " in result:
+            result = result.replace("  ", " ")
+        return result
 
     def get_disposition_date_node(self, soup) -> BeautifulSoup:
         try:
@@ -664,6 +667,14 @@ class BaseParser:
 
 
 class WilliamsonParser(BaseParser):
+    def get_attorneys_header_id(self, soup: BeautifulSoup) -> Optional[str]:
+        """Get the HTML ID attribute for the "Attorneys" column header."""
+        element = soup.find("th", text="Lead Attorneys")
+        if not element:
+            return None
+
+        return element.get("id")
+
     def get_defendant_elements(self, soup):
         """
         Gets the defendant HTML elements from a CaseDetail.
@@ -678,9 +689,21 @@ class WilliamsonParser(BaseParser):
         that contains Dispositions, Hearings, and Other Events.
         Used as a starting point for many event parsing methods.
         """
-        table_caption_div = soup.find_all("caption")[1].div
-        tbody = table_caption_div.parent.find_next_sibling("tbody")
+        table_caption = soup.find_all("caption")[1]
+        tbody = table_caption.find_next_sibling("tr").find_next_sibling("tr")
         return tbody
+
+    def get_hearing_tags(self, soup) -> List:
+        """
+        Returns <tr> elements in the Events and Hearings section of a CaseDetail document that represent a hearing record.
+        """
+        root = self.get_events_tbody_element(soup).parent
+        hearing_tds = root.find_all(
+            "td",
+            headers=lambda id_str: id_str is not None and id_str.startswith("RCDHR"),
+        )
+
+        return hearing_tds or []
 
     def get_plaintiff_elements(self, soup):
         """
