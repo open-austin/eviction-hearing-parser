@@ -22,7 +22,7 @@ class BaseParser:
         tag = self.get_plaintiff_elements(soup)[0]
         name_elem = tag.find_next_sibling("th")
 
-        return name_elem.text
+        return name_elem.text.strip()
 
     def get_plaintiff_elements(self, soup):
         """
@@ -159,7 +159,8 @@ class BaseParser:
 
     def get_events_tbody_element(self, soup):
         """
-        Returns the <tbody> element  of a CaseDetail document that contains Dispositions, Hearings, and Other Events.
+        Returns the <tbody> element  of a CaseDetail document
+        that contains Dispositions, Hearings, and Other Events.
         Used as a starting point for many event parsing methods.
         """
         table_caption_div = soup.find(
@@ -660,3 +661,27 @@ class BaseParser:
             "match_score": score if score is not None else "",
             "date_filed": self.get_date_filed(soup),
         }
+
+
+class WilliamsonParser(BaseParser):
+    def get_plaintiff_elements(self, soup):
+        """
+        Gets the plaintiff HTML elements from a CaseDetail.
+        These are currently used as an anchor for most of the Party Info parsing.
+        """
+        return soup.find_all("th", text=re.compile("Plaintiff"))
+
+    def get_precinct_number(self, soup) -> int:
+        location_heading = soup.find(text="Location:").parent
+        precinct_name = location_heading.find_next_sibling("td").text
+        return int(precinct_name[-1])
+
+    def get_events_tbody_element(self, soup):
+        """
+        Returns the <tbody> element  of a CaseDetail document
+        that contains Dispositions, Hearings, and Other Events.
+        Used as a starting point for many event parsing methods.
+        """
+        table_caption_div = soup.find_all("caption")[1].div
+        tbody = table_caption_div.parent.find_next_sibling("tbody")
+        return tbody
