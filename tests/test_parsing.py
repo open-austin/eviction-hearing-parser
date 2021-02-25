@@ -2,8 +2,10 @@ from decimal import Decimal
 
 import pytest
 
-import hearing
+from hearing import BaseParser
 import load_pages
+
+TravisParser = BaseParser()
 
 
 class TestLoadHTML:
@@ -36,7 +38,7 @@ class TestParseHTML:
     )
     def test_get_plaintiff(self, index, expected):
         soup = load_pages.get_test_soup(index)
-        plaintiff = hearing.get_plaintiff(soup)
+        plaintiff = TravisParser.get_plaintiff(soup=soup)
         assert plaintiff == expected
 
     @pytest.mark.parametrize(
@@ -60,7 +62,7 @@ class TestParseHTML:
     )
     def test_get_defendants(self, index, expected):
         soup = load_pages.get_test_soup(index)
-        defendants = hearing.get_defendants(soup)
+        defendants = TravisParser.get_defendants(soup)
         assert expected in defendants
 
     @pytest.mark.parametrize(
@@ -85,7 +87,7 @@ class TestParseHTML:
     )
     def test_get_style(self, index, expected):
         soup = load_pages.get_test_soup(index)
-        style = hearing.get_style(soup)
+        style = TravisParser.get_style(soup)
         assert style == expected
 
     @pytest.mark.parametrize(
@@ -107,7 +109,7 @@ class TestParseHTML:
     )
     def test_get_case_number(self, index, expected):
         soup = load_pages.get_test_soup(index)
-        number = hearing.get_case_number(soup)
+        number = TravisParser.get_case_number(soup)
         assert number == expected
 
     @pytest.mark.parametrize(
@@ -131,7 +133,7 @@ class TestParseHTML:
     )
     def test_get_defendant_zip(self, index, expected):
         soup = load_pages.get_test_soup(index)
-        number = hearing.get_zip(hearing.get_defendant_elements(soup).pop())
+        number = TravisParser.get_zip(TravisParser.get_defendant_elements(soup).pop())
         assert number == expected
 
     @pytest.mark.parametrize(
@@ -155,7 +157,7 @@ class TestParseHTML:
     )
     def test_get_plaintiff_zip(self, index, expected):
         soup = load_pages.get_test_soup(index)
-        number = hearing.get_zip(hearing.get_plaintiff_elements(soup).pop())
+        number = TravisParser.get_zip(TravisParser.get_plaintiff_elements(soup).pop())
         assert number == expected
 
     @pytest.mark.parametrize(
@@ -177,9 +179,9 @@ class TestParseHTML:
     )
     def test_get_hearing_text(self, index, expected):
         soup = load_pages.get_test_soup(index)
-        hearing_tags = hearing.get_hearing_tags(soup)
+        hearing_tags = TravisParser.get_hearing_tags(soup)
         hearing_tag = hearing_tags[-1] if len(hearing_tags) > 0 else None
-        passage = hearing.get_hearing_text(hearing_tag)
+        passage = TravisParser.get_hearing_text(hearing_tag)
         assert expected in passage
 
     @pytest.mark.parametrize(
@@ -201,7 +203,7 @@ class TestParseHTML:
     )
     def test_get_first_event(self, index, expected):
         soup = load_pages.get_test_soup(index)
-        hearing_tags = hearing.get_hearing_and_event_tags(soup)
+        hearing_tags = TravisParser.get_hearing_and_event_tags(soup)
         hearing_tag = hearing_tags[0] if len(hearing_tags) > 0 else None
         assert expected in hearing_tag.text
 
@@ -224,9 +226,9 @@ class TestParseHTML:
     )
     def test_get_hearing_officer(self, index, expected):
         soup = load_pages.get_test_soup(index)
-        hearing_tags = hearing.get_hearing_tags(soup)
+        hearing_tags = TravisParser.get_hearing_tags(soup)
         hearing_tag = hearing_tags[-1] if len(hearing_tags) > 0 else None
-        name = hearing.get_hearing_officer(hearing_tag)
+        name = TravisParser.get_hearing_officer(hearing_tag)
         assert name == expected
 
     @pytest.mark.parametrize(
@@ -248,9 +250,9 @@ class TestParseHTML:
     )
     def test_get_hearing_time(self, index, expected):
         soup = load_pages.get_test_soup(index)
-        hearing_tags = hearing.get_hearing_tags(soup)
+        hearing_tags = TravisParser.get_hearing_tags(soup)
         hearing_tag = hearing_tags[-1] if len(hearing_tags) > 0 else None
-        time = hearing.get_hearing_time(hearing_tag)
+        time = TravisParser.get_hearing_time(hearing_tag)
         assert expected == time
 
     @pytest.mark.parametrize(
@@ -272,9 +274,9 @@ class TestParseHTML:
     )
     def test_get_hearing_date(self, index, expected):
         soup = load_pages.get_test_soup(index)
-        hearing_tags = hearing.get_hearing_tags(soup)
+        hearing_tags = TravisParser.get_hearing_tags(soup)
         hearing_tag = hearing_tags[-1] if len(hearing_tags) > 0 else None
-        hearing_date = hearing.get_hearing_date(hearing_tag)
+        hearing_date = TravisParser.get_hearing_date(hearing_tag)
         assert expected == hearing_date
 
     @pytest.mark.parametrize(
@@ -296,7 +298,7 @@ class TestParseHTML:
     )
     def test_get_precinct_number(self, index, expected):
         soup = load_pages.get_test_soup(index)
-        precinct_number = hearing.get_precinct_number(soup)
+        precinct_number = TravisParser.get_precinct_number(soup)
         assert expected == precinct_number
 
     @pytest.mark.parametrize(
@@ -326,9 +328,9 @@ class TestParseHTML:
     )
     def test_defendant_appeared(self, index, hearing_index, expected):
         soup = load_pages.get_test_soup(index)
-        hearing_tags = hearing.get_hearing_tags(soup)
+        hearing_tags = TravisParser.get_hearing_tags(soup)
         hearing_tag = hearing_tags[hearing_index] if len(hearing_tags) > 0 else None
-        appeared = hearing.did_defendant_appear(hearing_tag)
+        appeared = TravisParser.did_defendant_appear(hearing_tag)
         assert expected == appeared
 
     @pytest.mark.parametrize(
@@ -357,7 +359,7 @@ class TestParseHTML:
     )
     def test_defendant_served(self, index, defendant, expected):
         soup = load_pages.get_test_soup(index)
-        served = hearing.was_defendant_served(soup)
+        served = TravisParser.was_defendant_served(soup)
         assert served.get(defendant) == expected
 
     @pytest.mark.parametrize(
@@ -379,7 +381,7 @@ class TestParseHTML:
     )
     def test_alternative_service(self, index, expected):
         soup = load_pages.get_test_soup(index)
-        served = hearing.was_defendant_alternative_served(soup)
+        served = TravisParser.was_defendant_alternative_served(soup)
         assert expected == served
 
     @pytest.mark.parametrize(
@@ -403,7 +405,7 @@ class TestParseHTML:
     )
     def test_disposition_date(self, index, expected):
         soup = load_pages.get_test_soup(index)
-        answer = hearing.get_disposition_date(soup)
+        answer = TravisParser.get_disposition_date(soup)
         assert expected == answer
 
     @pytest.mark.parametrize(
@@ -427,7 +429,7 @@ class TestParseHTML:
     )
     def test_disposition_amount(self, index, expected):
         soup = load_pages.get_test_soup(index)
-        amount = hearing.get_disposition_amount(soup)
+        amount = TravisParser.get_disposition_amount(soup)
         assert expected == amount
 
     @pytest.mark.parametrize(
@@ -451,8 +453,8 @@ class TestParseHTML:
     )
     def test_disposition_awarded_to(self, index, expected):
         soup = load_pages.get_test_soup(index)
-        disposition_tr = hearing.get_disposition_tr_element(soup)
-        winning_party = hearing.get_disposition_awarded_to(disposition_tr)
+        disposition_tr = TravisParser.get_disposition_tr_element(soup)
+        winning_party = TravisParser.get_disposition_awarded_to(disposition_tr)
         assert winning_party == expected
 
     @pytest.mark.parametrize(
@@ -476,8 +478,8 @@ class TestParseHTML:
     )
     def test_disposition_awarded_against(self, index, expected):
         soup = load_pages.get_test_soup(index)
-        disposition_tr = hearing.get_disposition_tr_element(soup)
-        losing_party = hearing.get_disposition_awarded_against(disposition_tr)
+        disposition_tr = TravisParser.get_disposition_tr_element(soup)
+        losing_party = TravisParser.get_disposition_awarded_against(disposition_tr)
         assert losing_party == expected
 
     @pytest.mark.parametrize(
@@ -501,11 +503,11 @@ class TestParseHTML:
     )
     def test_disposition_type(self, index, expected):
         soup = load_pages.get_test_soup(index)
-        disposition_tr = hearing.get_disposition_tr_element(soup)
+        disposition_tr = TravisParser.get_disposition_tr_element(soup)
         if disposition_tr is None:
             dt = None
         else:
-            dt = hearing.get_disposition_type(disposition_tr)
+            dt = TravisParser.get_disposition_type(disposition_tr)
         assert dt == expected
 
     @pytest.mark.parametrize(
@@ -538,7 +540,7 @@ class TestParseHTML:
     )
     def test_comments(self, test_html_file_index, expected_comments):
         soup = load_pages.get_test_soup(test_html_file_index)
-        comments = hearing.get_comments(soup)
+        comments = TravisParser.get_comments(soup)
         assert comments == expected_comments
 
     @pytest.mark.parametrize(
@@ -577,7 +579,7 @@ class TestParseHTML:
     )
     def test_get_writ(self, test_html_file_index, expected_event_details):
         soup = load_pages.get_test_soup(test_html_file_index)
-        event_details = hearing.get_writ(soup)
+        event_details = TravisParser.get_writ(soup)
         assert event_details == expected_event_details
 
     @pytest.mark.parametrize(
@@ -603,7 +605,7 @@ class TestParseHTML:
         self, test_html_file_index, expected_event_details
     ):
         soup = load_pages.get_test_soup(test_html_file_index)
-        event_details = hearing.get_writ_of_possession_service(soup)
+        event_details = TravisParser.get_writ_of_possession_service(soup)
         assert event_details == expected_event_details
 
     @pytest.mark.parametrize(
@@ -629,7 +631,7 @@ class TestParseHTML:
         self, test_html_file_index, expected_event_details
     ):
         soup = load_pages.get_test_soup(test_html_file_index)
-        event_details = hearing.get_writ_of_possession_requested(soup)
+        event_details = TravisParser.get_writ_of_possession_requested(soup)
         assert event_details == expected_event_details
 
     @pytest.mark.parametrize(
@@ -655,7 +657,7 @@ class TestParseHTML:
         self, test_html_file_index, expected_event_details
     ):
         soup = load_pages.get_test_soup(test_html_file_index)
-        event_details = hearing.get_writ_of_possession_sent_to_constable(soup)
+        event_details = TravisParser.get_writ_of_possession_sent_to_constable(soup)
         assert event_details == expected_event_details
 
     @pytest.mark.parametrize(
@@ -681,7 +683,7 @@ class TestParseHTML:
         self, test_html_file_index, expected_event_details
     ):
         soup = load_pages.get_test_soup(test_html_file_index)
-        event_details = hearing.get_writ_returned_to_court(soup)
+        event_details = TravisParser.get_writ_returned_to_court(soup)
         assert event_details == expected_event_details
 
     @pytest.mark.parametrize(
@@ -707,7 +709,7 @@ class TestParseHTML:
         self, test_html_file_index, expected_attorneys
     ):
         soup = load_pages.get_test_soup(test_html_file_index)
-        attorneys = hearing.get_attorneys_for_defendants(soup)
+        attorneys = TravisParser.get_attorneys_for_defendants(soup)
         assert attorneys == expected_attorneys
 
     @pytest.mark.parametrize(
@@ -733,7 +735,7 @@ class TestParseHTML:
         self, test_html_file_index, expected_attorneys
     ):
         soup = load_pages.get_test_soup(test_html_file_index)
-        attorneys = hearing.get_attorneys_for_plaintiffs(soup)
+        attorneys = TravisParser.get_attorneys_for_plaintiffs(soup)
         assert attorneys == expected_attorneys
 
     @pytest.mark.parametrize(
@@ -746,6 +748,6 @@ class TestParseHTML:
     )
     def test_make_parsed_case(self, test_html_file_index, plaintiff, disposition_date):
         soup = load_pages.get_test_soup(test_html_file_index)
-        parsed_case = hearing.make_parsed_case(soup=soup)
+        parsed_case = TravisParser.make_parsed_case(soup=soup)
         assert parsed_case["plaintiff"] == plaintiff
         assert parsed_case["disposition_date"] == disposition_date

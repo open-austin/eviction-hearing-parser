@@ -15,6 +15,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 
 from emailing import log_and_email
+import calendars
 import hearing
 
 options = Options()
@@ -327,7 +328,7 @@ def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str) -> List
             (
                 filings_case_nums_list,
                 query_needs_splitting,
-            ) = hearing.get_filing_case_nums(filings_soup)
+            ) = calendars.get_filing_case_nums(filings_soup)
             break
         except:
             if tries == 10:
