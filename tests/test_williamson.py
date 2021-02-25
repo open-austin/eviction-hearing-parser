@@ -26,7 +26,7 @@ class TestParseHTML:
         assert plaintiff == expected
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "Alice Smith,Beverly Jones"),],
+        "index, expected", [(0, "Smith, Alice; Jones, Beverly"),],
     )
     def test_get_defendants(self, index, expected):
         soup = load_pages.get_test_williamson(index)

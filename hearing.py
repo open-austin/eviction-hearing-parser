@@ -664,6 +664,24 @@ class BaseParser:
 
 
 class WilliamsonParser(BaseParser):
+    def get_defendant_elements(self, soup):
+        """
+        Gets the defendant HTML elements from a CaseDetail.
+        These are currently used as an anchor for most of the Party Info parsing.
+        Sometimes the text of the element does not always say "Defendant", but may say something like "Defendant 2".
+        """
+        return soup.find_all("th", text=re.compile(r"^\s+Defendant"))
+
+    def get_events_tbody_element(self, soup):
+        """
+        Returns the <tbody> element  of a CaseDetail document
+        that contains Dispositions, Hearings, and Other Events.
+        Used as a starting point for many event parsing methods.
+        """
+        table_caption_div = soup.find_all("caption")[1].div
+        tbody = table_caption_div.parent.find_next_sibling("tbody")
+        return tbody
+
     def get_plaintiff_elements(self, soup):
         """
         Gets the plaintiff HTML elements from a CaseDetail.
@@ -676,12 +694,7 @@ class WilliamsonParser(BaseParser):
         precinct_name = location_heading.find_next_sibling("td").text
         return int(precinct_name[-1])
 
-    def get_events_tbody_element(self, soup):
-        """
-        Returns the <tbody> element  of a CaseDetail document
-        that contains Dispositions, Hearings, and Other Events.
-        Used as a starting point for many event parsing methods.
-        """
-        table_caption_div = soup.find_all("caption")[1].div
-        tbody = table_caption_div.parent.find_next_sibling("tbody")
-        return tbody
+    def get_style(self, soup):
+        tables = soup.find_all("table")
+        elem = tables[4].tr.td.b
+        return elem.text
