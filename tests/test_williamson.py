@@ -76,7 +76,7 @@ class TestParseHTML:
         assert expected in passage
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "Original Petition"),],
+        "index, expected", [(0, "Non Military Affidavit"),],
     )
     def test_get_first_event(self, index, expected):
         soup = load_pages.get_test_williamson(index)

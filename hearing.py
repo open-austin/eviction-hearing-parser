@@ -225,14 +225,17 @@ class BaseParser:
         hearing_time_matches = re.search(r"\d{1,2}:\d{2} [AP]M", hearing_text)
         return hearing_time_matches[0] if hearing_time_matches is not None else ""
 
+    def remove_whitespace(self, text: str) -> str:
+        result = text.replace("\n", "").strip(") ")
+        while "  " in result:
+            result = result.replace("  ", " ")
+        return result.strip()
+
     def get_hearing_officer(self, hearing_tag) -> str:
         hearing_text = self.get_hearing_text(hearing_tag)
         officer_groups = hearing_text.split("Judicial Officer")
         name = officer_groups[1] if len(officer_groups) > 1 else ""
-        result = name.strip().strip(")".replace("\n", ""))
-        while "  " in result:
-            result = result.replace("  ", " ")
-        return result
+        return self.remove_whitespace(name)
 
     def get_disposition_date_node(self, soup) -> BeautifulSoup:
         try:
@@ -242,7 +245,9 @@ class BaseParser:
 
     def get_disposition_date(self, soup) -> Optional[str]:
         disposition_date_node = self.get_disposition_date_node(soup)
-        return disposition_date_node.text if disposition_date_node else None
+        if disposition_date_node:
+            return self.remove_whitespace(disposition_date_node.text)
+        return None
 
     def get_disposition_amount(self, soup) -> Optional[Decimal]:
         disposition_date_node = self.get_disposition_date_node(soup)
@@ -693,6 +698,12 @@ class WilliamsonParser(BaseParser):
         tbody = table_caption.find_next_sibling("tr").find_next_sibling("tr")
         return tbody
 
+    def get_hearing_date(self, hearing_tag) -> str:
+        if hearing_tag is None:
+            return ""
+        date_tag = hearing_tag.parent.th
+        return date_tag.text
+
     def get_hearing_tags(self, soup) -> List:
         """
         Returns <tr> elements in the Events and Hearings section of a CaseDetail document that represent a hearing record.
@@ -701,6 +712,18 @@ class WilliamsonParser(BaseParser):
         hearing_tds = root.find_all(
             "td",
             headers=lambda id_str: id_str is not None and id_str.startswith("RCDHR"),
+        )
+
+        return hearing_tds or []
+
+    def get_hearing_and_event_tags(self, soup) -> List:
+        """
+        Returns <tr> elements in the Events and Hearings section of a CaseDetail document that represent a hearing record.
+        """
+        root = self.get_events_tbody_element(soup).parent
+        hearing_tds = root.find_all(
+            "td",
+            headers=lambda id_str: id_str is not None and id_str.startswith("RCD"),
         )
 
         return hearing_tds or []
@@ -721,3 +744,13 @@ class WilliamsonParser(BaseParser):
         tables = soup.find_all("table")
         elem = tables[4].tr.td.b
         return elem.text
+
+    def was_defendant_served(self, soup) -> Dict[str, str]:
+        dates_of_service = {}
+        served_tags = soup.find_all(text="Served")
+        for service_tag in served_tags:
+            date_tag = service_tag.parent.find_next_sibling("td")
+            defendant_tag = service_tag.parent.parent.parent.parent.parent.td
+            defendant_name = self.remove_whitespace(defendant_tag.text)
+            dates_of_service[defendant_name] = date_tag.text
+        return dates_of_service
