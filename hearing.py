@@ -206,9 +206,12 @@ class BaseParser:
         date_tag = hearing_tag.find("th")
         return date_tag.text
 
-    def get_hearing_type(self, hearing_tag) -> str:
+    def get_hearing_type_from_hearing_tag(self, hearing_tag) -> str:
         """Function to get all events and case type from case page section: Other Events and Hearings"""
         hearing_type = hearing_tag.find_all("b")[0].text
+        return hearing_type
+
+    def get_all_text_from_hearing_tag(self, hearing_tag) -> str:
         all_tds = hearing_tag.find_all("td")
         all_text = all_tds[-1].get_text(separator=" ")
 
@@ -218,7 +221,7 @@ class BaseParser:
                 if len(text) > 1 and text not in all_text:
                     all_text += text
 
-        return hearing_type, all_text
+        return all_text
 
     def get_hearing_time(self, hearing_tag) -> str:
         hearing_text = self.get_hearing_text(hearing_tag)
@@ -457,14 +460,16 @@ class BaseParser:
         except:
             appeared = None
 
-        type, all_text = self.get_hearing_type(soup)
+        hearing_type = self.get_hearing_type_from_hearing_tag(soup)
+
+        all_text = self.get_all_text_from_hearing_tag(soup)
 
         return {
             "hearing_date": self.get_hearing_date(soup),
             "hearing_time": time,
             "hearing_officer": officer,
             "appeared": appeared,
-            "hearing_type": type,
+            "hearing_type": hearing_type,
             "all_text": all_text,
         }
 
@@ -672,6 +677,11 @@ class BaseParser:
 
 
 class WilliamsonParser(BaseParser):
+    def get_all_text_from_hearing_tag(self, hearing_tag) -> str:
+
+        all_text = self.remove_whitespace(hearing_tag.text)
+        return all_text
+
     def get_attorneys_header_id(self, soup: BeautifulSoup) -> Optional[str]:
         """Get the HTML ID attribute for the "Attorneys" column header."""
         element = soup.find("th", text="Lead Attorneys")

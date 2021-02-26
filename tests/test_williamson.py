@@ -273,7 +273,7 @@ class TestParseHTML:
 
     @pytest.mark.parametrize(
         "test_html_file_index, plaintiff, disposition_date",
-        [(0, "Realistic Fake Name", ""),],
+        [(0, "Name, Realistic Fake", "01/21/2021"),],
     )
     def test_make_parsed_case(self, test_html_file_index, plaintiff, disposition_date):
         soup = load_pages.get_test_williamson(test_html_file_index)

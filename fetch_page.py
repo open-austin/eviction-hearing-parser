@@ -16,6 +16,7 @@ from selenium.webdriver.chrome.options import Options
 
 from emailing import log_and_email
 import calendars
+import case_search
 import hearing
 
 options = Options()
@@ -278,8 +279,8 @@ def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
     result_soup = BeautifulSoup(result_page, "html.parser")
     register_soup = BeautifulSoup(register_page, "html.parser")
 
-    register_url = hearing.get_register_url(result_soup)
-    status, type = hearing.get_status_and_type(result_soup)
+    register_url = case_search.get_register_url(result_soup)
+    status, type = case_search.get_status_and_type(result_soup)
 
     if status.lower() not in hearing.statuses_map:
         load_dotenv()
@@ -294,7 +295,9 @@ def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
                 f"Case {case_id} has status '{status}', which is not in our list of known statuses."
             )
 
-    return hearing.make_parsed_case(
+    # TODO: choose parser based on county
+    parser = hearing.BaseParser()
+    return parser.make_parsed_case(
         soup=register_soup, status=status, type=type, register_url=register_url
     )
 
@@ -337,7 +340,7 @@ def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str) -> List
     # handle case of too many results (200 results means that the search cut off)
     if query_needs_splitting:
         try:
-            end_of_first_range, start_of_second_range = hearing.split_date_range(
+            end_of_first_range, start_of_second_range = calendars.split_date_range(
                 afterdate, beforedate
             )
             filings_case_nums_list = fetch_filings(
