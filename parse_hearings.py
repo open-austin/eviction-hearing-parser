@@ -11,7 +11,7 @@ import fetch_page
 import persist
 import logging
 import sys
-import simplejson as json
+import simplejson
 from typing import Any, Dict, List
 from emailing import log_and_email
 
@@ -49,7 +49,7 @@ def make_case_list(ids_to_parse: List[str]) -> List[Dict[str, Any]]:
 
 
 def parse_all_from_parse_filings(
-    case_nums: List[str], showbrowser=False
+    case_nums: List[str], showbrowser: bool = False, json: bool = True, db: bool = True
 ) -> List[Dict[str, Any]]:
     """
     Gets case details for each case number in `case_nums` and sends the data to PostgreSQL.
@@ -61,29 +61,41 @@ def parse_all_from_parse_filings(
 
         fetch_page.driver = webdriver.Chrome("./chromedriver")
 
-    parsed_cases = make_case_list(case_nums)
-    logger.info(
-        f"Finished making case list, now will send all {len(parsed_cases)} cases to SQL."
-    )
-
-    failed_cases = []
-    for parsed_case in parsed_cases:
+    parsed_cases = []
+    for tries in range(1, 6):
         try:
-            persist.rest_case(parsed_case)
-        except:
-            try:
-                failed_cases.append(parsed_case["case_number"])
-            except:
-                logger.error(
-                    "A case failed to be parsed but it doesn't have a case number."
-                )
+            parsed_cases = make_case_list(case_nums)
+            break
+        except Exception as e:
+            logger.error(
+                f"Failed to parse hearings on attempt {tries}. Error message: {e}"
+            )
 
-    if failed_cases:
-        error_message = f"Failed to send the following case numbers to SQL:\n{', '.join(failed_cases)}"
-        log_and_email(
-            error_message, "Case Numbers for Which Sending to SQL Failed", error=True
+    if db:
+        logger.info(
+            f"Finished making case list, now will send all {len(parsed_cases)} cases to SQL."
         )
-    logger.info("Finished sending cases to SQL.")
+
+        failed_cases = []
+        for parsed_case in parsed_cases:
+            try:
+                persist.rest_case(parsed_case)
+            except:
+                try:
+                    failed_cases.append(parsed_case["case_number"])
+                except:
+                    logger.error(
+                        "A case failed to be parsed but it doesn't have a case number."
+                    )
+
+        if failed_cases:
+            error_message = f"Failed to send the following case numbers to SQL:\n{', '.join(failed_cases)}"
+            log_and_email(
+                error_message,
+                "Case Numbers for Which Sending to SQL Failed",
+                error=True,
+            )
+        logger.info("Finished sending cases to SQL.")
 
     return parsed_cases
 
@@ -98,7 +110,13 @@ def parse_all_from_parse_filings(
     default=False,
     help="whether to operate in headless mode or not",
 )
-def parse_all(infile, outfile, showbrowser=False):
+@click.option(
+    "--json / --no-json", default=True, help="whether to dump JSON or not",
+)
+@click.option(
+    "--db / --no-db", default=True, help="whether to persist the data to a db",
+)
+def parse_all(infile, outfile, showbrowser=False, json=True, db=True):
     """Same as `parse_all_from_parse_filings()` but takes in a csv of case numbers instead of a list."""
 
     # If showbrowser is True, use the default selenium driver
@@ -108,19 +126,11 @@ def parse_all(infile, outfile, showbrowser=False):
         fetch_page.driver = webdriver.Chrome("./chromedriver")
 
     ids_to_parse = get_ids_to_parse(infile)
-
-    for tries in range(5):
-        try:
-            parsed_cases = make_case_list(ids_to_parse)
-            for parsed_case in parsed_cases:
-                persist.rest_case(parsed_case)
-            json.dump(parsed_cases, outfile)
-            logger.info(f"Successfully parsed hearings on attempt {tries + 1}")
-            break
-        except Exception as e:
-            logger.error(
-                f"Failed to parse hearings on attempt {tries + 1}. Error message: {e}"
-            )
+    parsed_cases = parse_all_from_parse_filings(
+        case_nums=ids_to_parse, showbrowser=showbrowser, db=db
+    )
+    if json:
+        simplejson.dump(parsed_cases, outfile)
 
 
 if __name__ == "__main__":
