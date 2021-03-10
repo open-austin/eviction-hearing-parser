@@ -2,16 +2,13 @@
 
 import os
 from typing import Dict, List
-
-from dotenv import load_dotenv
+import config
 from connect_to_database import get_database_connection
 
-load_dotenv()
-local_dev = os.getenv("LOCAL_DEV") == "true"
 
 
 def get_case(case_id: str) -> Dict:
-    conn = get_database_connection(local_dev=local_dev)
+    conn = get_database_connection(local_dev=config.local_dev)
 
     # conn.row_factory = sqlite3.Row
     curs = conn.cursor()
@@ -27,7 +24,7 @@ def rest_case(case: Dict):
     and EVENT table of the PostgreSQL database
     """
 
-    conn = get_database_connection(local_dev=local_dev)
+    conn = get_database_connection(local_dev=config.local_dev)
     curs = conn.cursor()
     curs.execute(
         """
@@ -112,7 +109,7 @@ def rest_case(case: Dict):
 def rest_setting(setting: Dict):
     """Takes a dictionary representation of a setting and maps it into the SETTING table of the PostgreSQL database"""
 
-    conn = get_database_connection(local_dev=local_dev)
+    conn = get_database_connection(local_dev=config.local_dev)
     curs = conn.cursor()
     curs.execute(
         """
@@ -141,7 +138,7 @@ def rest_setting(setting: Dict):
 def get_old_active_case_nums() -> List[str]:
     """Returns list of case numbers in CASE_DETAIL table that are still active (as determined by the STATUS column)."""
 
-    conn = get_database_connection(local_dev=local_dev)
+    conn = get_database_connection(local_dev=config.local_dev)
     curs = conn.cursor()
 
     curs.execute(
@@ -165,7 +162,7 @@ def drop_rows_from_table(table_name: str, case_ids: list):
     else:
         case_ids = str(tuple(case_ids))
 
-    conn = get_database_connection(local_dev=local_dev)
+    conn = get_database_connection(local_dev=config.local_dev)
     curs = conn.cursor()
 
     if table_name == "CASE_DETAIL":
@@ -194,7 +191,7 @@ def update_first_court_apperance_column():
                         )
                    """
 
-    conn = get_database_connection(local_dev=local_dev)
+    conn = get_database_connection(local_dev=config.local_dev)
     curs = conn.cursor()
     curs.execute(update_query)
     conn.commit()

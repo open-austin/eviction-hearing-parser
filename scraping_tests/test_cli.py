@@ -1,7 +1,7 @@
 import pytest
-
+import config
 import parse_hearings
-
+config.county= "travis"
 
 class TestCLI:
 

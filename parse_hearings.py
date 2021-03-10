@@ -31,7 +31,7 @@ def get_ids_to_parse(infile: click.File) -> List[str]:
 
 
 def make_case_list(ids_to_parse: List[str]) -> List[Dict[str, Any]]:
-    """Gets case details for each case number in `ids_to_pars`"""
+    """Gets case details for each case number in `ids_to_parse`"""
 
     parsed_cases, failed_ids = [], []
     for id_to_parse in ids_to_parse:

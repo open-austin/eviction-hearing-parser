@@ -4,7 +4,7 @@ import sys
 import logging
 import atexit
 import os
-from dotenv import load_dotenv
+import config
 from typing import Dict, List, Optional, Tuple
 
 from bs4 import BeautifulSoup
@@ -23,15 +23,13 @@ options = Options()
 options.add_argument("--no-sandbox")
 options.add_argument("--headless")
 options.add_argument("window-size=1920,1080")
-options.headless = True
+options.headless = False
 
 logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
 
-load_dotenv()
-local_dev = os.getenv("LOCAL_DEV") == "true"
 
-if local_dev:
+if config.local_dev:
     driver = webdriver.Chrome("./chromedriver", options=options)
 else:
     driver_path, chrome_bin = (
@@ -50,32 +48,26 @@ atexit.register(close_driver)
 
 
 def load_start_page():
-    driver.get("https://odysseypa.traviscountytx.gov/JPPublicAccess/default.aspx")
+    homepage = {
+        'travis' : "https://odysseypa.traviscountytx.gov/JPPublicAccess/default.aspx",
+        'williamson' : "https://judicialrecords.wilco.org/PublicAccess/default.aspx",
+    }
+    print(config.county)
+    driver.get(homepage[config.county])
     return driver
 
 
 def load_search_page():
     start_page = load_start_page()
+
+    search_page_text = {
+        'travis' : "Civil, Family & Probate Case Records",
+        'williamson' : "Civil, Family & Probate Case Records",
+    }
     try:
         element = WebDriverWait(start_page, 10).until(
             EC.presence_of_element_located(
-                (By.LINK_TEXT, "Civil, Family & Probate Case Records")
-            )
-        )
-    finally:
-        element.click()
-        return start_page
-    return None
-
-
-def load_case_records_search_page():
-    """Clicks into Case Records search page"""
-
-    start_page = load_start_page()
-    try:
-        element = WebDriverWait(start_page, 10).until(
-            EC.presence_of_element_located(
-                (By.LINK_TEXT, "Civil, Family & Probate Case Records")
+                (By.LINK_TEXT, search_page_text[config.county])
             )
         )
     finally:
@@ -85,6 +77,7 @@ def load_case_records_search_page():
 
 
 def query_case_id(case_id: str):
+    #this is the same for travis and williamson. 
     search_page = load_search_page()
     try:
         case_radio_button = WebDriverWait(search_page, 10).until(
@@ -214,7 +207,7 @@ def query_filings(afterdate: str, beforedate: str, case_num_prefix: str):
     for tries in range(5):
         # select case in search by
         try:
-            court_records = load_case_records_search_page()
+            court_records = load_court_calendar()
             case_button = WebDriverWait(court_records, 10).until(
                 EC.presence_of_element_located((By.ID, "Case"))
             )
@@ -283,8 +276,7 @@ def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
     status, type = case_search.get_status_and_type(result_soup)
 
     if status.lower() not in hearing.statuses_map:
-        load_dotenv()
-        if os.getenv("LOCAL_DEV") != "true":
+        if config.local_dev:
             log_and_email(
                 f"Case {case_id} has status '{status}', which is not in our list of known statuses.",
                 "Found Unknown Status",

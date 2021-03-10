@@ -10,6 +10,7 @@ import logging
 from statuses import statuses_map
 from fuzzywuzzy import fuzz
 from emailing import log_and_email
+import config
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -21,6 +22,186 @@ class BaseParser:
         # TODO handle multiple plaintiffs
         tag = self.get_plaintiff_elements(soup)[0]
         name_elem = tag.find_next_sibling("th")
+<<<<<<< HEAD
+=======
+        defendants.append(name_elem.text)
+    together = "; ".join(defendants)
+    return together
+
+
+def get_attorneys_header_id(soup: BeautifulSoup) -> Optional[str]:
+    """Get the HTML ID attribute for the "Attorneys" column header."""
+    elemnt = None
+    if config.county == "travis":
+        element = soup.find("th", text="Attorneys")
+    if config.county == "williamson": 
+        element = soup.find("th", text="Lead Attorneys")
+    if not element:
+        return None
+    return element.get("id")
+
+
+def get_attorneys_for_party(
+    soup: BeautifulSoup, party_elements
+) -> Dict[str, List[str]]:
+    """Get the attorney(s) for a party."""
+    attorneys: Dict[str, List[str]] = dict()
+    attorneys_header_id = get_attorneys_header_id(soup)
+
+    for party_element in party_elements:
+        try:
+            party_name = party_element.find_next_sibling("th").text.strip()
+
+            party_element_id = party_element.get("id")
+            party_attorney_element = soup.find(
+                "td",
+                headers=lambda _headers: _headers
+                and attorneys_header_id in _headers
+                and party_element_id in _headers,
+            )
+            party_attorney_name = party_attorney_element.find("b").text.strip()
+        except AttributeError:
+            continue
+
+        if party_attorney_name not in attorneys:
+            attorneys[party_attorney_name] = []
+
+        attorneys[party_attorney_name].append(party_name)
+
+    return attorneys
+
+
+def get_attorneys_for_defendants(soup: BeautifulSoup) -> Dict[str, List[str]]:
+    """Get the attorney(s) for the defendant(s)."""
+    defendant_elements = get_defendant_elements(soup)
+    return get_attorneys_for_party(soup, defendant_elements)
+
+
+def get_attorneys_for_plaintiffs(soup: BeautifulSoup) -> Dict[str, List[str]]:
+    """Get the attorney(s) for the plaintiff(s)."""
+    plaintiff_elements = get_plaintiff_elements(soup)
+    return get_attorneys_for_party(soup, plaintiff_elements)
+
+
+def get_case_number(soup):
+    elem = soup.find(class_="ssCaseDetailCaseNbr").span
+    return elem.text
+
+
+def get_style(soup):
+    elem = soup.find_all("table")[4].tbody.tr.td
+    return elem.text
+
+
+def get_date_filed(soup: BeautifulSoup) -> str:
+    """Get date filed for the case filing. """
+    elem = soup.find_all("table")[4].find("th", text="Date Filed:").find_next("b")
+    return elem.text
+
+
+def get_zip(party_info_th_soup) -> str:
+    """Returns a ZIP code from the Table Heading Party Info of a CaseDetail"""
+    zip_regex = re.compile(r", tx \d{5}(-\d{4})?")
+
+    def has_zip(string: str) -> bool:
+        return bool(zip_regex.search(string.lower()))
+
+    zip_tag = party_info_th_soup.find_next(string=has_zip)
+    return zip_tag.strip().split()[-1] if zip_tag is not None else ""
+
+
+def get_disposition_tr_element(soup) -> str:
+    """
+    Returns the <tr> element of a CaseDetail document that contains Disposition info, if one exists.
+    """
+    disp_date_th = soup.find(
+        "th", id=lambda id_str: id_str is not None and "RDISPDATE" in id_str
+    )
+    return disp_date_th.parent if disp_date_th is not None else None
+
+
+def get_disposition_type(disposition_tr) -> str:
+    return disposition_tr.find("b").text
+
+
+def get_disposition_awarded_to(disposition_tr) -> str:
+    """
+    Gets the "Awarded To" field of a disposition, if one exists.
+    """
+    if disposition_tr is None:
+        return None
+
+    award_field = disposition_tr.find(text=re.compile(r"Awarded To:"))
+
+    if award_field is None:
+        return None
+
+    return award_field.next_sibling.text.strip()
+
+
+def get_disposition_awarded_against(disposition_tr) -> str:
+    """
+    Gets the "Awarded Against" field of a disposition, if one exists.
+    """
+    if disposition_tr is None:
+        return None
+
+    award_field = disposition_tr.find(text=re.compile(r"Awarded Against:"))
+
+    if award_field is None:
+        return None
+
+    return award_field.next_sibling.text.strip()
+
+
+def get_events_tbody_element(soup):
+    """
+    Returns the <tbody> element  of a CaseDetail document that contains Dispositions, Hearings, and Other Events.
+    Used as a starting point for many event parsing methods.
+    """
+    table_caption_div = soup.find(
+        "div", class_="ssCaseDetailSectionTitle", text="Events & Orders of the Court"
+    )
+    tbody = table_caption_div.parent.find_next_sibling("tbody")
+    return tbody
+
+
+def get_hearing_tags(soup) -> List:
+    """
+    Returns <tr> elements in the Events and Hearings section of a CaseDetail document that represent a hearing record.
+    """
+    root = get_events_tbody_element(soup)
+    hearing_ths = root.find_all(
+        "th", id=lambda id_str: id_str is not None and id_str.startswith("RCDHR")
+    )
+    hearing_trs = [hearing_th.parent for hearing_th in hearing_ths]
+
+    return hearing_trs or []
+
+
+def get_hearing_and_event_tags(soup) -> List:
+    """
+    Returns <tr> elements in the Events and Hearings section of a CaseDetail document.
+    """
+    root = get_events_tbody_element(soup)
+    hearing_or_event_ths = root.find_all(
+        "th", id=lambda id_str: id_str is not None and id_str.startswith("RCD")
+    )
+    hearing_or_event_trs = [hearing_th.parent for hearing_th in hearing_or_event_ths]
+
+    return hearing_or_event_trs or []
+
+
+def get_hearing_text(hearing_tag) -> str:
+    return hearing_tag.find("b").next_sibling if hearing_tag is not None else ""
+
+
+def get_hearing_date(hearing_tag) -> str:
+    if hearing_tag is None:
+        return ""
+    date_tag = hearing_tag.find("th")
+    return date_tag.text
+>>>>>>> e233a4e02f1530b47fc0f8ff24cea16fff22e5fb
 
         return name_elem.text.strip()
 
@@ -251,6 +432,38 @@ class BaseParser:
         if disposition_date_node:
             return self.remove_whitespace(disposition_date_node.text)
         return None
+<<<<<<< HEAD
+=======
+    if "$" not in disposition_amount_node.text:
+        return None
+    amount_as_string = disposition_amount_node.text.strip(". ")
+    amount = Decimal(re.sub(r"[^\d.]", "", amount_as_string))
+    return amount
+
+
+def get_precinct_number(soup) -> int:
+    word_to_number = {"One": 1, "Two": 2, "Three": 3, "Four": 4, "Five": 5}
+
+    location_heading = soup.find(text="Location:").parent
+    precinct_name = location_heading.find_next_sibling("td").text
+    print(precinct_name)
+    if config.county == "travis":
+        precinct_number = precinct_name.split("Precinct ")[1]
+        return word_to_number[precinct_number]
+    if config.county == "williamson":
+        #returns last number of precinct, JP1, JP2, etc
+        return int(precinct_name[-1])
+    else:
+        return None
+    
+
+
+def get_status_and_type(status_soup) -> str:
+    tds = status_soup.find_all("td")
+    divs = tds[-1].find_all("div")
+    status, type = divs[1].text, divs[0].text
+    return status, type
+>>>>>>> e233a4e02f1530b47fc0f8ff24cea16fff22e5fb
 
     def get_disposition_amount(self, soup) -> Optional[Decimal]:
         disposition_date_node = self.get_disposition_date_node(soup)
@@ -566,6 +779,7 @@ class BaseParser:
         disposition_date = datetime.strptime(disposition_date, "%m/%d/%Y")
         march_14 = datetime(2020, 3, 14)
 
+<<<<<<< HEAD
         return (
             "Y"
             if (
@@ -573,6 +787,57 @@ class BaseParser:
                 and (statuses_map[substatus]["status"] == "Judgment")
             )
             else "N"
+=======
+    return (
+        "Y"
+        if (
+            (disposition_date >= march_14)
+            and (statuses_map[substatus]["status"] == "Judgment")
+        )
+        else "N"
+    )
+
+
+def make_parsed_case(
+    soup, status: str = "", type: str = "", register_url: str = "", county: str="travis"
+) -> Dict[str, str]:
+    # TODO handle multiple defendants/plaintiffs with different zips
+    disposition_tr = get_disposition_tr_element(soup)
+
+    try:
+        defendant_zip = get_zip(get_defendant_elements(soup)[0])
+    except:
+        defendant_zip = None
+
+    try:
+        style = get_style(soup)
+    except:
+        style = None
+
+    try:
+        plaintiff = get_plaintiff(soup)
+    except:
+        plaintiff = None
+
+    try:
+        plaintiff_zip = get_zip(get_plaintiff_elements(soup)[0])
+    except:
+        plaintiff_zip = None
+
+    try:
+        disp_type = get_disposition_type(disposition_tr)
+    except:
+        disp_type = None
+
+    try:
+        score, winner = match_disposition(
+            get_disposition_awarded_against(disposition_tr),
+            get_disposition_awarded_to(disposition_tr),
+            plaintiff,
+            get_defendants(soup),
+            disp_type,
+            status,
+>>>>>>> e233a4e02f1530b47fc0f8ff24cea16fff22e5fb
         )
 
     def make_parsed_case(
