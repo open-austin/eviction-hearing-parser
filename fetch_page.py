@@ -85,7 +85,16 @@ def load_case_records_search_page():
     return None
 
 
-class Scraper:
+class FakeScraper:
+    def query_case_id(self, case_id: str) -> Tuple[str, str]:
+        if not case_id == "J1-CV-20-001590":
+            raise ValueError(
+                "The fake Scraper can only take the Case ID J1-CV-20-001590."
+            )
+        search_page = load_pages.get_test_search_page(0)
+        register_page = load_pages.get_test_soup(0)
+        return search_page, register_page
+
     def fetch_parsed_case(self, case_id: str) -> Tuple[str, str]:
         query_result = self.query_case_id(case_id)
         if query_result is None:
@@ -114,6 +123,8 @@ class Scraper:
             soup=register_soup, status=status, type=type, register_url=register_url
         )
 
+
+class Scraper(FakeScraper):
     def query_case_id(self, case_id: str):
         search_page = load_search_page()
         try:
@@ -160,17 +171,6 @@ class Scraper:
             search_soup = BeautifulSoup(search_page_content, "html.parser")
             register_soup = BeautifulSoup(register_page_content, "html.parser")
             return search_soup, register_soup
-
-
-class FakeScraper(Scraper):
-    def query_case_id(self, case_id: str) -> Tuple[str, str]:
-        if not case_id == "J1-CV-20-001590":
-            raise ValueError(
-                "The fake Scraper can only take the Case ID J1-CV-20-001590."
-            )
-        search_page = load_pages.get_test_search_page(0)
-        register_page = load_pages.get_test_soup(0)
-        return search_page, register_page
 
 
 def load_court_calendar():
