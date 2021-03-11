@@ -31,23 +31,6 @@ logging.basicConfig(stream=sys.stdout)
 load_dotenv()
 local_dev = os.getenv("LOCAL_DEV") == "true"
 
-if local_dev:
-    driver = webdriver.Chrome("./chromedriver", options=options)
-else:
-    driver_path, chrome_bin = (
-        os.getenv("CHROMEDRIVER_PATH"),
-        os.getenv("GOOGLE_CHROME_BIN"),
-    )
-    options.binary_location = chrome_bin
-    driver = webdriver.Chrome(executable_path=driver_path, options=options)
-
-
-def close_driver():
-    driver.close()
-
-
-atexit.register(close_driver)
-
 
 def load_start_page():
     driver.get("https://odysseypa.traviscountytx.gov/JPPublicAccess/default.aspx")
@@ -85,6 +68,23 @@ def load_case_records_search_page():
 
 
 class Scraper(FakeScraper):
+    def __init__(self) -> None:
+        super().__init__()
+
+        if local_dev:
+            self.driver = webdriver.Chrome("./chromedriver", options=options)
+        else:
+            driver_path, chrome_bin = (
+                os.getenv("CHROMEDRIVER_PATH"),
+                os.getenv("GOOGLE_CHROME_BIN"),
+            )
+            options.binary_location = chrome_bin
+            self.driver = webdriver.Chrome(executable_path=driver_path, options=options)
+        atexit.register(self.close_driver)
+
+    def close_driver(self):
+        self.driver.close()
+
     def query_case_id(self, case_id: str):
         search_page = load_search_page()
         try:

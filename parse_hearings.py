@@ -4,9 +4,7 @@ To perform a scraper run, use: python parse_hearings.py name_of_csv_with_case_nu
 """
 
 import csv
-import os
 import click
-import hearing
 import fetch_page
 import persist
 import logging
@@ -33,26 +31,6 @@ def get_ids_to_parse(infile: click.File) -> List[str]:
 REAL_SCRAPER = fetch_page.Scraper()
 
 
-def make_case_list(
-    ids_to_parse: List[str], scraper=REAL_SCRAPER
-) -> List[Dict[str, Any]]:
-    """Gets case details for each case number in `ids_to_pars`"""
-
-    parsed_cases, failed_ids = [], []
-    for id_to_parse in ids_to_parse:
-        new_case = scraper.fetch_parsed_case(id_to_parse)
-        if new_case:
-            parsed_cases.append(new_case)
-        else:
-            failed_ids.append(id_to_parse)
-
-    if failed_ids:
-        error_message = f"Failed to scrape data for {len(failed_ids)} case numbers. Here they are:\n{', '.join(failed_ids)}"
-        log_and_email(error_message, "Failed Case Numbers", error=True)
-
-    return parsed_cases
-
-
 def parse_all_from_parse_filings(
     case_nums: List[str],
     showbrowser: bool = False,
@@ -64,16 +42,10 @@ def parse_all_from_parse_filings(
     Gets case details for each case number in `case_nums` and sends the data to PostgreSQL.
     Logs any case numbers for which getting data failed.
     """
-
-    if showbrowser:
-        from selenium import webdriver
-
-        fetch_page.driver = webdriver.Chrome("./chromedriver")
-
     parsed_cases = []
     for tries in range(1, 6):
         try:
-            parsed_cases = make_case_list(case_nums, scraper=scraper)
+            parsed_cases = scraper.make_case_list(case_nums)
             break
         except Exception as e:
             logger.error(
@@ -127,12 +99,6 @@ def parse_all_from_parse_filings(
 )
 def parse_all(infile, outfile, showbrowser=False, json=True, db=True):
     """Same as `parse_all_from_parse_filings()` but takes in a csv of case numbers instead of a list."""
-
-    # If showbrowser is True, use the default selenium driver
-    if showbrowser:
-        from selenium import webdriver
-
-        fetch_page.driver = webdriver.Chrome("./chromedriver")
 
     ids_to_parse = get_ids_to_parse(infile)
     parsed_cases = parse_all_from_parse_filings(

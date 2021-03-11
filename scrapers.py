@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Tuple
+from typing import Any, Dict, List, Tuple
 
 from dotenv import load_dotenv
 
@@ -49,3 +49,20 @@ class FakeScraper:
         return parser.make_parsed_case(
             soup=register_soup, status=status, type=type, register_url=register_url
         )
+
+    def make_case_list(self, ids_to_parse: List[str]) -> List[Dict[str, Any]]:
+        """Gets case details for each case number in `ids_to_pars`"""
+
+        parsed_cases, failed_ids = [], []
+        for id_to_parse in ids_to_parse:
+            new_case = self.fetch_parsed_case(id_to_parse)
+            if new_case:
+                parsed_cases.append(new_case)
+            else:
+                failed_ids.append(id_to_parse)
+
+        if failed_ids:
+            error_message = f"Failed to scrape data for {len(failed_ids)} case numbers. Here they are:\n{', '.join(failed_ids)}"
+            log_and_email(error_message, "Failed Case Numbers", error=True)
+
+        return parsed_cases
