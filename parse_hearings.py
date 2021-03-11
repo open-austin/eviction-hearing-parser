@@ -6,7 +6,6 @@ To perform a scraper run, use: python parse_hearings.py name_of_csv_with_case_nu
 import csv
 import click
 import fetch_page
-import persist
 import logging
 import sys
 import simplejson
@@ -53,6 +52,8 @@ def parse_all_from_parse_filings(
             )
 
     if db:
+        import persist
+
         logger.info(
             f"Finished making case list, now will send all {len(parsed_cases)} cases to SQL."
         )
