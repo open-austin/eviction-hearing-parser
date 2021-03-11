@@ -18,6 +18,7 @@ from emailing import log_and_email
 import calendars
 import case_search
 import hearing
+import load_pages
 
 options = Options()
 options.add_argument("--no-sandbox")
@@ -84,50 +85,92 @@ def load_case_records_search_page():
     return None
 
 
-def query_case_id(case_id: str):
-    search_page = load_search_page()
-    try:
-        case_radio_button = WebDriverWait(search_page, 10).until(
-            EC.presence_of_element_located((By.ID, "Case"))
-        )
-        case_radio_button.click()
-    except:
-        # logger.error(f"Could not click button to search for case {case_id}")
-        return None
+class Scraper:
+    def fetch_parsed_case(self, case_id: str) -> Tuple[str, str]:
+        query_result = self.query_case_id(case_id)
+        if query_result is None:
+            return None
+        result_soup, register_soup = query_result
 
-    try:
-        search_box = WebDriverWait(search_page, 10).until(
-            EC.presence_of_element_located((By.ID, "CaseSearchValue"))
-        )
-    except:
-        # logger.error(f"Could not type query to search for case {case_id}")
-        return None
-    finally:
-        search_box.send_keys(case_id)
-        search_button = search_page.find_element_by_name("SearchSubmit")
-        search_button.click()
-        search_page.implicitly_wait(1)
-        search_page_content = search_page.page_source
+        register_url = case_search.get_register_url(result_soup)
+        status, type = case_search.get_status_and_type(result_soup)
 
-    try:
-        register_link = WebDriverWait(search_page, 10).until(
-            EC.presence_of_element_located((By.LINK_TEXT, case_id))
-        )
-        register_link.click()
-    except:
-        # logger.error(f"Could not click search result for case {case_id}")
-        return None
+        if status.lower() not in hearing.statuses_map:
+            load_dotenv()
+            if os.getenv("LOCAL_DEV") != "true":
+                log_and_email(
+                    f"Case {case_id} has status '{status}', which is not in our list of known statuses.",
+                    "Found Unknown Status",
+                    error=True,
+                )
+            else:
+                logger.info(
+                    f"Case {case_id} has status '{status}', which is not in our list of known statuses."
+                )
 
-    try:
-        register_heading = WebDriverWait(search_page, 10).until(
-            EC.presence_of_element_located((By.ID, "PIr11"))
+        # TODO: choose parser based on county
+        parser = hearing.BaseParser()
+        return parser.make_parsed_case(
+            soup=register_soup, status=status, type=type, register_url=register_url
         )
-    except:
-        # logger.error(f"Could not load register of actions for case {case_id}")
-        return None
-    finally:
-        register_page_content = search_page.page_source
-        return search_page_content, register_page_content
+
+    def query_case_id(self, case_id: str):
+        search_page = load_search_page()
+        try:
+            case_radio_button = WebDriverWait(search_page, 10).until(
+                EC.presence_of_element_located((By.ID, "Case"))
+            )
+            case_radio_button.click()
+        except:
+            # logger.error(f"Could not click button to search for case {case_id}")
+            return None
+
+        try:
+            search_box = WebDriverWait(search_page, 10).until(
+                EC.presence_of_element_located((By.ID, "CaseSearchValue"))
+            )
+        except:
+            # logger.error(f"Could not type query to search for case {case_id}")
+            return None
+        finally:
+            search_box.send_keys(case_id)
+            search_button = search_page.find_element_by_name("SearchSubmit")
+            search_button.click()
+            search_page.implicitly_wait(1)
+            search_page_content = search_page.page_source
+
+        try:
+            register_link = WebDriverWait(search_page, 10).until(
+                EC.presence_of_element_located((By.LINK_TEXT, case_id))
+            )
+            register_link.click()
+        except:
+            # logger.error(f"Could not click search result for case {case_id}")
+            return None
+
+        try:
+            register_heading = WebDriverWait(search_page, 10).until(
+                EC.presence_of_element_located((By.ID, "PIr11"))
+            )
+        except:
+            # logger.error(f"Could not load register of actions for case {case_id}")
+            return None
+        finally:
+            register_page_content = search_page.page_source
+            search_soup = BeautifulSoup(search_page_content, "html.parser")
+            register_soup = BeautifulSoup(register_page_content, "html.parser")
+            return search_soup, register_soup
+
+
+class FakeScraper(Scraper):
+    def query_case_id(self, case_id: str) -> Tuple[str, str]:
+        if not case_id == "J1-CV-20-001590":
+            raise ValueError(
+                "The fake Scraper can only take the Case ID J1-CV-20-001590."
+            )
+        search_page = load_pages.get_test_search_page(0)
+        register_page = load_pages.get_test_soup(0)
+        return search_page, register_page
 
 
 def load_court_calendar():
@@ -269,37 +312,6 @@ def query_filings(afterdate: str, beforedate: str, case_num_prefix: str):
     finally:
         records_page_content = court_records.page_source
         return records_page_content
-
-
-def fetch_parsed_case(case_id: str) -> Tuple[str, str]:
-    query_result = query_case_id(case_id)
-    if query_result is None:
-        return None
-    result_page, register_page = query_result
-    result_soup = BeautifulSoup(result_page, "html.parser")
-    register_soup = BeautifulSoup(register_page, "html.parser")
-
-    register_url = case_search.get_register_url(result_soup)
-    status, type = case_search.get_status_and_type(result_soup)
-
-    if status.lower() not in hearing.statuses_map:
-        load_dotenv()
-        if os.getenv("LOCAL_DEV") != "true":
-            log_and_email(
-                f"Case {case_id} has status '{status}', which is not in our list of known statuses.",
-                "Found Unknown Status",
-                error=True,
-            )
-        else:
-            logger.info(
-                f"Case {case_id} has status '{status}', which is not in our list of known statuses."
-            )
-
-    # TODO: choose parser based on county
-    parser = hearing.BaseParser()
-    return parser.make_parsed_case(
-        soup=register_soup, status=status, type=type, register_url=register_url
-    )
 
 
 def fetch_settings(afterdate: str, beforedate: str) -> List[Optional[Dict[str, str]]]:

@@ -30,12 +30,17 @@ def get_ids_to_parse(infile: click.File) -> List[str]:
     return ids_to_parse
 
 
-def make_case_list(ids_to_parse: List[str]) -> List[Dict[str, Any]]:
+REAL_SCRAPER = fetch_page.Scraper()
+
+
+def make_case_list(
+    ids_to_parse: List[str], scraper=REAL_SCRAPER
+) -> List[Dict[str, Any]]:
     """Gets case details for each case number in `ids_to_pars`"""
 
     parsed_cases, failed_ids = [], []
     for id_to_parse in ids_to_parse:
-        new_case = fetch_page.fetch_parsed_case(id_to_parse)
+        new_case = scraper.fetch_parsed_case(id_to_parse)
         if new_case:
             parsed_cases.append(new_case)
         else:
@@ -49,7 +54,11 @@ def make_case_list(ids_to_parse: List[str]) -> List[Dict[str, Any]]:
 
 
 def parse_all_from_parse_filings(
-    case_nums: List[str], showbrowser: bool = False, json: bool = True, db: bool = True
+    case_nums: List[str],
+    showbrowser: bool = False,
+    json: bool = True,
+    db: bool = True,
+    scraper=REAL_SCRAPER,
 ) -> List[Dict[str, Any]]:
     """
     Gets case details for each case number in `case_nums` and sends the data to PostgreSQL.
@@ -64,7 +73,7 @@ def parse_all_from_parse_filings(
     parsed_cases = []
     for tries in range(1, 6):
         try:
-            parsed_cases = make_case_list(case_nums)
+            parsed_cases = make_case_list(case_nums, scraper=scraper)
             break
         except Exception as e:
             logger.error(
