@@ -18,7 +18,7 @@ class TestCLI:
             showbrowser=False,
             json=False,
             db=False,
-            scraper=FAKE_SCRAPER,
+            test_scraper=FAKE_SCRAPER,
         )
         assert cases[0]["register_url"].endswith("CaseID=2286743")
         assert cases[0]["hearings"][0]["hearing_type"] == "Eviction Hearing"

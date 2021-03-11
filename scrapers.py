@@ -12,7 +12,11 @@ import load_pages
 logger = logging.getLogger()
 
 
-class FakeScraper:
+class BaseScraper:
+    pass
+
+
+class FakeScraper(BaseScraper):
     def query_case_id(self, case_id: str) -> Tuple[str, str]:
         if not case_id == "J1-CV-20-001590":
             raise ValueError(
@@ -50,7 +54,9 @@ class FakeScraper:
             soup=register_soup, status=status, type=type, register_url=register_url
         )
 
-    def make_case_list(self, ids_to_parse: List[str]) -> List[Dict[str, Any]]:
+    def make_case_list(
+        self, ids_to_parse: List[str], showbrowser: bool = False
+    ) -> List[Dict[str, Any]]:
         """Gets case details for each case number in `ids_to_pars`"""
 
         parsed_cases, failed_ids = [], []

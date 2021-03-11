@@ -9,7 +9,9 @@ import fetch_page
 import logging
 import sys
 import simplejson
-from typing import Any, Dict, List
+
+from scrapers import BaseScraper
+from typing import Any, Dict, List, Optional
 from emailing import log_and_email
 
 logger = logging.getLogger()
@@ -27,24 +29,23 @@ def get_ids_to_parse(infile: click.File) -> List[str]:
     return ids_to_parse
 
 
-REAL_SCRAPER = fetch_page.Scraper()
-
-
 def parse_all_from_parse_filings(
     case_nums: List[str],
+    test_scraper: Optional[BaseScraper] = None,
     showbrowser: bool = False,
     json: bool = True,
     db: bool = True,
-    scraper=REAL_SCRAPER,
 ) -> List[Dict[str, Any]]:
     """
     Gets case details for each case number in `case_nums` and sends the data to PostgreSQL.
     Logs any case numbers for which getting data failed.
     """
+    if not test_scraper:
+        test_scraper = fetch_page.Scraper()
     parsed_cases = []
     for tries in range(1, 6):
         try:
-            parsed_cases = scraper.make_case_list(case_nums)
+            parsed_cases = test_scraper.make_case_list(case_nums)
             break
         except Exception as e:
             logger.error(

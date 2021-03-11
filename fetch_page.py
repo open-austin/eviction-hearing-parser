@@ -32,41 +32,6 @@ load_dotenv()
 local_dev = os.getenv("LOCAL_DEV") == "true"
 
 
-def load_start_page():
-    driver.get("https://odysseypa.traviscountytx.gov/JPPublicAccess/default.aspx")
-    return driver
-
-
-def load_search_page():
-    start_page = load_start_page()
-    try:
-        element = WebDriverWait(start_page, 10).until(
-            EC.presence_of_element_located(
-                (By.LINK_TEXT, "Civil, Family & Probate Case Records")
-            )
-        )
-    finally:
-        element.click()
-        return start_page
-    return None
-
-
-def load_case_records_search_page():
-    """Clicks into Case Records search page"""
-
-    start_page = load_start_page()
-    try:
-        element = WebDriverWait(start_page, 10).until(
-            EC.presence_of_element_located(
-                (By.LINK_TEXT, "Civil, Family & Probate Case Records")
-            )
-        )
-    finally:
-        element.click()
-        return start_page
-    return None
-
-
 class Scraper(FakeScraper):
     def __init__(self) -> None:
         super().__init__()
@@ -82,11 +47,45 @@ class Scraper(FakeScraper):
             self.driver = webdriver.Chrome(executable_path=driver_path, options=options)
         atexit.register(self.close_driver)
 
+    def load_start_page(self):
+        self.driver.get(
+            "https://odysseypa.traviscountytx.gov/JPPublicAccess/default.aspx"
+        )
+        return self.driver
+
+    def load_search_page(self):
+        start_page = self.load_start_page()
+        try:
+            element = WebDriverWait(start_page, 10).until(
+                EC.presence_of_element_located(
+                    (By.LINK_TEXT, "Civil, Family & Probate Case Records")
+                )
+            )
+        finally:
+            element.click()
+            return start_page
+        return None
+
+    def load_case_records_search_page(self):
+        """Clicks into Case Records search page"""
+
+        start_page = self.load_start_page()
+        try:
+            element = WebDriverWait(start_page, 10).until(
+                EC.presence_of_element_located(
+                    (By.LINK_TEXT, "Civil, Family & Probate Case Records")
+                )
+            )
+        finally:
+            element.click()
+            return start_page
+        return None
+
     def close_driver(self):
         self.driver.close()
 
     def query_case_id(self, case_id: str):
-        search_page = load_search_page()
+        search_page = self.load_search_page()
         try:
             case_radio_button = WebDriverWait(search_page, 10).until(
                 EC.presence_of_element_located((By.ID, "Case"))
@@ -308,22 +307,23 @@ def fetch_filings(afterdate: str, beforedate: str, case_num_prefix: str) -> List
         except:
             if tries == 10:
                 logger.error(f"Failed to find case numbers on all 10 attempts.")
+                query_needs_splitting = False
 
-    # handle case of too many results (200 results means that the search cut off)
-    if query_needs_splitting:
-        try:
-            end_of_first_range, start_of_second_range = calendars.split_date_range(
-                afterdate, beforedate
-            )
-            filings_case_nums_list = fetch_filings(
-                afterdate, end_of_first_range, case_num_prefix
-            ) + fetch_filings(start_of_second_range, beforedate, case_num_prefix)
-        except ValueError:
-            logger.error(
-                f"The search returned {len(filings_case_nums_list)} results but there's nothing "
-                "the code can do because beforedate and afterdate are the same.\n"
-                "Case details will be scraped for these results.\n"
-            )
+        # handle case of too many results (200 results means that the search cut off)
+        if query_needs_splitting:
+            try:
+                end_of_first_range, start_of_second_range = calendars.split_date_range(
+                    afterdate, beforedate
+                )
+                filings_case_nums_list = fetch_filings(
+                    afterdate, end_of_first_range, case_num_prefix
+                ) + fetch_filings(start_of_second_range, beforedate, case_num_prefix)
+            except ValueError:
+                logger.error(
+                    f"The search returned {len(filings_case_nums_list)} results but there's nothing "
+                    "the code can do because beforedate and afterdate are the same.\n"
+                    "Case details will be scraped for these results.\n"
+                )
 
     # # some optional logging to make sure results look good - could remove
     # logger.info(f"Found {len(filings_case_nums_list)} case numbers.")
