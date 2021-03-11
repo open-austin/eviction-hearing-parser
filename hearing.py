@@ -675,7 +675,13 @@ class BaseParser:
             "date_filed": self.get_date_filed(soup),
         }
 
+class HaysParser(BaseParser):
+    def get_all_text_from_hearing_tag(self, hearing_tag) -> str:
 
+        all_text = self.remove_whitespace(hearing_tag.text)
+        return all_text
+   
+ 
 class WilliamsonParser(BaseParser):
     def get_all_text_from_hearing_tag(self, hearing_tag) -> str:
 

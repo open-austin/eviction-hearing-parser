@@ -6,12 +6,12 @@ import hearing
 import load_pages
 
 Wilco = hearing.WilliamsonParser()
-
+county = "williamson"
 
 class TestLoadHTML:
     @pytest.mark.parametrize("index", [0])
     def test_html_has_title(self, index):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         tag = soup.div
         assert "Register of Actions" in tag.text
 
@@ -21,7 +21,7 @@ class TestParseHTML:
         "index, expected", [(0, "Name, Realistic Fake"),],
     )
     def test_get_plaintiff(self, index, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         plaintiff = Wilco.get_plaintiff(soup)
         assert plaintiff == expected
 
@@ -29,7 +29,7 @@ class TestParseHTML:
         "index, expected", [(0, "Smith, Alice; Jones, Beverly"),],
     )
     def test_get_defendants(self, index, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         defendants = Wilco.get_defendants(soup)
         assert expected in defendants
 
@@ -37,7 +37,7 @@ class TestParseHTML:
         "index, expected", [(0, "Realistic Fake Name vs. Alice Smith,Beverly Jones"),],
     )
     def test_get_style(self, index, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         style = Wilco.get_style(soup)
         assert style == expected
 
@@ -45,7 +45,7 @@ class TestParseHTML:
         "index, expected", [(0, "1JC-21-0008")],
     )
     def test_get_case_number(self, index, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         number = Wilco.get_case_number(soup)
         assert number == expected
 
@@ -53,7 +53,7 @@ class TestParseHTML:
         "index, expected", [(0, ""),],
     )
     def test_get_defendant_zip(self, index, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         number = Wilco.get_zip(Wilco.get_defendant_elements(soup).pop())
         assert number == expected
 
@@ -61,7 +61,7 @@ class TestParseHTML:
         "index, expected", [(0, ""),],
     )
     def test_get_plaintiff_zip(self, index, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         number = Wilco.get_zip(Wilco.get_plaintiff_elements(soup).pop())
         assert number == expected
 
@@ -69,7 +69,7 @@ class TestParseHTML:
         "index, expected", [(0, "(10:30 AM)"),],
     )
     def test_get_hearing_text(self, index, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         hearing_tags = Wilco.get_hearing_tags(soup)
         hearing_tag = hearing_tags[-1] if len(hearing_tags) > 0 else None
         passage = Wilco.get_hearing_text(hearing_tag)
@@ -79,7 +79,7 @@ class TestParseHTML:
         "index, expected", [(0, "Non Military Affidavit"),],
     )
     def test_get_first_event(self, index, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         hearing_tags = Wilco.get_hearing_and_event_tags(soup)
         hearing_tag = hearing_tags[0] if len(hearing_tags) > 0 else None
         assert expected in hearing_tag.text
@@ -88,7 +88,7 @@ class TestParseHTML:
         "index, expected", [(0, "Musselman, KT"),],
     )
     def test_get_hearing_officer(self, index, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         hearing_tags = Wilco.get_hearing_tags(soup)
         hearing_tag = hearing_tags[-1] if len(hearing_tags) > 0 else None
         name = Wilco.get_hearing_officer(hearing_tag)
@@ -98,7 +98,7 @@ class TestParseHTML:
         "index, expected", [(0, "10:30 AM"),],
     )
     def test_get_hearing_time(self, index, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         hearing_tags = Wilco.get_hearing_tags(soup)
         hearing_tag = hearing_tags[-1] if len(hearing_tags) > 0 else None
         time = Wilco.get_hearing_time(hearing_tag)
@@ -108,7 +108,7 @@ class TestParseHTML:
         "index, expected", [(0, "01/21/2021"),],
     )
     def test_get_hearing_date(self, index, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         hearing_tags = Wilco.get_hearing_tags(soup)
         hearing_tag = hearing_tags[-1] if len(hearing_tags) > 0 else None
         hearing_date = Wilco.get_hearing_date(hearing_tag)
@@ -118,7 +118,7 @@ class TestParseHTML:
         "index, expected", [(0, 1),],
     )
     def test_get_precinct_number(self, index, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         precinct_number = Wilco.get_precinct_number(soup)
         assert expected == precinct_number
 
@@ -126,7 +126,7 @@ class TestParseHTML:
         "index, hearing_index, expected", [(0, 0, False),],
     )
     def test_defendant_appeared(self, index, hearing_index, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         hearing_tags = Wilco.get_hearing_tags(soup)
         hearing_tag = hearing_tags[hearing_index] if len(hearing_tags) > 0 else None
         appeared = Wilco.did_defendant_appear(hearing_tag)
@@ -137,7 +137,7 @@ class TestParseHTML:
         [(0, "Smith, Alice", "01/11/2021"), (0, "Jones, Beverly", "01/11/2021"),],
     )
     def test_defendant_served(self, index, defendant, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         served = Wilco.was_defendant_served(soup)
         assert served.get(defendant) == expected
 
@@ -145,7 +145,7 @@ class TestParseHTML:
         "index, expected", [(0, []),],
     )
     def test_alternative_service(self, index, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         served = Wilco.was_defendant_alternative_served(soup)
         assert expected == served
 
@@ -153,7 +153,7 @@ class TestParseHTML:
         "index, expected", [(0, "01/21/2021"),],
     )
     def test_disposition_date(self, index, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         answer = Wilco.get_disposition_date(soup)
         assert expected == answer
 
@@ -161,7 +161,7 @@ class TestParseHTML:
         "index, expected", [(0, Decimal("1451.61")),],
     )
     def test_disposition_amount(self, index, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         amount = Wilco.get_disposition_amount(soup)
         assert expected == amount
 
@@ -169,7 +169,7 @@ class TestParseHTML:
         "index, expected", [(0, "Realistic Fake Name"),],
     )
     def test_disposition_awarded_to(self, index, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         disposition_tr = Wilco.get_disposition_tr_element(soup)
         winning_party = Wilco.get_disposition_awarded_to(disposition_tr)
         assert winning_party == expected
@@ -178,7 +178,7 @@ class TestParseHTML:
         "index, expected", [(0, "Alice Smith, et al"),],
     )
     def test_disposition_awarded_against(self, index, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         disposition_tr = Wilco.get_disposition_tr_element(soup)
         losing_party = Wilco.get_disposition_awarded_against(disposition_tr)
         assert losing_party == expected
@@ -187,7 +187,7 @@ class TestParseHTML:
         "index, expected", [(0, "Judgment"),],
     )
     def test_disposition_type(self, index, expected):
-        soup = load_pages.get_test_williamson(index)
+        soup = load_pages.get_test_soup(index, county)
         disposition_tr = Wilco.get_disposition_tr_element(soup)
         if disposition_tr is None:
             dt = None
@@ -199,7 +199,7 @@ class TestParseHTML:
         "test_html_file_index, expected_comments", [(0, None),],
     )
     def test_comments(self, test_html_file_index, expected_comments):
-        soup = load_pages.get_test_williamson(test_html_file_index)
+        soup = load_pages.get_test_soup(test_html_file_index, county)
         comments = Wilco.get_comments(soup)
         assert comments == expected_comments
 
@@ -207,7 +207,7 @@ class TestParseHTML:
         "test_html_file_index, expected_event_details", [(0, {}),],
     )
     def test_get_writ(self, test_html_file_index, expected_event_details):
-        soup = load_pages.get_test_williamson(test_html_file_index)
+        soup = load_pages.get_test_soup(test_html_file_index, county)
         event_details = Wilco.get_writ(soup)
         assert event_details == expected_event_details
 
@@ -217,7 +217,7 @@ class TestParseHTML:
     def test_get_writ_of_possession_service(
         self, test_html_file_index, expected_event_details
     ):
-        soup = load_pages.get_test_williamson(test_html_file_index)
+        soup = load_pages.get_test_soup(test_html_file_index, county)
         event_details = Wilco.get_writ_of_possession_service(soup)
         assert event_details == expected_event_details
 
@@ -227,7 +227,7 @@ class TestParseHTML:
     def test_get_writ_of_possession_requested(
         self, test_html_file_index, expected_event_details
     ):
-        soup = load_pages.get_test_williamson(test_html_file_index)
+        soup = load_pages.get_test_soup(test_html_file_index, county)
         event_details = Wilco.get_writ_of_possession_requested(soup)
         assert event_details == expected_event_details
 
@@ -237,7 +237,7 @@ class TestParseHTML:
     def test_get_writ_of_possession_sent_to_constable(
         self, test_html_file_index, expected_event_details
     ):
-        soup = load_pages.get_test_williamson(test_html_file_index)
+        soup = load_pages.get_test_soup(test_html_file_index, county)
         event_details = Wilco.get_writ_of_possession_sent_to_constable(soup)
         assert event_details == expected_event_details
 
@@ -247,7 +247,7 @@ class TestParseHTML:
     def test_get_writ_returned_to_court(
         self, test_html_file_index, expected_event_details
     ):
-        soup = load_pages.get_test_williamson(test_html_file_index)
+        soup = load_pages.get_test_soup(test_html_file_index, county)
         event_details = Wilco.get_writ_returned_to_court(soup)
         assert event_details == expected_event_details
 
@@ -257,7 +257,7 @@ class TestParseHTML:
     def test_get_attorneys_for_defendants(
         self, test_html_file_index, expected_attorneys
     ):
-        soup = load_pages.get_test_williamson(test_html_file_index)
+        soup = load_pages.get_test_soup(test_html_file_index, county)
         attorneys = Wilco.get_attorneys_for_defendants(soup)
         assert attorneys == expected_attorneys
 
@@ -267,7 +267,7 @@ class TestParseHTML:
     def test_get_attorneys_for_plaintiffs(
         self, test_html_file_index, expected_attorneys
     ):
-        soup = load_pages.get_test_williamson(test_html_file_index)
+        soup = load_pages.get_test_soup(test_html_file_index, county)
         attorneys = Wilco.get_attorneys_for_plaintiffs(soup)
         assert attorneys == expected_attorneys
 
@@ -276,7 +276,7 @@ class TestParseHTML:
         [(0, "Name, Realistic Fake", "01/21/2021"),],
     )
     def test_make_parsed_case(self, test_html_file_index, plaintiff, disposition_date):
-        soup = load_pages.get_test_williamson(test_html_file_index)
+        soup = load_pages.get_test_soup(test_html_file_index, county)
         parsed_case = Wilco.make_parsed_case(soup=soup)
         assert parsed_case["plaintiff"] == plaintiff
         assert parsed_case["disposition_date"] == disposition_date
