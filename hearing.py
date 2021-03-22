@@ -10,6 +10,7 @@ import logging
 from statuses import statuses_map
 from fuzzywuzzy import fuzz
 from emailing import log_and_email
+import config
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -251,6 +252,12 @@ class BaseParser:
         if disposition_date_node:
             return self.remove_whitespace(disposition_date_node.text)
         return None
+
+    def get_status_and_type(status_soup) -> str:
+        tds = status_soup.find_all("td")
+        divs = tds[-1].find_all("div")
+        status, type = divs[1].text, divs[0].text
+        return status, type
 
     def get_disposition_amount(self, soup) -> Optional[Decimal]:
         disposition_date_node = self.get_disposition_date_node(soup)
