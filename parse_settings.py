@@ -4,20 +4,12 @@ To perform a scraper run, use: python parse_settings.py afterdate beforedate
 (dates in format (m)m-(d)d-yyyy)
 """
 
-import csv
 import simplejson as json
-import os
 import sys
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 import datetime as dt
 import click
-import pandas as pd
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-import hearing
 import fetch_page
-import persist
-import gsheet
 import logging
 
 logger = logging.getLogger()
@@ -63,30 +55,15 @@ def parse_settings_on_cloud(afterdate: str, beforedate: str, write_to_sheets=Tru
 
     days_to_pull = get_days_between_dates(afterdate=afterdate, beforedate=beforedate)
     pulled_settings = make_setting_list(days_to_pull)
+    import persist
+
     for setting in pulled_settings:
         persist.rest_setting(setting)
     # maybe make this cleaner in sql? future work
     if write_to_sheets:
-        gsheet.write_data(
-            gsheet.open_sheet(
-                gsheet.init_sheets(),
-                "Court_scraper_eviction_scheduler",
-                "eviction_scheduler",
-            ),
-            gsheet.morning_afternoon(
-                gsheet.combine_cols(
-                    gsheet.filter_df(
-                        gsheet.filter_df(
-                            pd.DataFrame(pulled_settings), "setting_type", "Eviction"
-                        ),
-                        "hearing_type",
-                        "(Hearing)|(Trial)",
-                    ),
-                    ["case_number", "setting_style"],
-                    "case_dets",
-                ).drop_duplicates("case_number", keep="last")
-            ),
-        )
+        import gsheet
+
+        gsheet.write_pulled_settings(pulled_settings)
 
 
 def parse_settings(afterdate: str, beforedate: str, outfile: str, showbrowser=False):
@@ -106,38 +83,37 @@ def parse_settings(afterdate: str, beforedate: str, outfile: str, showbrowser=Fa
 @click.command()
 @click.argument("afterdate", nargs=1)
 @click.argument("beforedate", nargs=1)
-@click.argument("outfile", type=click.File(mode="w"), default="result.json")
+@click.option("--outfile", type=click.File(mode="w"), required=False)
 @click.option(
     "--showbrowser / --headless",
     default=False,
     help="whether to operate in headless mode or not",
 )
+@click.option(
+    "--db / --no-db", default=True, help="whether to persist data to database",
+)
+@click.option(
+    "--gs / --no-gs", default=True, help="whether to persist data to Google Sheets",
+)
 def parse_and_persist_settings(
-    afterdate: str, beforedate: str, outfile: str, showbrowser=False
+    afterdate: str,
+    beforedate: str,
+    outfile: Optional[click.File],
+    showbrowser: bool = False,
+    db: bool = True,
+    gs: bool = True,
 ):
     pulled_settings = parse_settings(afterdate, beforedate, outfile, showbrowser)
-    for setting in pulled_settings:
-        persist.rest_setting(setting)
-    gsheet.write_data(
-        gsheet.open_sheet(
-            gsheet.init_sheets(),
-            "Court_scraper_eviction_scheduler",
-            "eviction_scheduler",
-        ),
-        gsheet.morning_afternoon(
-            gsheet.combine_cols(
-                gsheet.filter_df(
-                    gsheet.filter_df(
-                        pd.DataFrame(pulled_settings), "setting_type", "Eviction"
-                    ),
-                    "hearing_type",
-                    "(Hearing)|(Trial)",
-                ),
-                ["case_number", "setting_style"],
-                "case_dets",
-            ).drop_duplicates("case_number", keep="last")
-        ),
-    )
+    if db:
+        import persist
+
+        for setting in pulled_settings:
+            persist.rest_setting(setting)
+    if gs:
+        import gsheet
+
+        gsheet.write_pulled_settings(pulled_settings)
+
     json.dump(pulled_settings, outfile)
 
 
