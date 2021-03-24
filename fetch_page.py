@@ -178,7 +178,9 @@ class Scraper(FakeScraper):
                 EC.presence_of_element_located((By.ID, "DateSettingOnAfter"))
             )
             after_box.clear()
-            after_box.send_keys(afterdate.strftime(format="%m/%d/%Y"))
+            after_box.send_keys(
+                afterdate.strftime(format="%m/%d/%Y").lstrip("0").replace("/0", "/")
+            )
         except:
             logger.error(f"Could not type in after date {afterdate}")
 
@@ -188,7 +190,9 @@ class Scraper(FakeScraper):
                 EC.presence_of_element_located((By.ID, "DateSettingOnBefore"))
             )
             before_box.clear()
-            before_box.send_keys(beforedate.strftime(format="%m/%d/%Y"))
+            before_box.send_keys(
+                beforedate.strftime(format="%m/%d/%Y").lstrip("0").replace("/0", "/")
+            )
         except:
             logger.error(f"Could not type in before date {beforedate}")
 
@@ -207,7 +211,9 @@ class Scraper(FakeScraper):
             calendar_page_content = court_calendar.page_source
             return calendar_page_content
 
-    def query_filings(self, afterdate: str, beforedate: str, case_num_prefix: str):
+    def query_filings(
+        self, afterdate: datetime.date, beforedate: datetime.date, case_num_prefix: str
+    ):
         """Executes search for case filings between beforedate and afterdate for case_num_prefix, returns content of resulting page"""
 
         for tries in range(5):
@@ -230,7 +236,9 @@ class Scraper(FakeScraper):
                 EC.presence_of_element_located((By.ID, "DateFiledOnAfter"))
             )
             after_box.clear()
-            after_box.send_keys(afterdate.replace("-", "/"))
+            after_box.send_keys(
+                afterdate.strftime(format="%m/%d/%Y").lstrip("0").replace("/0", "/")
+            )
         except:
             logger.error(f"Could not type in after date {afterdate}")
 
@@ -240,7 +248,9 @@ class Scraper(FakeScraper):
                 EC.presence_of_element_located((By.ID, "DateFiledOnBefore"))
             )
             before_box.clear()
-            before_box.send_keys(beforedate.replace("-", "/"))
+            before_box.send_keys(
+                beforedate.strftime(format="%m/%d/%Y").lstrip("0").replace("/0", "/")
+            )
         except Exception as e:
             logger.error(f"Could not type in before date {beforedate}")
 
@@ -290,7 +300,7 @@ class Scraper(FakeScraper):
         return []
 
     def fetch_filings(
-        self, afterdate: str, beforedate: str, case_num_prefix: str
+        self, afterdate: datetime.date, beforedate: datetime.date, case_num_prefix: str
     ) -> List[str]:
         "Get filing case numbers between afterdate and beforedate and starting with case_num_prefix."
 
@@ -347,4 +357,3 @@ class WilliamsonScraper(Scraper):
     def __init__(self) -> None:
         super().__init__()
         self.homepage = "https://judicialrecords.wilco.org/PublicAccess/default.aspx"
-

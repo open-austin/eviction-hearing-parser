@@ -22,7 +22,11 @@ logging.basicConfig(stream=sys.stdout)
 
 
 def get_all_case_nums(afterdate: str, beforedate: str) -> List[str]:
-    """Gets list of all case numbers between `afterdate` and `beforedate` (dates are in format mm-dd-yyyy)"""
+    """
+    Get list of all case numbers between `afterdate` and `beforedate`.
+
+    (dates are in format mm-dd-yyyy)
+    """
 
     aferdate_year = afterdate.split("-")[-1][-2:]
     beforedate_year = beforedate.split("-")[-1][-2:]
@@ -44,7 +48,8 @@ def get_all_case_nums(afterdate: str, beforedate: str) -> List[str]:
         all_case_nums += prefix_case_nums
 
     logger.info(
-        f"Scraped case numbers between {afterdate} and {beforedate} - found {len(all_case_nums)} of them."
+        f"Scraped case numbers between {afterdate} and {beforedate} "
+        f"- found {len(all_case_nums)} of them."
     )
     return all_case_nums
 
@@ -76,8 +81,12 @@ def parse_filings_on_cloud(afterdate: str, beforedate: str, get_old_active=True)
 )
 def parse_filings(afterdate, beforedate, outfile, showbrowser=False):
     """
-    Performs a full 'scraper run' between `afterdate` and `beforedate` - gets case details, events, and dispositions for all case numbers between
-    `afterdate` and `beforedate`. Example of date format: 9-1-2020. Also updates rows in event/disposition/case_detail table that are still active
+    Perform a full 'scraper run' between `afterdate` and `beforedate`.
+
+    Gets case details, events, and dispositions for all case numbers between
+    `afterdate` and `beforedate`.
+    Example of date format: 9-1-2020.
+    Also updates rows in event/disposition/case_detail table that are still active.
     """
 
     all_case_nums = (
