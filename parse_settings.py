@@ -19,18 +19,11 @@ logging.basicConfig(stream=sys.stdout)
 def get_days_between_dates(afterdate: str, beforedate: str):
     "Return a list of individual days between two dates"
 
-    # convert to datetime objects
-    beforedate = dt.datetime.strptime(beforedate, "%m-%d-%Y")
-    afterdate = dt.datetime.strptime(afterdate, "%m-%d-%Y")
-
     # get days between as int
     n_days = (beforedate - afterdate).days
 
     # return each individual day, including the last one
-    return [
-        (afterdate + dt.timedelta(days=i)).strftime("%m/%d/%Y")
-        for i in range(n_days + 1)
-    ]
+    return [(afterdate + dt.timedelta(days=i)) for i in range(n_days + 1)]
 
 
 def make_setting_list(days_to_pull: List[str]) -> List[Dict[str, Any]]:
@@ -98,15 +91,19 @@ def parse_settings(afterdate: str, beforedate: str, outfile: str, showbrowser=Fa
     help="whether to operate in headless mode or not",
 )
 @click.option(
-    "--db / --no-db", default=True, help="whether to persist data to database",
+    "--db / --no-db",
+    default=True,
+    help="whether to persist data to database",
 )
 @click.option(
-    "--gs / --no-gs", default=True, help="whether to persist data to Google Sheets",
+    "--gs / --no-gs",
+    default=True,
+    help="whether to persist data to Google Sheets",
 )
 def parse_and_persist_settings(
-    afterdate: str,
-    beforedate: str,
-    outfile: Optional[click.File],
+    afterdate: dt.date,
+    beforedate: dt.date,
+    outfile: Optional[str],
     showbrowser: bool = False,
     db: bool = True,
     gs: bool = True,

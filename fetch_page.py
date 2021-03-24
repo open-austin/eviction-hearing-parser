@@ -319,6 +319,7 @@ class Scraper(FakeScraper):
                 if tries == 10:
                     logger.error(f"Failed to find case numbers on all 10 attempts.")
                     query_needs_splitting = False
+                    filings_case_nums_list = []
 
         # handle case of too many results (200 results means that the search cut off)
         if query_needs_splitting:

@@ -1,3 +1,5 @@
+from datetime import date
+
 import pytest
 
 import fetch_page
@@ -14,7 +16,9 @@ class TestFetchFilingsPage:
     def test_fetch_filings_page(self):
 
         fetched = scraper.query_filings(
-            afterdate="6-1-2020", beforedate="6-30-2020", case_num_prefix="J1-CV-20*"
+            afterdate=date(2020, 6, 1),
+            beforedate=date(2020, 6, 30),
+            case_num_prefix="J1-CV-20*",
         )
         assert "J1-CV-20-001773" in fetched
 
@@ -27,7 +31,9 @@ class TestFetchCaseNumbers:
         The scraper will need to split this into multiple queries and combine the results.
         """
         numbers = scraper.fetch_filings(
-            afterdate="1-1-2020", beforedate="1-30-2020", case_num_prefix="J1-CV-20*"
+            afterdate=date(2020, 1, 1),
+            beforedate=date(2020, 1, 30),
+            case_num_prefix="J1-CV-20*",
         )
         assert "J1-CV-20-000001" in numbers
         assert len(numbers) > 200
