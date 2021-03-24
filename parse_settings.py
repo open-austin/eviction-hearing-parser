@@ -81,8 +81,16 @@ def parse_settings(afterdate: str, beforedate: str, outfile: str, showbrowser=Fa
 
 
 @click.command()
-@click.argument("afterdate", nargs=1)
-@click.argument("beforedate", nargs=1)
+@click.argument(
+    "afterdate",
+    type=click.DateTime(formats=["%Y-%m-%d", "%m-%d-%Y", "%m/%d/%Y"]),
+    nargs=1,
+)
+@click.argument(
+    "beforedate",
+    type=click.DateTime(formats=["%Y-%m-%d", "%m-%d-%Y", "%m/%d/%Y"]),
+    nargs=1,
+)
 @click.option("--outfile", type=click.File(mode="w"), required=False)
 @click.option(
     "--showbrowser / --headless",
@@ -114,7 +122,9 @@ def parse_and_persist_settings(
 
         gsheet.write_pulled_settings(pulled_settings)
 
-    json.dump(pulled_settings, outfile)
+    if outfile:
+        json.dump(pulled_settings, outfile)
+    return pulled_settings
 
 
 if __name__ == "__main__":

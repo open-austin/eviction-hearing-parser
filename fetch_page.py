@@ -1,5 +1,6 @@
 """Module for executing searches using Selenium"""
 
+import datetime
 import sys
 import logging
 import atexit
@@ -143,7 +144,7 @@ class Scraper(FakeScraper):
             return start_page
         return None
 
-    def query_settings(self, afterdate: str, beforedate: str):
+    def query_settings(self, afterdate: datetime.date, beforedate: datetime.date):
         """Executes search for case settings between beforedate and afterdate for, returns content of resulting page"""
 
         for tries in range(5):
@@ -177,7 +178,7 @@ class Scraper(FakeScraper):
                 EC.presence_of_element_located((By.ID, "DateSettingOnAfter"))
             )
             after_box.clear()
-            after_box.send_keys(afterdate)
+            after_box.send_keys(afterdate.strftime(format="%m/%d/%Y"))
         except:
             logger.error(f"Could not type in after date {afterdate}")
 
@@ -187,7 +188,7 @@ class Scraper(FakeScraper):
                 EC.presence_of_element_located((By.ID, "DateSettingOnBefore"))
             )
             before_box.clear()
-            before_box.send_keys(beforedate)
+            before_box.send_keys(beforedate.strftime(format="%m/%d/%Y"))
         except:
             logger.error(f"Could not type in before date {beforedate}")
 
@@ -269,7 +270,7 @@ class Scraper(FakeScraper):
             return records_page_content
 
     def fetch_settings(
-        self, afterdate: str, beforedate: str
+        self, afterdate: datetime.date, beforedate: datetime.date
     ) -> List[Optional[Dict[str, str]]]:
 
         for tries in range(1, 11):
@@ -279,7 +280,7 @@ class Scraper(FakeScraper):
                 if calendar_page_content is None:
                     return None
                 calendar_soup = BeautifulSoup(calendar_page_content, "html.parser")
-                return hearing.get_setting_list(calendar_soup)
+                return calendars.get_setting_list(calendar_soup)
             except:
                 if tries == 10:
                     logger.error(
