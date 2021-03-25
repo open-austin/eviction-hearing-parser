@@ -219,7 +219,7 @@ class Scraper(FakeScraper):
         for tries in range(5):
             # select case in search by
             try:
-                court_records = self.load_court_calendar()
+                court_records = self.load_case_records_search_page()
                 case_button = WebDriverWait(court_records, 10).until(
                     EC.presence_of_element_located((By.ID, "Case"))
                 )
