@@ -94,7 +94,8 @@ def parse_all_from_parse_filings(
 
 @click.command()
 @click.argument(
-    "infile", type=click.File(mode="r"),
+    "infile",
+    type=click.File(mode="r"),
 )
 @click.argument("outfile", type=click.File(mode="w"), default="result.json")
 
@@ -106,19 +107,27 @@ def parse_all_from_parse_filings(
     help="whether to operate in headless mode or not",
 )
 @click.option(
-    "--json / --no-json", default=True, help="whether to dump JSON or not",
+    "--db / --no-db",
+    default=True,
+    help="whether to persist the data to a db",
 )
 @click.option(
     "--db / --no-db", default=True, help="whether to persist the data to a db",
 )
-def parse_all(infile, outfile, county, showbrowser=False, json=True, db=True):
+def parse_all(
+    infile: Optional[click.File],
+    outfile: Optional[click.File],
+    county: Optional[click.STRING],
+    showbrowser=False,
+    db=True,
+):
     """Same as `parse_all_from_parse_filings()` but takes in a csv of case numbers instead of a list."""
 
     ids_to_parse = get_ids_to_parse(infile)
     parsed_cases = parse_all_from_parse_filings(
         case_nums=ids_to_parse, showbrowser=showbrowser, db=db, county=county
     )
-    if json:
+    if outfile:
         simplejson.dump(parsed_cases, outfile)
 
 

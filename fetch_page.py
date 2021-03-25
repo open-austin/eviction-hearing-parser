@@ -1,5 +1,6 @@
 """Module for executing searches using Selenium"""
 
+import datetime
 import sys
 import logging
 import atexit
@@ -16,9 +17,13 @@ from selenium.webdriver.chrome.options import Options
 
 from emailing import log_and_email
 import calendars
+<<<<<<< HEAD
 import hearing
 from scrapers import FakeScraper
 from dotenv import load_dotenv
+=======
+from scrapers import BaseScraper
+>>>>>>> bdd9462916078c575e751516e7ca9b5337b9fd88
 
 import case_search
 options = Options()
@@ -31,7 +36,7 @@ logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
 
 
-class Scraper(FakeScraper):
+class RealScraper(BaseScraper):
     def __init__(self) -> None:
         super().__init__()
         self.homepage = (
@@ -145,7 +150,7 @@ class Scraper(FakeScraper):
             return start_page
         return None
 
-    def query_settings(self, afterdate: str, beforedate: str):
+    def query_settings(self, afterdate: datetime.date, beforedate: datetime.date):
         """Executes search for case settings between beforedate and afterdate for, returns content of resulting page"""
 
         for tries in range(5):
@@ -179,7 +184,9 @@ class Scraper(FakeScraper):
                 EC.presence_of_element_located((By.ID, "DateSettingOnAfter"))
             )
             after_box.clear()
-            after_box.send_keys(afterdate)
+            after_box.send_keys(
+                afterdate.strftime(format="%m/%d/%Y").lstrip("0").replace("/0", "/")
+            )
         except:
             logger.error(f"Could not type in after date {afterdate}")
 
@@ -189,7 +196,9 @@ class Scraper(FakeScraper):
                 EC.presence_of_element_located((By.ID, "DateSettingOnBefore"))
             )
             before_box.clear()
-            before_box.send_keys(beforedate)
+            before_box.send_keys(
+                beforedate.strftime(format="%m/%d/%Y").lstrip("0").replace("/0", "/")
+            )
         except:
             logger.error(f"Could not type in before date {beforedate}")
 
@@ -208,13 +217,15 @@ class Scraper(FakeScraper):
             calendar_page_content = court_calendar.page_source
             return calendar_page_content
 
-    def query_filings(self, afterdate: str, beforedate: str, case_num_prefix: str):
+    def query_filings(
+        self, afterdate: datetime.date, beforedate: datetime.date, case_num_prefix: str
+    ):
         """Executes search for case filings between beforedate and afterdate for case_num_prefix, returns content of resulting page"""
 
         for tries in range(5):
             # select case in search by
             try:
-                court_records = self.load_court_calendar()
+                court_records = self.load_case_records_search_page()
                 case_button = WebDriverWait(court_records, 10).until(
                     EC.presence_of_element_located((By.ID, "Case"))
                 )
@@ -231,7 +242,9 @@ class Scraper(FakeScraper):
                 EC.presence_of_element_located((By.ID, "DateFiledOnAfter"))
             )
             after_box.clear()
-            after_box.send_keys(afterdate.replace("-", "/"))
+            after_box.send_keys(
+                afterdate.strftime(format="%m/%d/%Y").lstrip("0").replace("/0", "/")
+            )
         except:
             logger.error(f"Could not type in after date {afterdate}")
 
@@ -241,7 +254,9 @@ class Scraper(FakeScraper):
                 EC.presence_of_element_located((By.ID, "DateFiledOnBefore"))
             )
             before_box.clear()
-            before_box.send_keys(beforedate.replace("-", "/"))
+            before_box.send_keys(
+                beforedate.strftime(format="%m/%d/%Y").lstrip("0").replace("/0", "/")
+            )
         except Exception as e:
             logger.error(f"Could not type in before date {beforedate}")
 
@@ -271,7 +286,7 @@ class Scraper(FakeScraper):
             return records_page_content
 
     def fetch_settings(
-        self, afterdate: str, beforedate: str
+        self, afterdate: datetime.date, beforedate: datetime.date
     ) -> List[Optional[Dict[str, str]]]:
 
         for tries in range(1, 11):
@@ -281,7 +296,7 @@ class Scraper(FakeScraper):
                 if calendar_page_content is None:
                     return None
                 calendar_soup = BeautifulSoup(calendar_page_content, "html.parser")
-                return hearing.get_setting_list(calendar_soup)
+                return calendars.get_setting_list(calendar_soup)
             except:
                 if tries == 10:
                     logger.error(
@@ -291,7 +306,7 @@ class Scraper(FakeScraper):
         return []
 
     def fetch_filings(
-        self, afterdate: str, beforedate: str, case_num_prefix: str
+        self, afterdate: datetime.date, beforedate: datetime.date, case_num_prefix: str
     ) -> List[str]:
         "Get filing case numbers between afterdate and beforedate and starting with case_num_prefix."
 
@@ -310,6 +325,7 @@ class Scraper(FakeScraper):
                 if tries == 10:
                     logger.error(f"Failed to find case numbers on all 10 attempts.")
                     query_needs_splitting = False
+                    filings_case_nums_list = []
 
         # handle case of too many results (200 results means that the search cut off)
         if query_needs_splitting:
@@ -344,10 +360,11 @@ class Scraper(FakeScraper):
         return filings_case_nums_list
 
 
-class WilliamsonScraper(Scraper):
+class WilliamsonScraper(RealScraper):
     def __init__(self) -> None:
         super().__init__()
         self.homepage = "https://judicialrecords.wilco.org/PublicAccess/default.aspx"
+<<<<<<< HEAD
 
     def fetch_parsed_case(self, case_id: str) -> Tuple[str, str]:
         query_result = self.query_case_id(case_id)
@@ -376,3 +393,5 @@ class WilliamsonScraper(Scraper):
             soup=register_soup, status=status, type=type, register_url=register_url
         )
 
+=======
+>>>>>>> bdd9462916078c575e751516e7ca9b5337b9fd88
