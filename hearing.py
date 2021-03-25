@@ -705,15 +705,7 @@ class WilliamsonParser(BaseParser):
         """
         return soup.find_all("th", text=re.compile(r"^\s+Defendant"))
 
-    def get_events_tbody_element(self, soup):
-        """
-        Returns the <tbody> element  of a CaseDetail document
-        that contains Dispositions, Hearings, and Other Events.
-        Used as a starting point for many event parsing methods.
-        """
-        table_caption = soup.find_all("caption")[1]
-        tbody = table_caption.find_next_sibling("tr").find_next_sibling("tr")
-        return tbody
+
 
     def get_hearing_date(self, hearing_tag) -> str:
         if hearing_tag is None:

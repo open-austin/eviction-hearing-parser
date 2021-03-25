@@ -31,6 +31,7 @@ def get_ids_to_parse(infile: click.File) -> List[str]:
 
 def parse_all_from_parse_filings(
     case_nums: List[str],
+    county: str,
     test_scraper: Optional[BaseScraper] = None,
     showbrowser: bool = False,
     json: bool = True,
@@ -40,8 +41,16 @@ def parse_all_from_parse_filings(
     Gets case details for each case number in `case_nums` and sends the data to PostgreSQL.
     Logs any case numbers for which getting data failed.
     """
+
+    scraper_map = {
+                    'travis' : fetch_page.Scraper(),
+                    'williamson' : fetch_page.WilliamsonScraper()
+                    }
+
+
     if not test_scraper:
-        test_scraper = fetch_page.Scraper()
+        test_scraper = scraper_map[county.lower()]
+
     parsed_cases = []
     for tries in range(1, 6):
         try:
@@ -51,6 +60,7 @@ def parse_all_from_parse_filings(
             logger.error(
                 f"Failed to parse hearings on attempt {tries}. Error message: {e}"
             )
+            kill
 
     if db:
         import persist
@@ -88,6 +98,9 @@ def parse_all_from_parse_filings(
     "infile", type=click.File(mode="r"),
 )
 @click.argument("outfile", type=click.File(mode="w"), default="result.json")
+
+@click.argument("county", type=click.STRING, default="travis")
+
 @click.option(
     "--showbrowser / --headless",
     default=False,
@@ -99,12 +112,12 @@ def parse_all_from_parse_filings(
 @click.option(
     "--db / --no-db", default=True, help="whether to persist the data to a db",
 )
-def parse_all(infile, outfile, showbrowser=False, json=True, db=True):
+def parse_all(infile, outfile, county, showbrowser=False, json=True, db=True):
     """Same as `parse_all_from_parse_filings()` but takes in a csv of case numbers instead of a list."""
 
     ids_to_parse = get_ids_to_parse(infile)
     parsed_cases = parse_all_from_parse_filings(
-        case_nums=ids_to_parse, showbrowser=showbrowser, db=db
+        case_nums=ids_to_parse, showbrowser=showbrowser, db=db, county=county
     )
     if json:
         simplejson.dump(parsed_cases, outfile)
