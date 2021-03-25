@@ -17,8 +17,7 @@ from selenium.webdriver.chrome.options import Options
 
 from emailing import log_and_email
 import calendars
-import hearing
-from scrapers import FakeScraper
+from scrapers import BaseScraper
 
 options = Options()
 options.add_argument("--no-sandbox")
@@ -30,7 +29,7 @@ logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
 
 
-class Scraper(FakeScraper):
+class RealScraper(BaseScraper):
     def __init__(self) -> None:
         super().__init__()
         self.homepage = (
@@ -354,7 +353,7 @@ class Scraper(FakeScraper):
         return filings_case_nums_list
 
 
-class WilliamsonScraper(Scraper):
+class WilliamsonScraper(RealScraper):
     def __init__(self) -> None:
         super().__init__()
         self.homepage = "https://judicialrecords.wilco.org/PublicAccess/default.aspx"

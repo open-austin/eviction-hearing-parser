@@ -41,7 +41,7 @@ def parse_all_from_parse_filings(
     Logs any case numbers for which getting data failed.
     """
     if not test_scraper:
-        test_scraper = fetch_page.Scraper()
+        test_scraper = fetch_page.RealScraper()
     parsed_cases = []
     for tries in range(1, 6):
         try:
@@ -85,7 +85,8 @@ def parse_all_from_parse_filings(
 
 @click.command()
 @click.argument(
-    "infile", type=click.File(mode="r"),
+    "infile",
+    type=click.File(mode="r"),
 )
 @click.option("--outfile", type=click.File(mode="w"), required=False)
 @click.option(
@@ -94,7 +95,9 @@ def parse_all_from_parse_filings(
     help="whether to operate in headless mode or not",
 )
 @click.option(
-    "--db / --no-db", default=True, help="whether to persist the data to a db",
+    "--db / --no-db",
+    default=True,
+    help="whether to persist the data to a db",
 )
 def parse_all(
     infile: Optional[click.File],

@@ -28,7 +28,7 @@ def get_days_between_dates(afterdate: str, beforedate: str):
 
 def make_setting_list(days_to_pull: List[str]) -> List[Dict[str, Any]]:
     """Pulls all settings, one day at a time"""
-    scraper = fetch_page.Scraper()
+    scraper = fetch_page.RealScraper()
     pulled_settings = []
     for setting_day in days_to_pull:
         day_settings = scraper.fetch_settings(

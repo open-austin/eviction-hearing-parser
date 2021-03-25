@@ -20,24 +20,6 @@ class CalendarQuery(NamedTuple):
 
 
 class BaseScraper:
-    pass
-
-
-class FakeScraper(BaseScraper):
-    def query_case_id(self, case_id: str) -> Tuple[str, str]:
-        if not case_id == "J1-CV-20-001590":
-            raise ValueError(
-                "The fake Scraper can only take the Case ID J1-CV-20-001590."
-            )
-        search_page = load_pages.get_test_search_page(0)
-        register_page = load_pages.get_test_soup(0)
-        return search_page, register_page
-
-    def fetch_filings(
-        self, afterdate: datetime.date, beforedate: datetime.date, case_num_prefix: str
-    ) -> List[str]:
-        return ["J2-CV-20-000245"]
-
     def fetch_parsed_case(self, case_id: str) -> Tuple[str, str]:
         query_result = self.query_case_id(case_id)
         if query_result is None:
@@ -114,3 +96,19 @@ class FakeScraper(BaseScraper):
             f"- found {len(all_case_nums)} of them."
         )
         return all_case_nums
+
+
+class FakeScraper(BaseScraper):
+    def query_case_id(self, case_id: str) -> Tuple[str, str]:
+        if not case_id == "J1-CV-20-001590":
+            raise ValueError(
+                "The fake Scraper can only take the Case ID J1-CV-20-001590."
+            )
+        search_page = load_pages.get_test_search_page(0)
+        register_page = load_pages.get_test_soup(0)
+        return search_page, register_page
+
+    def fetch_filings(
+        self, afterdate: datetime.date, beforedate: datetime.date, case_num_prefix: str
+    ) -> List[str]:
+        return ["J2-CV-20-000245"]

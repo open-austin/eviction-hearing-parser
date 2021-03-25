@@ -8,7 +8,7 @@ import config
 
 config.county = "travis"
 
-scraper = fetch_page.Scraper()
+scraper = fetch_page.RealScraper()
 williamson_scraper = fetch_page.WilliamsonScraper()
 
 

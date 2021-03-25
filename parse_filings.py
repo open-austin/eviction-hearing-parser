@@ -32,7 +32,7 @@ def parse_filings_on_cloud(
     logger.info(f"Parsing filings between {afterdate} and {beforedate}.")
 
     if not test_scraper:
-        test_scraper = fetch_page.Scraper()
+        test_scraper = fetch_page.RealScraper()
 
     all_case_nums = test_scraper.get_all_case_nums(afterdate, beforedate)
     if get_old_active:
