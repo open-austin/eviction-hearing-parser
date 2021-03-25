@@ -60,7 +60,6 @@ def parse_all_from_parse_filings(
             logger.error(
                 f"Failed to parse hearings on attempt {tries}. Error message: {e}"
             )
-            kill
 
     if db:
         import persist
