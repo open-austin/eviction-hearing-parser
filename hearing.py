@@ -676,11 +676,52 @@ class BaseParser:
         }
 
 class HaysParser(BaseParser):
-    def get_all_text_from_hearing_tag(self, hearing_tag) -> str:
+    def get_plaintiff_elements(self, soup):
+        """
+        Gets the plaintiff HTML elements from a CaseDetail.
+        These are currently used as an anchor for 
+        most of the Party Info parsing.
+        """
+        return soup.find_all("th", 
+                            text=re.compile(r"Plaintiff")
+                            )
 
-        all_text = self.remove_whitespace(hearing_tag.text)
-        return all_text
-   
+
+    def get_defendant_elements(self, soup):
+        """
+        Gets the defendant HTML elements from a CaseDetail.
+        These are currently used as an anchor for most of the Party Info parsing.
+        Sometimes the text of the element does not always say "Defendant", but may say something like "Defendant 2".
+        """
+        return soup.find_all("th", 
+                            text=re.compile(r"Defendant")
+                            )
+
+
+    def get_defendants(self, soup):
+        defendants = []
+#not sure if every defendant is a link create other test pages
+        for tag in self.get_defendant_elements(soup):
+            name_elem = (tag
+                         .find_next_sibling("th")
+                         .findChild("a",recursive=False)
+                        )
+            defendants.append(name_elem.string)
+        together = "; ".join(defendants)
+        return together
+
+
+    def get_precinct_number(self, soup) -> int:
+        location_heading = soup.find(text=re.compile("Location:")).parent
+        precinct_name = (location_heading
+                         .find_next_sibling("td")
+                         .text
+                        )
+        return precinct_name
+        
+               
+
+     
  
 class WilliamsonParser(BaseParser):
     def get_all_text_from_hearing_tag(self, hearing_tag) -> str:

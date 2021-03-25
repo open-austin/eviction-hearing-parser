@@ -13,3 +13,5 @@ cases.db*
 .DS_Store
 .env
 chromedriver
+*.swp
+*.*.swp
