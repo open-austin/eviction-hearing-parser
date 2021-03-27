@@ -5,12 +5,11 @@ To perform a scraper run, use: python parse_hearings.py name_of_csv_with_case_nu
 
 import csv
 import click
-import fetch_page
 import logging
 import sys
 import simplejson
 
-from scrapers import BaseScraper
+import scrapers
 from typing import Any, Dict, List, Optional
 from emailing import log_and_email
 
@@ -31,7 +30,7 @@ def get_ids_to_parse(infile: click.File) -> List[str]:
 
 def parse_all_from_parse_filings(
     case_nums: List[str],
-    test_scraper: Optional[BaseScraper] = None,
+    test_scraper: Optional[scrapers.TestScraper] = None,
     showbrowser: bool = False,
     json: bool = True,
     db: bool = True,
@@ -41,7 +40,7 @@ def parse_all_from_parse_filings(
     Logs any case numbers for which getting data failed.
     """
     if not test_scraper:
-        test_scraper = fetch_page.RealScraper()
+        test_scraper = scrapers.TravisScraper()
     parsed_cases = []
     for tries in range(1, 6):
         try:

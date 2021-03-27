@@ -1,7 +1,7 @@
-from scrapers import FakeScraper
+from scrapers import TestScraper
 import parse_hearings
 
-FAKE_SCRAPER = FakeScraper()
+FAKE_SCRAPER = TestScraper()
 
 
 class TestCLI:

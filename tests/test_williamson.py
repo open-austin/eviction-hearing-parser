@@ -18,7 +18,10 @@ class TestLoadHTML:
 
 class TestParseHTML:
     @pytest.mark.parametrize(
-        "index, expected", [(0, "Name, Realistic Fake"),],
+        "index, expected",
+        [
+            (0, "Name, Realistic Fake"),
+        ],
     )
     def test_get_plaintiff(self, index, expected):
         soup = load_pages.get_test_williamson(index)
@@ -26,7 +29,10 @@ class TestParseHTML:
         assert plaintiff == expected
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "Smith, Alice; Jones, Beverly"),],
+        "index, expected",
+        [
+            (0, "Smith, Alice; Jones, Beverly"),
+        ],
     )
     def test_get_defendants(self, index, expected):
         soup = load_pages.get_test_williamson(index)
@@ -34,7 +40,10 @@ class TestParseHTML:
         assert expected in defendants
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "Realistic Fake Name vs. Alice Smith,Beverly Jones"),],
+        "index, expected",
+        [
+            (0, "Realistic Fake Name vs. Alice Smith,Beverly Jones"),
+        ],
     )
     def test_get_style(self, index, expected):
         soup = load_pages.get_test_williamson(index)
@@ -42,7 +51,8 @@ class TestParseHTML:
         assert style == expected
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "1JC-21-0008")],
+        "index, expected",
+        [(0, "1JC-21-0008")],
     )
     def test_get_case_number(self, index, expected):
         soup = load_pages.get_test_williamson(index)
@@ -50,7 +60,10 @@ class TestParseHTML:
         assert number == expected
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, ""),],
+        "index, expected",
+        [
+            (0, ""),
+        ],
     )
     def test_get_defendant_zip(self, index, expected):
         soup = load_pages.get_test_williamson(index)
@@ -58,7 +71,10 @@ class TestParseHTML:
         assert number == expected
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, ""),],
+        "index, expected",
+        [
+            (0, ""),
+        ],
     )
     def test_get_plaintiff_zip(self, index, expected):
         soup = load_pages.get_test_williamson(index)
@@ -66,7 +82,10 @@ class TestParseHTML:
         assert number == expected
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "(10:30 AM)"),],
+        "index, expected",
+        [
+            (0, "(10:30 AM)"),
+        ],
     )
     def test_get_hearing_text(self, index, expected):
         soup = load_pages.get_test_williamson(index)
@@ -76,7 +95,10 @@ class TestParseHTML:
         assert expected in passage
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "Non Military Affidavit"),],
+        "index, expected",
+        [
+            (0, "Non Military Affidavit"),
+        ],
     )
     def test_get_first_event(self, index, expected):
         soup = load_pages.get_test_williamson(index)
@@ -85,7 +107,10 @@ class TestParseHTML:
         assert expected in hearing_tag.text
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "Musselman, KT"),],
+        "index, expected",
+        [
+            (0, "Musselman, KT"),
+        ],
     )
     def test_get_hearing_officer(self, index, expected):
         soup = load_pages.get_test_williamson(index)
@@ -95,7 +120,10 @@ class TestParseHTML:
         assert name == expected
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "10:30 AM"),],
+        "index, expected",
+        [
+            (0, "10:30 AM"),
+        ],
     )
     def test_get_hearing_time(self, index, expected):
         soup = load_pages.get_test_williamson(index)
@@ -105,7 +133,10 @@ class TestParseHTML:
         assert expected == time
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "01/21/2021"),],
+        "index, expected",
+        [
+            (0, "01/21/2021"),
+        ],
     )
     def test_get_hearing_date(self, index, expected):
         soup = load_pages.get_test_williamson(index)
@@ -115,7 +146,10 @@ class TestParseHTML:
         assert expected == hearing_date
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, 1),],
+        "index, expected",
+        [
+            (0, 1),
+        ],
     )
     def test_get_precinct_number(self, index, expected):
         soup = load_pages.get_test_williamson(index)
@@ -123,7 +157,10 @@ class TestParseHTML:
         assert expected == precinct_number
 
     @pytest.mark.parametrize(
-        "index, hearing_index, expected", [(0, 0, False),],
+        "index, hearing_index, expected",
+        [
+            (0, 0, False),
+        ],
     )
     def test_defendant_appeared(self, index, hearing_index, expected):
         soup = load_pages.get_test_williamson(index)
@@ -134,7 +171,10 @@ class TestParseHTML:
 
     @pytest.mark.parametrize(
         "index, defendant, expected",
-        [(0, "Smith, Alice", "01/11/2021"), (0, "Jones, Beverly", "01/11/2021"),],
+        [
+            (0, "Smith, Alice", "01/11/2021"),
+            (0, "Jones, Beverly", "01/11/2021"),
+        ],
     )
     def test_defendant_served(self, index, defendant, expected):
         soup = load_pages.get_test_williamson(index)
@@ -142,7 +182,10 @@ class TestParseHTML:
         assert served.get(defendant) == expected
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, []),],
+        "index, expected",
+        [
+            (0, []),
+        ],
     )
     def test_alternative_service(self, index, expected):
         soup = load_pages.get_test_williamson(index)
@@ -150,7 +193,10 @@ class TestParseHTML:
         assert expected == served
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "01/21/2021"),],
+        "index, expected",
+        [
+            (0, "01/21/2021"),
+        ],
     )
     def test_disposition_date(self, index, expected):
         soup = load_pages.get_test_williamson(index)
@@ -158,7 +204,10 @@ class TestParseHTML:
         assert expected == answer
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, Decimal("1451.61")),],
+        "index, expected",
+        [
+            (0, Decimal("1451.61")),
+        ],
     )
     def test_disposition_amount(self, index, expected):
         soup = load_pages.get_test_williamson(index)
@@ -166,7 +215,10 @@ class TestParseHTML:
         assert expected == amount
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "Realistic Fake Name"),],
+        "index, expected",
+        [
+            (0, "Realistic Fake Name"),
+        ],
     )
     def test_disposition_awarded_to(self, index, expected):
         soup = load_pages.get_test_williamson(index)
@@ -175,7 +227,10 @@ class TestParseHTML:
         assert winning_party == expected
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "Alice Smith, et al"),],
+        "index, expected",
+        [
+            (0, "Alice Smith, et al"),
+        ],
     )
     def test_disposition_awarded_against(self, index, expected):
         soup = load_pages.get_test_williamson(index)
@@ -184,7 +239,10 @@ class TestParseHTML:
         assert losing_party == expected
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, "Judgment"),],
+        "index, expected",
+        [
+            (0, "Judgment"),
+        ],
     )
     def test_disposition_type(self, index, expected):
         soup = load_pages.get_test_williamson(index)
@@ -196,7 +254,10 @@ class TestParseHTML:
         assert dt == expected
 
     @pytest.mark.parametrize(
-        "test_html_file_index, expected_comments", [(0, None),],
+        "test_html_file_index, expected_comments",
+        [
+            (0, None),
+        ],
     )
     def test_comments(self, test_html_file_index, expected_comments):
         soup = load_pages.get_test_williamson(test_html_file_index)
@@ -204,7 +265,10 @@ class TestParseHTML:
         assert comments == expected_comments
 
     @pytest.mark.parametrize(
-        "test_html_file_index, expected_event_details", [(0, {}),],
+        "test_html_file_index, expected_event_details",
+        [
+            (0, {}),
+        ],
     )
     def test_get_writ(self, test_html_file_index, expected_event_details):
         soup = load_pages.get_test_williamson(test_html_file_index)
@@ -212,7 +276,10 @@ class TestParseHTML:
         assert event_details == expected_event_details
 
     @pytest.mark.parametrize(
-        "test_html_file_index, expected_event_details", [(0, {}),],
+        "test_html_file_index, expected_event_details",
+        [
+            (0, {}),
+        ],
     )
     def test_get_writ_of_possession_service(
         self, test_html_file_index, expected_event_details
@@ -222,7 +289,10 @@ class TestParseHTML:
         assert event_details == expected_event_details
 
     @pytest.mark.parametrize(
-        "test_html_file_index, expected_event_details", [(0, {}),],
+        "test_html_file_index, expected_event_details",
+        [
+            (0, {}),
+        ],
     )
     def test_get_writ_of_possession_requested(
         self, test_html_file_index, expected_event_details
@@ -232,7 +302,10 @@ class TestParseHTML:
         assert event_details == expected_event_details
 
     @pytest.mark.parametrize(
-        "test_html_file_index, expected_event_details", [(0, {}),],
+        "test_html_file_index, expected_event_details",
+        [
+            (0, {}),
+        ],
     )
     def test_get_writ_of_possession_sent_to_constable(
         self, test_html_file_index, expected_event_details
@@ -242,7 +315,10 @@ class TestParseHTML:
         assert event_details == expected_event_details
 
     @pytest.mark.parametrize(
-        "test_html_file_index, expected_event_details", [(0, {}),],
+        "test_html_file_index, expected_event_details",
+        [
+            (0, {}),
+        ],
     )
     def test_get_writ_returned_to_court(
         self, test_html_file_index, expected_event_details
@@ -252,7 +328,10 @@ class TestParseHTML:
         assert event_details == expected_event_details
 
     @pytest.mark.parametrize(
-        "test_html_file_index, expected_attorneys", [(0, {}),],
+        "test_html_file_index, expected_attorneys",
+        [
+            (0, {}),
+        ],
     )
     def test_get_attorneys_for_defendants(
         self, test_html_file_index, expected_attorneys
@@ -262,7 +341,10 @@ class TestParseHTML:
         assert attorneys == expected_attorneys
 
     @pytest.mark.parametrize(
-        "test_html_file_index, expected_attorneys", [(0, {}),],
+        "test_html_file_index, expected_attorneys",
+        [
+            (0, {}),
+        ],
     )
     def test_get_attorneys_for_plaintiffs(
         self, test_html_file_index, expected_attorneys
@@ -273,7 +355,9 @@ class TestParseHTML:
 
     @pytest.mark.parametrize(
         "test_html_file_index, plaintiff, disposition_date",
-        [(0, "Name, Realistic Fake", "01/21/2021"),],
+        [
+            (0, "Name, Realistic Fake", "01/21/2021"),
+        ],
     )
     def test_make_parsed_case(self, test_html_file_index, plaintiff, disposition_date):
         soup = load_pages.get_test_williamson(test_html_file_index)

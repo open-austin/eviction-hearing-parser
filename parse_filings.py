@@ -10,7 +10,6 @@ import json
 from typing import List, Dict, Optional
 
 import click
-import fetch_page
 import scrapers
 from parse_hearings import parse_all_from_parse_filings
 from persist import get_old_active_case_nums
@@ -25,14 +24,14 @@ def parse_filings_on_cloud(
     beforedate: datetime.date,
     get_old_active=True,
     showbrowser=False,
-    test_scraper: Optional[scrapers.BaseScraper] = None,
+    test_scraper: Optional[scrapers.TestScraper] = None,
 ):
     """Parses filings without command line interface and outfile options."""
 
     logger.info(f"Parsing filings between {afterdate} and {beforedate}.")
 
     if not test_scraper:
-        test_scraper = fetch_page.RealScraper()
+        test_scraper = scrapers.TravisScraper()
 
     all_case_nums = test_scraper.get_all_case_nums(afterdate, beforedate)
     if get_old_active:

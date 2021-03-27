@@ -3,14 +3,15 @@ Module to get setting details between two dates.
 To perform a scraper run, use: python parse_settings.py afterdate beforedate
 (dates in format (m)m-(d)d-yyyy)
 """
-
-import simplejson as json
+import datetime as dt
+import logging
 import sys
 from typing import Any, Dict, List, Optional
-import datetime as dt
+
 import click
-import fetch_page
-import logging
+import simplejson as json
+
+import scrapers
 
 logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
@@ -28,7 +29,7 @@ def get_days_between_dates(afterdate: str, beforedate: str):
 
 def make_setting_list(days_to_pull: List[str]) -> List[Dict[str, Any]]:
     """Pulls all settings, one day at a time"""
-    scraper = fetch_page.RealScraper()
+    scraper = scrapers.TravisScraper()
     pulled_settings = []
     for setting_day in days_to_pull:
         day_settings = scraper.fetch_settings(
@@ -73,6 +74,30 @@ def parse_settings(afterdate: str, beforedate: str, outfile: str, showbrowser=Fa
     return pulled_settings
 
 
+def _parse_and_persist_settings(
+    afterdate: dt.date,
+    beforedate: dt.date,
+    outfile: str = "",
+    showbrowser: bool = False,
+    db: bool = True,
+    gs: bool = True,
+):
+    pulled_settings = parse_settings(afterdate, beforedate, outfile, showbrowser)
+    if db:
+        import persist
+
+        for setting in pulled_settings:
+            persist.rest_setting(setting)
+    if gs:
+        import gsheet
+
+        gsheet.write_pulled_settings(pulled_settings)
+
+    if outfile:
+        json.dump(pulled_settings, outfile)
+    return pulled_settings
+
+
 @click.command()
 @click.argument(
     "afterdate",
@@ -103,25 +128,20 @@ def parse_settings(afterdate: str, beforedate: str, outfile: str, showbrowser=Fa
 def parse_and_persist_settings(
     afterdate: dt.date,
     beforedate: dt.date,
-    outfile: Optional[str],
+    outfile: str = "",
     showbrowser: bool = False,
     db: bool = True,
     gs: bool = True,
 ):
-    pulled_settings = parse_settings(afterdate, beforedate, outfile, showbrowser)
-    if db:
-        import persist
-
-        for setting in pulled_settings:
-            persist.rest_setting(setting)
-    if gs:
-        import gsheet
-
-        gsheet.write_pulled_settings(pulled_settings)
-
-    if outfile:
-        json.dump(pulled_settings, outfile)
-    return pulled_settings
+    """Pass same values to an alias function that isn't a Click command."""
+    return _parse_and_persist_settings(
+        afterdate=afterdate,
+        beforedate=beforedate,
+        outfile=outfile,
+        showbrowser=showbrowser,
+        db=db,
+        gs=gs,
+    )
 
 
 if __name__ == "__main__":
