@@ -24,16 +24,16 @@ def parse_filings_on_cloud(
     beforedate: datetime.date,
     get_old_active=True,
     showbrowser=False,
-    test_scraper: Optional[scrapers.TestScraper] = None,
+    scraper: Optional[scrapers.TestScraper] = None,
 ):
     """Parses filings without command line interface and outfile options."""
 
     logger.info(f"Parsing filings between {afterdate} and {beforedate}.")
 
-    if not test_scraper:
-        test_scraper = scrapers.TravisScraper()
+    if not scraper:
+        scraper = scrapers.TravisScraper(headless=not showbrowser)
 
-    all_case_nums = test_scraper.get_all_case_nums(afterdate, beforedate)
+    all_case_nums = scraper.get_all_case_nums(afterdate, beforedate)
     if get_old_active:
         all_case_nums += get_old_active_case_nums()
 

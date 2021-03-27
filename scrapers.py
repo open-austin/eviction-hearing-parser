@@ -111,6 +111,16 @@ class TestScraper:
         )
         return all_case_nums
 
+    def make_setting_list(self, days_to_pull: List[str]) -> List[Dict[str, Any]]:
+        """Pulls all settings, one day at a time"""
+        pulled_settings = []
+        for setting_day in days_to_pull:
+            day_settings = self.fetch_settings(
+                afterdate=setting_day, beforedate=setting_day
+            )
+            pulled_settings.extend(day_settings)
+        return pulled_settings
+
     def query_case_id(self, case_id: str) -> Tuple[str, str]:
         if case_id != "J1-CV-20-001590":
             raise ValueError(
@@ -120,6 +130,18 @@ class TestScraper:
         search_page = load_pages.get_test_search_page(0)
         register_page = load_pages.get_test_soup(0)
         return search_page, register_page
+
+    def query_settings(self, afterdate: datetime.date, beforedate: datetime.date):
+        """Return fake setting list for testing."""
+        if afterdate != datetime.date(2015, 10, 21):
+            raise ValueError(
+                "To prevent confusion between real and fake data, TestScraper "
+                "only works with date ranges "
+                "that begin on 2015-10-21. To make real queries, use a scraper named "
+                "for the county you want, such as 'TravisScraper'."
+            )
+        soup = load_pages.get_test_calendar()
+        return calendars.get_setting_list(soup)
 
     def fetch_filings(
         self, afterdate: datetime.date, beforedate: datetime.date, case_num_prefix: str
@@ -457,4 +479,5 @@ SCRAPER_NAMES = {
     "test": TestScraper,
     "travis": TravisScraper,
     "williamson": WilliamsonScraper,
+    "wilco": WilliamsonScraper,
 }

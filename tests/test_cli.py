@@ -16,9 +16,8 @@ class TestCLI:
         cases = parse_hearings.parse_all_from_parse_filings(
             case_nums=ids_to_parse,
             showbrowser=False,
-            json=False,
             db=False,
-            test_scraper=FAKE_SCRAPER,
+            scraper=FAKE_SCRAPER,
         )
         assert cases[0]["register_url"].endswith("CaseID=2286743")
         assert cases[0]["hearings"][0]["hearing_type"] == "Eviction Hearing"

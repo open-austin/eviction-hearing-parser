@@ -30,21 +30,20 @@ def get_ids_to_parse(infile: click.File) -> List[str]:
 
 def parse_all_from_parse_filings(
     case_nums: List[str],
-    test_scraper: Optional[scrapers.TestScraper] = None,
+    scraper: Optional[scrapers.TestScraper] = None,
     showbrowser: bool = False,
-    json: bool = True,
     db: bool = True,
 ) -> List[Dict[str, Any]]:
     """
     Gets case details for each case number in `case_nums` and sends the data to PostgreSQL.
     Logs any case numbers for which getting data failed.
     """
-    if not test_scraper:
-        test_scraper = scrapers.TravisScraper()
+    if not scraper:
+        scraper = scrapers.TravisScraper(headless=not showbrowser)
     parsed_cases = []
     for tries in range(1, 6):
         try:
-            parsed_cases = test_scraper.make_case_list(case_nums)
+            parsed_cases = scraper.make_case_list(case_nums)
             break
         except Exception as e:
             logger.error(
