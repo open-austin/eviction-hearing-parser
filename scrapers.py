@@ -94,6 +94,23 @@ class TestScraper:
                     prefix=f"{prefix_text}-{year}*",
                 )
 
+    def fetch_settings(
+        self, afterdate: datetime.date, beforedate: datetime.date
+    ) -> List[Optional[Dict[str, str]]]:
+
+        for tries in range(1, 11):
+            try:
+                "fetch all settings as a list of dicts"
+                calendar_soup = self.query_settings(afterdate, beforedate)
+                return calendars.get_setting_list(calendar_soup)
+            except:
+                if tries == 10:
+                    logger.error(
+                        f"Failed to get setting list between {afterdate} and {beforedate} on all 10 attempts."
+                    )
+
+        return []
+
     def get_all_case_nums(
         self, afterdate: datetime.date, beforedate: datetime.date
     ) -> List[str]:
@@ -140,8 +157,7 @@ class TestScraper:
                 "that begin on 2015-10-21. To make real queries, use a scraper named "
                 "for the county you want, such as 'TravisScraper'."
             )
-        soup = load_pages.get_test_calendar()
-        return calendars.get_setting_list(soup)
+        return load_pages.get_test_calendar()
 
     def fetch_filings(
         self, afterdate: datetime.date, beforedate: datetime.date, case_num_prefix: str
@@ -269,7 +285,9 @@ class TravisScraper(TestScraper):
             return start_page
         return None
 
-    def query_settings(self, afterdate: datetime.date, beforedate: datetime.date):
+    def query_settings(
+        self, afterdate: datetime.date, beforedate: datetime.date
+    ) -> BeautifulSoup:
         """Executes search for case settings between beforedate and afterdate for, returns content of resulting page"""
 
         for tries in range(5):
@@ -334,7 +352,7 @@ class TravisScraper(TestScraper):
 
         finally:
             calendar_page_content = court_calendar.page_source
-            return calendar_page_content
+            return BeautifulSoup(calendar_page_content, "html.parser")
 
     def query_filings(
         self, afterdate: datetime.date, beforedate: datetime.date, case_num_prefix: str
@@ -403,26 +421,6 @@ class TravisScraper(TestScraper):
         finally:
             records_page_content = court_records.page_source
             return records_page_content
-
-    def fetch_settings(
-        self, afterdate: datetime.date, beforedate: datetime.date
-    ) -> List[Optional[Dict[str, str]]]:
-
-        for tries in range(1, 11):
-            try:
-                "fetch all settings as a list of dicts"
-                calendar_page_content = self.query_settings(afterdate, beforedate)
-                if calendar_page_content is None:
-                    return None
-                calendar_soup = BeautifulSoup(calendar_page_content, "html.parser")
-                return calendars.get_setting_list(calendar_soup)
-            except:
-                if tries == 10:
-                    logger.error(
-                        f"Failed to get setting list between {afterdate} and {beforedate} on all 10 attempts."
-                    )
-
-        return []
 
     def fetch_filings(
         self, afterdate: datetime.date, beforedate: datetime.date, case_num_prefix: str

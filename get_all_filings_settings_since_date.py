@@ -40,7 +40,7 @@ if __name__ == "__main__":
         "date", type=click.DateTime(formats=["%Y-%m-%d", "%m-%d-%Y", "%m/%d/%Y"])
     )
     @click.option(
-        "county",
+        "--county",
         type=click.Choice(scrapers.SCRAPER_NAMES, case_sensitive=False),
         default="travis",
     )

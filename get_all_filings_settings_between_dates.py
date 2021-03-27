@@ -88,7 +88,7 @@ def get_all_filings_settings_between_dates(start_date: str, end_date: str, count
     )
 
     failures = []
-    scraper = scrapers.SCRAPER_NAMES["county"]
+    scraper = scrapers.SCRAPER_NAMES[county]
     for week_start, week_end in weeks:
         msg = try_to_parse(week_start, week_end, 5, scraper=scraper)
         if msg != "success":
@@ -120,7 +120,7 @@ if __name__ == "__main__":
         "end_date", type=click.DateTime(formats=["%Y-%m-%d", "%m-%d-%Y", "%m/%d/%Y"])
     )
     @click.option(
-        "county",
+        "--county",
         type=click.Choice(scrapers.SCRAPER_NAMES, case_sensitive=False),
         default="travis",
     )

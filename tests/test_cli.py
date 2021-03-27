@@ -1,5 +1,8 @@
+from datetime import date
+
 from scrapers import TestScraper
 import parse_hearings
+import get_all_filings_settings_between_dates as filings_settings
 
 FAKE_SCRAPER = TestScraper()
 
@@ -21,3 +24,10 @@ class TestCLI:
         )
         assert cases[0]["register_url"].endswith("CaseID=2286743")
         assert cases[0]["hearings"][0]["hearing_type"] == "Eviction Hearing"
+
+    def test_split_into_weeks(self):
+        weeks = filings_settings.split_into_weeks(
+            start=date(2020, 1, 1), end=date(2020, 12, 31)
+        )
+        assert len(weeks) == 53
+        assert weeks[-1][0] == date(2020, 12, 30)
