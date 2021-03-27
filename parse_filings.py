@@ -12,7 +12,7 @@ from typing import List, Dict, Optional
 import click
 import scrapers
 from parse_hearings import parse_all_from_parse_filings
-from persist import get_old_active_case_nums
+
 import logging
 
 logger = logging.getLogger()
@@ -35,6 +35,8 @@ def parse_filings_on_cloud(
 
     all_case_nums = scraper.get_all_case_nums(afterdate, beforedate)
     if get_old_active:
+        from persist import get_old_active_case_nums
+
         all_case_nums += get_old_active_case_nums()
 
     logger.info(f"Found {len(all_case_nums)} case numbers (including old active ones).")
