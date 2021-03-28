@@ -1,6 +1,7 @@
 """Module for scraping court websites using Selenium"""
 
 import datetime
+from itertools import chain
 import logging
 import os
 import sys
@@ -34,6 +35,9 @@ class CalendarQuery(NamedTuple):
 
 
 class TestScraper:
+    def __init__(self, headless: bool = True) -> None:
+        self.homepage = "will not access web"
+
     def fetch_parsed_case(self, case_id: str) -> Tuple[str, str]:
         query_result = self.query_case_id(case_id)
         if query_result is None:
@@ -117,10 +121,12 @@ class TestScraper:
         """
         Get list of all case numbers between `afterdate` and `beforedate`.
         """
-        all_case_nums = [
-            self.fetch_filings(query.afterdate, query.beforedate, query.prefix)
-            for query in self.calendar_queries(afterdate, beforedate)
-        ]
+        all_case_nums = []
+        for query in self.calendar_queries(afterdate, beforedate):
+            response = self.fetch_filings(
+                query.afterdate, query.beforedate, query.prefix
+            )
+            all_case_nums.extend(response)
 
         logger.info(
             f"Scraped case numbers between {afterdate} and {beforedate} "
@@ -138,7 +144,7 @@ class TestScraper:
             pulled_settings.extend(day_settings)
         return pulled_settings
 
-    def query_case_id(self, case_id: str) -> Tuple[str, str]:
+    def query_case_id(self, case_id: str) -> Tuple[BeautifulSoup, BeautifulSoup]:
         if case_id != "J1-CV-20-001590":
             raise ValueError(
                 "The testing-only TestScraper can only take the Case ID J1-CV-20-001590. "

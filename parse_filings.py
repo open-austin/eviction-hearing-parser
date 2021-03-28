@@ -11,7 +11,7 @@ from typing import List, Dict, Optional
 
 import click
 import scrapers
-from parse_hearings import parse_all_from_parse_filings
+from parse_hearings import parse_all_from_parse_filings, persist_parsed_cases
 
 import logging
 
@@ -33,14 +33,24 @@ def parse_filings_on_cloud(
     if not scraper:
         scraper = scrapers.TravisScraper(headless=not showbrowser)
 
-    all_case_nums = scraper.get_all_case_nums(afterdate, beforedate)
+    all_case_nums = scraper.get_all_case_nums(
+        afterdate=afterdate, beforedate=beforedate
+    )
     if get_old_active:
         from persist import get_old_active_case_nums
 
         all_case_nums += get_old_active_case_nums()
 
+    # using dict to eliminate duplicates
+    all_case_nums = list(dict.fromkeys(all_case_nums))
     logger.info(f"Found {len(all_case_nums)} case numbers (including old active ones).")
-    return parse_all_from_parse_filings(all_case_nums)
+    cases = parse_all_from_parse_filings(all_case_nums, scraper=scraper)
+
+    # persist cases only if not using the test scraper
+    if isinstance(scraper, scrapers.TravisScraper):
+        persist_parsed_cases(cases)
+
+    return cases
 
 
 @click.command()

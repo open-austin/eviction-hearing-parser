@@ -19,7 +19,6 @@ class TestCLI:
         cases = parse_hearings.parse_all_from_parse_filings(
             case_nums=ids_to_parse,
             showbrowser=False,
-            db=False,
             scraper=FAKE_SCRAPER,
         )
         assert cases[0]["register_url"].endswith("CaseID=2286743")
@@ -31,3 +30,9 @@ class TestCLI:
         )
         assert len(weeks) == 53
         assert weeks[-1][0] == date(2020, 12, 30)
+
+    def test_no_failure_messages_when_getting_all_filings(self):
+        failures = filings_settings.get_all_filings_settings_between_dates(
+            start_date=date(2015, 10, 21), end_date=date(2015, 10, 21), county="test"
+        )
+        assert not failures

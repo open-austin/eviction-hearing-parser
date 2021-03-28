@@ -28,21 +28,28 @@ def get_days_between_dates(afterdate: str, beforedate: str):
 
 
 def parse_settings_on_cloud(
-    afterdate: str, beforedate: str, write_to_sheets=True, scraper=scrapers.TestScraper
+    afterdate: str,
+    beforedate: str,
+    write_to_sheets=True,
+    scraper: Optional[scrapers.TestScraper] = None,
 ):
     """
     Same as `parse_settings()` (see below) but without command line interface and showbrowser option.
     Outputs scraped results to a gsheet:Settings_scheduler if `write_to_sheets` is True
     """
-
+    if scraper is None:
+        scraper = scrapers.TravisScraper()
     logger.info(f"Parsing settings between {afterdate} and {beforedate}.")
 
     days_to_pull = get_days_between_dates(afterdate=afterdate, beforedate=beforedate)
     pulled_settings = scraper.make_setting_list(days_to_pull)
-    import persist
+    if scraper is None:
+        scraper = scrapers.TravisScraper(headless=True)
+    if isinstance(scraper, scrapers.TravisScraper):
+        import persist
 
-    for setting in pulled_settings:
-        persist.rest_setting(setting)
+        for setting in pulled_settings:
+            persist.rest_setting(setting)
     # maybe make this cleaner in sql? future work
     if write_to_sheets:
         import gsheet

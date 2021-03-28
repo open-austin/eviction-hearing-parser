@@ -50,9 +50,11 @@ def try_to_parse(
     for attempt in range(1, tries + 1):
         try:
             parse_filings.parse_filings_on_cloud(
-                start, end, get_old_active=False, scraper=scraper
+                afterdate=start, beforedate=end, get_old_active=False, scraper=scraper
             )
-            parse_settings.parse_settings_on_cloud(start, end, write_to_sheets=False)
+            parse_settings.parse_settings_on_cloud(
+                afterdate=start, beforedate=end, write_to_sheets=False, scraper=scraper
+            )
             logger.info(
                 Fore.GREEN
                 + "Successfully parsed filings and settings "
@@ -75,7 +77,9 @@ def try_to_parse(
     return message
 
 
-def get_all_filings_settings_between_dates(start_date: str, end_date: str, county: str):
+def get_all_filings_settings_between_dates(
+    start_date: date, end_date: date, county: str, showbrowser=bool
+):
     """
     Gets all filings and settings between `start_date` and `end_date` but splits it up by week.
 
@@ -88,7 +92,7 @@ def get_all_filings_settings_between_dates(start_date: str, end_date: str, count
     )
 
     failures = []
-    scraper = scrapers.SCRAPER_NAMES[county]
+    scraper = scrapers.SCRAPER_NAMES[county](headless=not showbrowser)
     for week_start, week_end in weeks:
         msg = try_to_parse(week_start, week_end, 5, scraper=scraper)
         if msg != "success":

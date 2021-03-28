@@ -32,7 +32,6 @@ def parse_all_from_parse_filings(
     case_nums: List[str],
     scraper: Optional[scrapers.TestScraper] = None,
     showbrowser: bool = False,
-    db: bool = True,
 ) -> List[Dict[str, Any]]:
     """
     Gets case details for each case number in `case_nums` and sends the data to PostgreSQL.
@@ -44,41 +43,41 @@ def parse_all_from_parse_filings(
     for tries in range(1, 6):
         try:
             parsed_cases = scraper.make_case_list(case_nums)
-            break
+            return parsed_cases
         except Exception as e:
             logger.error(
                 f"Failed to parse hearings on attempt {tries}. Error message: {e}"
             )
-
-    if db:
-        import persist
-
-        logger.info(
-            f"Finished making case list, now will send all {len(parsed_cases)} cases to SQL."
-        )
-
-        failed_cases = []
-        for parsed_case in parsed_cases:
-            try:
-                persist.rest_case(parsed_case)
-            except:
-                try:
-                    failed_cases.append(parsed_case["case_number"])
-                except:
-                    logger.error(
-                        "A case failed to be parsed but it doesn't have a case number."
-                    )
-
-        if failed_cases:
-            error_message = f"Failed to send the following case numbers to SQL:\n{', '.join(failed_cases)}"
-            log_and_email(
-                error_message,
-                "Case Numbers for Which Sending to SQL Failed",
-                error=True,
-            )
-        logger.info("Finished sending cases to SQL.")
-
     return parsed_cases
+
+
+def persist_parsed_cases(cases: List[Dict[str, Any]]) -> None:
+    import persist
+
+    logger.info(
+        f"Finished making case list, now will send all {len(parsed_cases)} cases to SQL."
+    )
+
+    failed_cases = []
+    for parsed_case in parsed_cases:
+        try:
+            persist.rest_case(parsed_case)
+        except:
+            try:
+                failed_cases.append(parsed_case["case_number"])
+            except:
+                logger.error(
+                    "A case failed to be parsed but it doesn't have a case number."
+                )
+
+    if failed_cases:
+        error_message = f"Failed to send the following case numbers to SQL:\n{', '.join(failed_cases)}"
+        log_and_email(
+            error_message,
+            "Case Numbers for Which Sending to SQL Failed",
+            error=True,
+        )
+    logger.info("Finished sending cases to SQL.")
 
 
 @click.command()
@@ -109,6 +108,8 @@ def parse_all(
     parsed_cases = parse_all_from_parse_filings(
         case_nums=ids_to_parse, showbrowser=showbrowser, db=db
     )
+    if db:
+        persist_parsed_cases(parsed_cases)
     if outfile:
         simplejson.dump(parsed_cases, outfile)
 
