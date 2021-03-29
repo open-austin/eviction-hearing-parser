@@ -1,2 +1,5 @@
 [run]
-omit = tests/*, venv/*
+omit =
+    tests/*
+    scraping_tests/*
+    venv/*

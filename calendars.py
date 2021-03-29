@@ -13,7 +13,7 @@ def get_setting(soup) -> Optional[Dict[str, str]]:
 
     # get case number
     try:
-        setting_details["case_number"] = td_list[1].text
+        setting_details["case_number"] = td_list[1].text.strip()
     except:
         return None
 

@@ -253,12 +253,6 @@ class BaseParser:
             return self.remove_whitespace(disposition_date_node.text)
         return None
 
-    def get_status_and_type(status_soup) -> str:
-        tds = status_soup.find_all("td")
-        divs = tds[-1].find_all("div")
-        status, type = divs[1].text, divs[0].text
-        return status, type
-
     def get_disposition_amount(self, soup) -> Optional[Decimal]:
         disposition_date_node = self.get_disposition_date_node(soup)
         if disposition_date_node is None:
@@ -434,8 +428,10 @@ class BaseParser:
         served_tags = soup.find_all(text="Served")
         for service_tag in served_tags:
             date_tag = service_tag.parent.find_next_sibling("td")
-            defendant_tag = service_tag.parent.parent.parent.parent.parent.find_previous_sibling(
-                "td"
+            defendant_tag = (
+                service_tag.parent.parent.parent.parent.parent.find_previous_sibling(
+                    "td"
+                )
             )
             dates_of_service[defendant_tag.text] = date_tag.text
 

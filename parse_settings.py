@@ -3,14 +3,15 @@ Module to get setting details between two dates.
 To perform a scraper run, use: python parse_settings.py afterdate beforedate
 (dates in format (m)m-(d)d-yyyy)
 """
-
-import simplejson as json
+import datetime as dt
+import logging
 import sys
 from typing import Any, Dict, List, Optional
-import datetime as dt
+
 import click
-import fetch_page
-import logging
+import simplejson as json
+
+import scrapers
 
 logger = logging.getLogger()
 logging.basicConfig(stream=sys.stdout)
@@ -26,32 +27,29 @@ def get_days_between_dates(afterdate: str, beforedate: str):
     return [(afterdate + dt.timedelta(days=i)) for i in range(n_days + 1)]
 
 
-def make_setting_list(days_to_pull: List[str]) -> List[Dict[str, Any]]:
-    """Pulls all settings, one day at a time"""
-    scraper = fetch_page.RealScraper()
-    pulled_settings = []
-    for setting_day in days_to_pull:
-        day_settings = scraper.fetch_settings(
-            afterdate=setting_day, beforedate=setting_day
-        )
-        pulled_settings.extend(day_settings)
-    return pulled_settings
-
-
-def parse_settings_on_cloud(afterdate: str, beforedate: str, write_to_sheets=True):
+def parse_settings_on_cloud(
+    afterdate: str,
+    beforedate: str,
+    write_to_sheets=True,
+    scraper: Optional[scrapers.TestScraper] = None,
+):
     """
     Same as `parse_settings()` (see below) but without command line interface and showbrowser option.
     Outputs scraped results to a gsheet:Settings_scheduler if `write_to_sheets` is True
     """
-
+    if scraper is None:
+        scraper = scrapers.TravisScraper()
     logger.info(f"Parsing settings between {afterdate} and {beforedate}.")
 
     days_to_pull = get_days_between_dates(afterdate=afterdate, beforedate=beforedate)
-    pulled_settings = make_setting_list(days_to_pull)
-    import persist
+    pulled_settings = scraper.make_setting_list(days_to_pull)
+    if scraper is None:
+        scraper = scrapers.TravisScraper(headless=True)
+    if isinstance(scraper, scrapers.TravisScraper):
+        import persist
 
-    for setting in pulled_settings:
-        persist.rest_setting(setting)
+        for setting in pulled_settings:
+            persist.rest_setting(setting)
     # maybe make this cleaner in sql? future work
     if write_to_sheets:
         import gsheet
@@ -59,17 +57,45 @@ def parse_settings_on_cloud(afterdate: str, beforedate: str, write_to_sheets=Tru
         gsheet.write_pulled_settings(pulled_settings)
 
 
-def parse_settings(afterdate: str, beforedate: str, outfile: str, showbrowser=False):
+def parse_settings(
+    afterdate: str,
+    beforedate: str,
+    outfile: str,
+    showbrowser=False,
+    county: str = "travis",
+):
     """Gets data for all settings between `afterdate` and `beforedate` and sends results to PostgreSQL database."""
-
-    # If showbrowser is True, use the default selenium driver
-    if showbrowser:
-        from selenium import webdriver
-
-        fetch_page.driver = webdriver.Chrome("./chromedriver")
+    scraper = scrapers.SCRAPER_NAMES[county](headless=not showbrowser)
 
     days_to_pull = get_days_between_dates(afterdate=afterdate, beforedate=beforedate)
-    pulled_settings = make_setting_list(days_to_pull)
+    pulled_settings = scraper.make_setting_list(days_to_pull)
+    return pulled_settings
+
+
+def _parse_and_persist_settings(
+    afterdate: dt.date,
+    beforedate: dt.date,
+    outfile: str = "",
+    showbrowser: bool = False,
+    db: bool = True,
+    gs: bool = True,
+    county: str = "travis",
+):
+    pulled_settings = parse_settings(
+        afterdate, beforedate, outfile, showbrowser, county=county
+    )
+    if db:
+        import persist
+
+        for setting in pulled_settings:
+            persist.rest_setting(setting)
+    if gs:
+        import gsheet
+
+        gsheet.write_pulled_settings(pulled_settings)
+
+    if outfile:
+        json.dump(pulled_settings, outfile)
     return pulled_settings
 
 
@@ -100,28 +126,30 @@ def parse_settings(afterdate: str, beforedate: str, outfile: str, showbrowser=Fa
     default=True,
     help="whether to persist data to Google Sheets",
 )
+@click.option(
+    "--county",
+    type=click.Choice(scrapers.SCRAPER_NAMES, case_sensitive=False),
+    default="travis",
+)
 def parse_and_persist_settings(
     afterdate: dt.date,
     beforedate: dt.date,
-    outfile: Optional[str],
+    outfile: str = "",
     showbrowser: bool = False,
     db: bool = True,
     gs: bool = True,
+    county: str = "travis",
 ):
-    pulled_settings = parse_settings(afterdate, beforedate, outfile, showbrowser)
-    if db:
-        import persist
-
-        for setting in pulled_settings:
-            persist.rest_setting(setting)
-    if gs:
-        import gsheet
-
-        gsheet.write_pulled_settings(pulled_settings)
-
-    if outfile:
-        json.dump(pulled_settings, outfile)
-    return pulled_settings
+    """Pass same values to an alias function that isn't a Click command."""
+    return _parse_and_persist_settings(
+        afterdate=afterdate,
+        beforedate=beforedate,
+        outfile=outfile,
+        showbrowser=showbrowser,
+        db=db,
+        gs=gs,
+        county=county,
+    )
 
 
 if __name__ == "__main__":

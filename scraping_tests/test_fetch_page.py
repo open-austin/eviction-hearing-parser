@@ -2,14 +2,13 @@ from datetime import date
 
 import pytest
 
-import fetch_page
-import hearing
+import scrapers
 import config
 
 config.county = "travis"
 
-scraper = fetch_page.RealScraper()
-williamson_scraper = fetch_page.WilliamsonScraper()
+scraper = scrapers.TravisScraper()
+williamson_scraper = scrapers.WilliamsonScraper()
 
 
 class TestFetchFilingsPage:
