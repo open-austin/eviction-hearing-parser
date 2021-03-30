@@ -484,7 +484,7 @@ class BaseParser:
         else:
             return 0
 
-    def fuzzy(i):
+    def fuzzy(self, i):
         j = fuzz.partial_ratio(i[0].upper(), i[1].upper())
         return j
 

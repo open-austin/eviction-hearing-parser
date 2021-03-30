@@ -66,12 +66,13 @@ class TestScraper:
             soup=register_soup, status=status, type=type, register_url=register_url
         )
 
-    def make_case_list(
-        self, ids_to_parse: List[str], showbrowser: bool = False
-    ) -> List[Dict[str, Any]]:
-        """Gets case details for each case number in `ids_to_pars`"""
+    def make_case_list(self, ids_to_parse, showbrowser=False):
+    #     self, ids_to_parse: List[str], showbrowser: bool = False
+    # ) -> List[Dict[str, Any]]:
+        """Gets case details for each case number in `ids_to_parse`"""
+        parsed_cases = []
 
-        parsed_cases, failed_ids = [], []
+        failed_ids = []
         for id_to_parse in ids_to_parse:
             new_case = self.fetch_parsed_case(id_to_parse)
             if new_case:
@@ -480,8 +481,8 @@ class WilliamsonScraper(TravisScraper):
 
 
 SCRAPER_NAMES = {
-    "test": TestScraper,
-    "travis": TravisScraper,
-    "williamson": WilliamsonScraper,
-    "wilco": WilliamsonScraper,
+    "test": TestScraper(),
+    "travis": TravisScraper(),
+    "williamson": WilliamsonScraper(),
+    "wilco": WilliamsonScraper(),
 }
