@@ -92,7 +92,7 @@ def get_all_filings_settings_between_dates(
     )
 
     failures = []
-    scraper = scrapers.SCRAPER_NAMES[county](headless=not showbrowser)
+    scraper = scrapers.SCRAPER_NAMES[county]
     for week_start, week_end in weeks:
         msg = try_to_parse(week_start, week_end, 5, scraper=scraper)
         if msg != "success":
