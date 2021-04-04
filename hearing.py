@@ -756,7 +756,7 @@ class WilliamsonParser(BaseParser):
         served_tags = soup.find_all(text="Served")
         for service_tag in served_tags:
             date_tag = service_tag.parent.find_next_sibling("td")
-            defendant_tag = service_tag.parent.parent.parent.parent.parent.td
+            defendant_tag = service_tag.parent.parent.parent.parent.parent.parent.parent.parent.td
             defendant_name = self.remove_whitespace(defendant_tag.text)
             dates_of_service[defendant_name] = date_tag.text
         return dates_of_service
