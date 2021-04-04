@@ -20,7 +20,7 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
-            (0, "Name, Realistic Fake"),
+            (1, "Nelson, Charles A"),
         ],
     )
     def test_get_plaintiff(self, index, expected):
@@ -31,7 +31,7 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
-            (0, "Smith, Alice; Jones, Beverly"),
+            (1, "McGlasson, Patrick"),
         ],
     )
     def test_get_defendants(self, index, expected):

@@ -11,6 +11,7 @@ from statuses import statuses_map
 from fuzzywuzzy import fuzz
 from emailing import log_and_email
 import config
+import re 
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -699,7 +700,7 @@ class WilliamsonParser(BaseParser):
         These are currently used as an anchor for most of the Party Info parsing.
         Sometimes the text of the element does not always say "Defendant", but may say something like "Defendant 2".
         """
-        return soup.find_all("th", text=re.compile(r"^\s+Defendant"))
+        return soup.find_all("th", text=re.compile(r"^Defendant"))
 
 
 
