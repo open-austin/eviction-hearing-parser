@@ -510,8 +510,8 @@ class WilliamsonScraper(TravisScraper):
 
 
 SCRAPER_NAMES = {
-    "test": TestScraper(),
-    "travis": TravisScraper(),
-    "williamson": WilliamsonScraper(),
-    "wilco": WilliamsonScraper(),
+    "test": TestScraper,
+    "travis": TravisScraper,
+    "williamson": WilliamsonScraper,
+    "wilco": WilliamsonScraper,
 }

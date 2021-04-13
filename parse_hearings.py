@@ -42,7 +42,7 @@ def parse_all_from_parse_filings(
     if not scraper:
         #Get the scraper corresponding to the lowercase command line entry for county. Default to TravisScraper.
         county = county.lower()
-        scraper = scrapers.SCRAPER_NAMES[county] if county in scrapers.SCRAPER_NAMES else scrapers.TravisScraper
+        scraper = scrapers.SCRAPER_NAMES[county]() if county in scrapers.SCRAPER_NAMES else scrapers.TravisScraper()
     parsed_cases = []
     for tries in range(1, 6):
         try:

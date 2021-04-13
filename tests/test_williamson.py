@@ -20,6 +20,7 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
+            (0, "Name, Realistic Fake"),
             (1, "Nelson, Charlie A"),
         ],
     )
@@ -31,6 +32,7 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
+            (0, "Smith, Alice; Jones, Beverly"),
             (1, "McGlasson, Patrick"),
         ],
     )
@@ -42,6 +44,7 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
+            (0, "Realistic Fake Name vs. Alice Smith,Beverly Jones"),            
             (1, 'Charlie A Nelson\n vs. \nPatrick McGlasson'),
         ],
     )
@@ -52,6 +55,7 @@ class TestParseHTML:
 
     @pytest.mark.parametrize(
         "index, expected",
+        [(0, "1JC-21-0008")],
         [(1, "1JC-21-0116")],
     )
     def test_get_case_number(self, index, expected):
@@ -62,6 +66,7 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
+            (0, ""),
             (1, ""),
         ],
     )
@@ -73,6 +78,7 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
+            (0, ""),
             (1, ""),
         ],
     )
@@ -84,6 +90,7 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
+            (0, "(10:30 AM)"),
             (1, "(10:45 AM)"),
         ],
     )
@@ -97,6 +104,7 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
+            (0, "Non Military Affidavit"),
             (1, "Non Military Affidavit"),
         ],
     )
@@ -109,6 +117,7 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
+            (0, "Musselman, KT"),
             (1, "Musselman, KT"),
         ],
     )
@@ -122,6 +131,7 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
+            (0, "10:30 AM"),
             (1, "10:45 AM"),
         ],
     )
@@ -135,6 +145,7 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
+            (0, "01/21/2021"),
             (1, "02/03/2021"),
         ],
     )
@@ -148,6 +159,7 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
+            (0, 1),
             (1, 1),
         ],
     )
@@ -159,6 +171,7 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, hearing_index, expected",
         [
+            (0, 0, False),
             (1, 0, False),
         ],
     )
@@ -172,6 +185,8 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, defendant, expected",
         [
+            (0, "Smith, Alice", "01/11/2021"),
+            (0, "Jones, Beverly", "01/11/2021"),
             (1, 'McGlasson, Patrick', "01/25/2021"),
         ],
     )
@@ -183,6 +198,7 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
+            (0, []),
             (1, []),
         ],
     )
@@ -194,6 +210,7 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
+            (0, "01/21/2021"),
             (1, "02/02/2021"),
         ],
     )
@@ -355,7 +372,8 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, plaintiff, disposition_date",
         [
-            (1, "Nelson, Charlie A", "02/02/2021"),
+            (0, "Name, Realistic Fake", "01/21/2021"),
+           (1, "Nelson, Charlie A", "02/02/2021"),
         ],
     )
     def test_make_parsed_case(self, test_html_file_index, plaintiff, disposition_date):
