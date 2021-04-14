@@ -167,7 +167,7 @@ class BaseParser:
         table_caption_div = soup.find(
             "div",
             class_="ssCaseDetailSectionTitle",
-            text="Events & Orders of the Court",
+            text=re.compile(r"\s*Events & Orders of the Court\s*"),
         )
         tbody = table_caption_div.parent.find_next_sibling("tbody")
         return tbody
@@ -707,13 +707,12 @@ class WilliamsonParser(BaseParser):
         that contains Dispositions, Hearings, and Other Events.
         Used as a starting point for many event parsing methods.
         """
-        table_caption_div = soup.find(
-            "div",
-            class_="ssCaseDetailSectionTitle",
-            text=re.compile(r"\s*Events & Orders of the Court\s*"),
-        )
-        tbody = table_caption_div.parent.find_next_sibling("tbody")
-        return tbody
+        table_caption = soup.find_all("caption")[1]
+        try:
+            tbody = table_caption.find_next_sibling("tr").find_next_sibling("tr")
+            return tbody
+        except AttributeError:
+            return super().get_events_tbody_element(soup)
 
     def get_hearing_date(self, hearing_tag) -> str:
         if hearing_tag is None:
@@ -735,7 +734,7 @@ class WilliamsonParser(BaseParser):
 
     def get_hearing_and_event_tags(self, soup) -> List:
         """
-        Returns <tr> elements in the Events and Hearings section of a CaseDetail document that represent a hearing record.
+        Returns <tr> elements in the Events and Hearings section representing a hearing record.
         """
         root = self.get_events_tbody_element(soup).parent
         hearing_tds = root.find_all(
