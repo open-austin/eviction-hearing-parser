@@ -35,7 +35,7 @@ class TestParseHTML:
         [
             (0, "Smith, Alice; Jones, Beverly"),
             (1, "McDuff, Donald"),
-            (2, "Barron, Carlos; O'Oregon, Kristin"),
+            (2, "Jones, Alice; O'Oregon, Eve"),
         ],
     )
     def test_get_defendants(self, index, expected):
@@ -203,8 +203,8 @@ class TestParseHTML:
             (0, "Smith, Alice", "01/11/2021"),
             (0, "Jones, Beverly", "01/11/2021"),
             (1, "McDuff, Donald", "01/25/2021"),
-            (2, "Barron, Carlos", "01/11/2021"),
-            (2, "O'Oregon, Kristin", "01/11/2021"),
+            (2, "Jones, Alice", "01/11/2021"),
+            (2, "O'Oregon, Eve", "01/11/2021"),
         ],
     )
     def test_defendant_served(self, index, defendant, expected):
