@@ -719,7 +719,8 @@ class WilliamsonParser(BaseParser):
         if hearing_tag is None:
             return ""
         date_tag = hearing_tag.parent.th
-        return date_tag.text
+        text = date_tag.text
+        return self.remove_whitespace(text)
 
     def get_hearing_tags(self, soup) -> List:
         """
@@ -763,12 +764,20 @@ class WilliamsonParser(BaseParser):
         elem = tables[4].tr.td.b
         return elem.text.replace("/n", " ").replace("  ", " ").strip()
 
+    def get_defendant_tag_for_service_tag(self, service_tag):
+        defendant_tag = service_tag.parent.parent.parent.parent.parent.td
+        if self.remove_whitespace(defendant_tag.text) != "Served":
+            return defendant_tag
+        return service_tag.parent.parent.parent.parent.parent.parent.parent.td
+
     def was_defendant_served(self, soup) -> Dict[str, str]:
         dates_of_service = {}
         served_tags = soup.find_all(text="Served")
         for service_tag in served_tags:
             date_tag = service_tag.parent.find_next_sibling("td")
-            defendant_tag = service_tag.parent.parent.parent.parent.parent.td
+            defendant_tag = self.get_defendant_tag_for_service_tag(
+                service_tag=service_tag
+            )
             defendant_name = self.remove_whitespace(defendant_tag.text)
-            dates_of_service[defendant_name] = date_tag.text
+            dates_of_service[defendant_name] = self.remove_whitespace(date_tag.text)
         return dates_of_service
