@@ -70,7 +70,7 @@ class TestFetchSearchPage:
         search_page_content, register_page_content = williamson_scraper.query_case_id(
             "1JC-21-0116"
         )
-        assert "04/27/2020" in register_page_content
+        assert "02/02/2021" in str(register_page_content)
 
 
 class TestDataFromScrapedPage:
