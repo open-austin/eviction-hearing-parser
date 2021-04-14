@@ -237,7 +237,8 @@ class BaseParser:
 
     def get_hearing_officer(self, hearing_tag) -> str:
         hearing_text = self.get_hearing_text(hearing_tag)
-        officer_groups = hearing_text.split("Judicial Officer")
+        cleaned_hearing_text = self.remove_whitespace(hearing_text)
+        officer_groups = cleaned_hearing_text.split("Judicial Officer")
         name = officer_groups[1] if len(officer_groups) > 1 else ""
         return self.remove_whitespace(name)
 
