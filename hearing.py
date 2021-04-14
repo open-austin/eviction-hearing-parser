@@ -44,7 +44,7 @@ class BaseParser:
         defendants = []
         for tag in self.get_defendant_elements(soup):
             name_elem = tag.find_next_sibling("th")
-            defendants.append(name_elem.text)
+            defendants.append(name_elem.text.strip())
         together = "; ".join(defendants)
         return together
 
@@ -484,7 +484,7 @@ class BaseParser:
         else:
             return 0
 
-    def fuzzy(i):
+    def fuzzy(self, i):
         j = fuzz.partial_ratio(i[0].upper(), i[1].upper())
         return j
 
@@ -699,7 +699,7 @@ class WilliamsonParser(BaseParser):
         These are currently used as an anchor for most of the Party Info parsing.
         Sometimes the text of the element does not always say "Defendant", but may say something like "Defendant 2".
         """
-        return soup.find_all("th", text=re.compile(r"^\s+Defendant"))
+        return soup.find_all("th", text=re.compile(r"^\s*Defendant"))
 
     def get_events_tbody_element(self, soup):
         """
@@ -707,8 +707,12 @@ class WilliamsonParser(BaseParser):
         that contains Dispositions, Hearings, and Other Events.
         Used as a starting point for many event parsing methods.
         """
-        table_caption = soup.find_all("caption")[1]
-        tbody = table_caption.find_next_sibling("tr").find_next_sibling("tr")
+        table_caption_div = soup.find(
+            "div",
+            class_="ssCaseDetailSectionTitle",
+            text=re.compile(r"\s*Events & Orders of the Court\s*"),
+        )
+        tbody = table_caption_div.parent.find_next_sibling("tbody")
         return tbody
 
     def get_hearing_date(self, hearing_tag) -> str:
@@ -754,9 +758,10 @@ class WilliamsonParser(BaseParser):
         return int(precinct_name[-1])
 
     def get_style(self, soup):
+        """Get name of the case."""
         tables = soup.find_all("table")
         elem = tables[4].tr.td.b
-        return elem.text
+        return elem.text.replace("/n", " ").replace("  ", " ").strip()
 
     def was_defendant_served(self, soup) -> Dict[str, str]:
         dates_of_service = {}
