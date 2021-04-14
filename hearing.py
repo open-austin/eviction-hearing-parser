@@ -762,7 +762,7 @@ class WilliamsonParser(BaseParser):
         """Get name of the case."""
         tables = soup.find_all("table")
         elem = tables[4].tr.td.b
-        return elem.text.replace("/n", " ").replace("  ", " ").strip()
+        return self.remove_whitespace(elem.text)
 
     def get_defendant_tag_for_service_tag(self, service_tag):
         defendant_tag = service_tag.parent.parent.parent.parent.parent.td
