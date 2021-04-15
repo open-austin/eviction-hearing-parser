@@ -44,7 +44,7 @@ class BaseParser:
         defendants = []
         for tag in self.get_defendant_elements(soup):
             name_elem = tag.find_next_sibling("th")
-            defendants.append(name_elem.text)
+            defendants.append(name_elem.text.strip())
         together = "; ".join(defendants)
         return together
 
@@ -167,7 +167,7 @@ class BaseParser:
         table_caption_div = soup.find(
             "div",
             class_="ssCaseDetailSectionTitle",
-            text="Events & Orders of the Court",
+            text=re.compile(r"\s*Events & Orders of the Court\s*"),
         )
         tbody = table_caption_div.parent.find_next_sibling("tbody")
         return tbody
@@ -237,7 +237,8 @@ class BaseParser:
 
     def get_hearing_officer(self, hearing_tag) -> str:
         hearing_text = self.get_hearing_text(hearing_tag)
-        officer_groups = hearing_text.split("Judicial Officer")
+        cleaned_hearing_text = self.remove_whitespace(hearing_text)
+        officer_groups = cleaned_hearing_text.split("Judicial Officer")
         name = officer_groups[1] if len(officer_groups) > 1 else ""
         return self.remove_whitespace(name)
 
@@ -484,7 +485,7 @@ class BaseParser:
         else:
             return 0
 
-    def fuzzy(i):
+    def fuzzy(self, i):
         j = fuzz.partial_ratio(i[0].upper(), i[1].upper())
         return j
 
@@ -699,7 +700,7 @@ class WilliamsonParser(BaseParser):
         These are currently used as an anchor for most of the Party Info parsing.
         Sometimes the text of the element does not always say "Defendant", but may say something like "Defendant 2".
         """
-        return soup.find_all("th", text=re.compile(r"^\s+Defendant"))
+        return soup.find_all("th", text=re.compile(r"^\s*Defendant"))
 
     def get_events_tbody_element(self, soup):
         """
@@ -708,14 +709,18 @@ class WilliamsonParser(BaseParser):
         Used as a starting point for many event parsing methods.
         """
         table_caption = soup.find_all("caption")[1]
-        tbody = table_caption.find_next_sibling("tr").find_next_sibling("tr")
-        return tbody
+        try:
+            tbody = table_caption.find_next_sibling("tr").find_next_sibling("tr")
+            return tbody
+        except AttributeError:
+            return super().get_events_tbody_element(soup)
 
     def get_hearing_date(self, hearing_tag) -> str:
         if hearing_tag is None:
             return ""
         date_tag = hearing_tag.parent.th
-        return date_tag.text
+        text = date_tag.text
+        return self.remove_whitespace(text)
 
     def get_hearing_tags(self, soup) -> List:
         """
@@ -731,7 +736,7 @@ class WilliamsonParser(BaseParser):
 
     def get_hearing_and_event_tags(self, soup) -> List:
         """
-        Returns <tr> elements in the Events and Hearings section of a CaseDetail document that represent a hearing record.
+        Returns <tr> elements in the Events and Hearings section representing a hearing record.
         """
         root = self.get_events_tbody_element(soup).parent
         hearing_tds = root.find_all(
@@ -754,16 +759,25 @@ class WilliamsonParser(BaseParser):
         return int(precinct_name[-1])
 
     def get_style(self, soup):
+        """Get name of the case."""
         tables = soup.find_all("table")
         elem = tables[4].tr.td.b
-        return elem.text
+        return self.remove_whitespace(elem.text)
+
+    def get_defendant_tag_for_service_tag(self, service_tag):
+        defendant_tag = service_tag.parent.parent.parent.parent.parent.td
+        if self.remove_whitespace(defendant_tag.text) != "Served":
+            return defendant_tag
+        return service_tag.parent.parent.parent.parent.parent.parent.parent.td
 
     def was_defendant_served(self, soup) -> Dict[str, str]:
         dates_of_service = {}
         served_tags = soup.find_all(text="Served")
         for service_tag in served_tags:
             date_tag = service_tag.parent.find_next_sibling("td")
-            defendant_tag = service_tag.parent.parent.parent.parent.parent.td
+            defendant_tag = self.get_defendant_tag_for_service_tag(
+                service_tag=service_tag
+            )
             defendant_name = self.remove_whitespace(defendant_tag.text)
-            dates_of_service[defendant_name] = date_tag.text
+            dates_of_service[defendant_name] = self.remove_whitespace(date_tag.text)
         return dates_of_service
