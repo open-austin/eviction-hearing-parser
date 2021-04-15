@@ -701,11 +701,6 @@ class WilliamsonParser(BaseParser):
         These are currently used as an anchor for most of the Party Info parsing.
         Sometimes the text of the element does not always say "Defendant", but may say something like "Defendant 2".
         """
-<<<<<<< HEAD
-        return soup.find_all("th", text=re.compile(r"^Defendant"))
-
-
-=======
         return soup.find_all("th", text=re.compile(r"^\s*Defendant"))
 
     def get_events_tbody_element(self, soup):
@@ -720,7 +715,6 @@ class WilliamsonParser(BaseParser):
             return tbody
         except AttributeError:
             return super().get_events_tbody_element(soup)
->>>>>>> add-open-austin
 
     def get_hearing_date(self, hearing_tag) -> str:
         if hearing_tag is None:
@@ -782,13 +776,9 @@ class WilliamsonParser(BaseParser):
         served_tags = soup.find_all(text="Served")
         for service_tag in served_tags:
             date_tag = service_tag.parent.find_next_sibling("td")
-<<<<<<< HEAD
-            defendant_tag = service_tag.parent.parent.parent.parent.parent.parent.parent.parent.td
-=======
             defendant_tag = self.get_defendant_tag_for_service_tag(
                 service_tag=service_tag
             )
->>>>>>> add-open-austin
             defendant_name = self.remove_whitespace(defendant_tag.text)
             dates_of_service[defendant_name] = self.remove_whitespace(date_tag.text)
         return dates_of_service
