@@ -61,7 +61,6 @@ class TestParseHTML:
         [
             (0, "1JC-21-0008"),
             (1, "1JC-21-0116"),
-            (0, "1JC-21-0008"),
         ],
     )
     def test_get_case_number(self, index, expected):

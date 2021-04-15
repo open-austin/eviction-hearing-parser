@@ -11,6 +11,7 @@ from statuses import statuses_map
 from fuzzywuzzy import fuzz
 from emailing import log_and_email
 import config
+import re 
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
