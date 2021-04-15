@@ -31,6 +31,8 @@ def get_ids_to_parse(infile: click.File) -> List[str]:
 def parse_all_from_parse_filings(
     case_nums: List[str],
     scraper: Optional[scrapers.TestScraper] = None,
+    db: bool = True,
+    county: str = "travis",
     showbrowser: bool = False,
 ) -> List[Dict[str, Any]]:
     """
@@ -38,11 +40,17 @@ def parse_all_from_parse_filings(
     Logs any case numbers for which getting data failed.
     """
     if not scraper:
-        scraper = scrapers.TravisScraper(headless=not showbrowser)
+        # Get the scraper corresponding to the lowercase command line entry for county. Default to TravisScraper.
+        county = county.lower()
+        scraper = (
+            scrapers.SCRAPER_NAMES[county]()
+            if county in scrapers.SCRAPER_NAMES
+            else scrapers.TravisScraper()
+        )
     parsed_cases = []
     for tries in range(1, 6):
         try:
-            parsed_cases = scraper.make_case_list(case_nums)
+            parsed_cases = scraper.make_case_list(ids_to_parse=case_nums)
             return parsed_cases
         except Exception as e:
             logger.error(
@@ -55,11 +63,11 @@ def persist_parsed_cases(cases: List[Dict[str, Any]]) -> None:
     import persist
 
     logger.info(
-        f"Finished making case list, now will send all {len(parsed_cases)} cases to SQL."
+        f"Finished making case list, now will send all {len(cases)} cases to SQL."
     )
 
     failed_cases = []
-    for parsed_case in parsed_cases:
+    for parsed_case in cases:
         try:
             persist.rest_case(parsed_case)
         except:
@@ -85,7 +93,8 @@ def persist_parsed_cases(cases: List[Dict[str, Any]]) -> None:
     "infile",
     type=click.File(mode="r"),
 )
-@click.option("--outfile", type=click.File(mode="w"), required=False)
+@click.argument("outfile", type=click.File(mode="w"), default="result.json")
+@click.argument("county", type=click.STRING, default="travis")
 @click.option(
     "--showbrowser / --headless",
     default=False,
@@ -96,9 +105,15 @@ def persist_parsed_cases(cases: List[Dict[str, Any]]) -> None:
     default=True,
     help="whether to persist the data to a db",
 )
+@click.option(
+    "--db / --no-db",
+    default=True,
+    help="whether to persist the data to a db",
+)
 def parse_all(
     infile: Optional[click.File],
     outfile: Optional[click.File],
+    county: Optional[click.STRING],
     showbrowser=False,
     db=True,
 ):
@@ -106,7 +121,7 @@ def parse_all(
 
     ids_to_parse = get_ids_to_parse(infile)
     parsed_cases = parse_all_from_parse_filings(
-        case_nums=ids_to_parse, showbrowser=showbrowser, db=db
+        case_nums=ids_to_parse, showbrowser=showbrowser, db=db, county=county
     )
     if db:
         persist_parsed_cases(parsed_cases)

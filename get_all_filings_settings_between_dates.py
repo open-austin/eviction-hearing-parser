@@ -79,7 +79,7 @@ def try_to_parse(
 
 def get_all_filings_settings_between_dates(
     start_date: date, end_date: date, county: str, showbrowser=bool
-):
+) -> List[str]:
     """
     Gets all filings and settings between `start_date` and `end_date` but splits it up by week.
 
@@ -91,7 +91,7 @@ def get_all_filings_settings_between_dates(
         f"Will get all filings and settings between {start_date} and {end_date}\n"
     )
 
-    failures = []
+    failures: List[str] = []
     scraper = scrapers.SCRAPER_NAMES[county](headless=not showbrowser)
     for week_start, week_end in weeks:
         msg = try_to_parse(week_start, week_end, 5, scraper=scraper)

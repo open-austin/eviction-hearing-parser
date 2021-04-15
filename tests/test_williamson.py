@@ -242,6 +242,7 @@ class TestParseHTML:
         "index, expected",
         [
             (0, Decimal("1451.61")),
+            (1, None),
             (2, Decimal("1451.61")),
         ],
     )
@@ -298,6 +299,7 @@ class TestParseHTML:
         "test_html_file_index, expected_comments",
         [
             (0, None),
+            (1, None),
             (2, None),
         ],
     )
@@ -310,6 +312,8 @@ class TestParseHTML:
         "test_html_file_index, expected_event_details",
         [
             (0, {}),
+            (1, {}),
+            (2, {}),
         ],
     )
     def test_get_writ(self, test_html_file_index, expected_event_details):
@@ -321,6 +325,7 @@ class TestParseHTML:
         "test_html_file_index, expected_event_details",
         [
             (0, {}),
+            (1, {}),
             (2, {}),
         ],
     )
@@ -335,6 +340,7 @@ class TestParseHTML:
         "test_html_file_index, expected_event_details",
         [
             (0, {}),
+            (1, {}),
             (2, {}),
         ],
     )
@@ -349,6 +355,7 @@ class TestParseHTML:
         "test_html_file_index, expected_event_details",
         [
             (0, {}),
+            (1, {}),
             (2, {}),
         ],
     )
@@ -363,6 +370,7 @@ class TestParseHTML:
         "test_html_file_index, expected_event_details",
         [
             (0, {}),
+            (1, {}),
             (2, {}),
         ],
     )
@@ -377,6 +385,7 @@ class TestParseHTML:
         "test_html_file_index, expected_attorneys",
         [
             (0, {}),
+            (1, {}),
             (2, {}),
         ],
     )
@@ -391,6 +400,7 @@ class TestParseHTML:
         "test_html_file_index, expected_attorneys",
         [
             (0, {}),
+            (1, {}),
             (2, {}),
         ],
     )
