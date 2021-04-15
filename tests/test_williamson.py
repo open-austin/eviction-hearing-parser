@@ -254,6 +254,7 @@ class TestParseHTML:
         "index, expected",
         [
             (0, "Realistic Fake Name"),
+            (1, ""),
             (2, "Unlikely Fake Name"),
         ],
     )
@@ -267,6 +268,7 @@ class TestParseHTML:
         "index, expected",
         [
             (0, "Alice Smith, et al"),
+            (1, ""),
             (2, "Alice Jones, et al"),
         ],
     )

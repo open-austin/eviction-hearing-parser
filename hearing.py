@@ -135,12 +135,12 @@ class BaseParser:
         Gets the "Awarded To" field of a disposition, if one exists.
         """
         if disposition_tr is None:
-            return None
+            return ""
 
         award_field = disposition_tr.find(text=re.compile(r"Awarded To:"))
 
         if award_field is None:
-            return None
+            return ""
 
         return award_field.next_sibling.text.strip()
 
@@ -149,12 +149,12 @@ class BaseParser:
         Gets the "Awarded Against" field of a disposition, if one exists.
         """
         if disposition_tr is None:
-            return None
+            return ""
 
         award_field = disposition_tr.find(text=re.compile(r"Awarded Against:"))
 
         if award_field is None:
-            return None
+            return ""
 
         return award_field.next_sibling.text.strip()
 
