@@ -20,8 +20,9 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
-            (0, "Twaddle, Josh"),
-            (1, "Nelson, Charlie A"),
+            (0, "Name, Realistic Fake"),
+            (1, "Fox, Michael A"),
+            (2, "Fake Name, Unlikely"),
         ],
     )
     def test_get_plaintiff(self, index, expected):
@@ -32,8 +33,9 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
-            (0, "Barron, Carlos; O'Neill, Kristin"),
-            (1, "McGlasson, Patrick"),
+            (0, "Smith, Alice; Jones, Beverly"),
+            (1, "McDuff, Donald"),
+            (2, "Jones, Alice; O'Oregon, Eve"),
         ],
     )
     def test_get_defendants(self, index, expected):
@@ -44,8 +46,9 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
-            (0, "Josh Twaddle\n vs. \nCarlos Barron,Kristin O'Neill"),            
-            (1, 'Charlie A Nelson\n vs. \nPatrick McGlasson'),
+            (0, "Realistic Fake Name vs. Alice Smith,Beverly Jones"),
+            (1, "Michael A Fox vs. Donald McDuff"),
+            (2, "Unlikely Fake Name vs. Alice Jones,Eve O'Oregon"),
         ],
     )
     def test_get_style(self, index, expected):
@@ -57,7 +60,7 @@ class TestParseHTML:
         "index, expected",
         [
             (0, "1JC-21-0008"),
-            (1, "1JC-21-0116")
+            (1, "1JC-21-0116"),
         ],
     )
     def test_get_case_number(self, index, expected):
@@ -70,6 +73,7 @@ class TestParseHTML:
         [
             (0, ""),
             (1, ""),
+            (2, ""),
         ],
     )
     def test_get_defendant_zip(self, index, expected):
@@ -82,6 +86,7 @@ class TestParseHTML:
         [
             (0, ""),
             (1, ""),
+            (2, ""),
         ],
     )
     def test_get_plaintiff_zip(self, index, expected):
@@ -94,6 +99,7 @@ class TestParseHTML:
         [
             (0, "(10:30 AM)"),
             (1, "(10:45 AM)"),
+            (2, "(10:30 AM)"),
         ],
     )
     def test_get_hearing_text(self, index, expected):
@@ -108,6 +114,7 @@ class TestParseHTML:
         [
             (0, "Non Military Affidavit"),
             (1, "Non Military Affidavit"),
+            (2, "Non Military Affidavit"),
         ],
     )
     def test_get_first_event(self, index, expected):
@@ -121,6 +128,7 @@ class TestParseHTML:
         [
             (0, "Musselman, KT"),
             (1, "Musselman, KT"),
+            (2, "Musselman, KT"),
         ],
     )
     def test_get_hearing_officer(self, index, expected):
@@ -135,6 +143,7 @@ class TestParseHTML:
         [
             (0, "10:30 AM"),
             (1, "10:45 AM"),
+            (2, "10:30 AM"),
         ],
     )
     def test_get_hearing_time(self, index, expected):
@@ -149,6 +158,7 @@ class TestParseHTML:
         [
             (0, "01/21/2021"),
             (1, "02/03/2021"),
+            (2, "01/21/2021"),
         ],
     )
     def test_get_hearing_date(self, index, expected):
@@ -163,6 +173,7 @@ class TestParseHTML:
         [
             (0, 1),
             (1, 1),
+            (2, 1),
         ],
     )
     def test_get_precinct_number(self, index, expected):
@@ -175,6 +186,7 @@ class TestParseHTML:
         [
             (0, 0, False),
             (1, 0, False),
+            (2, 0, False),
         ],
     )
     def test_defendant_appeared(self, index, hearing_index, expected):
@@ -187,9 +199,11 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, defendant, expected",
         [
-            (0, "Barron, Carlos", "01/11/2021"),
-            (0, "O'Neill, Kristin", "01/11/2021"),
-            (1, 'McGlasson, Patrick', "01/25/2021"),
+            (0, "Smith, Alice", "01/11/2021"),
+            (0, "Jones, Beverly", "01/11/2021"),
+            (1, "McDuff, Donald", "01/25/2021"),
+            (2, "Jones, Alice", "01/11/2021"),
+            (2, "O'Oregon, Eve", "01/11/2021"),
         ],
     )
     def test_defendant_served(self, index, defendant, expected):
@@ -202,6 +216,7 @@ class TestParseHTML:
         [
             (0, []),
             (1, []),
+            (2, []),
         ],
     )
     def test_alternative_service(self, index, expected):
@@ -214,6 +229,7 @@ class TestParseHTML:
         [
             (0, "01/21/2021"),
             (1, "02/02/2021"),
+            (2, "01/21/2021"),
         ],
     )
     def test_disposition_date(self, index, expected):
@@ -225,6 +241,7 @@ class TestParseHTML:
         "index, expected",
         [
             (0, Decimal("1451.61")),
+            (2, Decimal("1451.61")),
         ],
     )
     def test_disposition_amount(self, index, expected):
@@ -235,7 +252,8 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
-            (0, "Josh Twaddle"),
+            (0, "Realistic Fake Name"),
+            (2, "Unlikely Fake Name"),
         ],
     )
     def test_disposition_awarded_to(self, index, expected):
@@ -247,7 +265,8 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
-            (0, "Carlos Barron, et al"),
+            (0, "Alice Smith, et al"),
+            (2, "Alice Jones, et al"),
         ],
     )
     def test_disposition_awarded_against(self, index, expected):
@@ -260,6 +279,7 @@ class TestParseHTML:
         "index, expected",
         [
             (0, "Judgment"),
+            (2, "Judgment"),
         ],
     )
     def test_disposition_type(self, index, expected):
@@ -275,6 +295,7 @@ class TestParseHTML:
         "test_html_file_index, expected_comments",
         [
             (0, None),
+            (2, None),
         ],
     )
     def test_comments(self, test_html_file_index, expected_comments):
@@ -297,6 +318,7 @@ class TestParseHTML:
         "test_html_file_index, expected_event_details",
         [
             (0, {}),
+            (2, {}),
         ],
     )
     def test_get_writ_of_possession_service(
@@ -310,6 +332,7 @@ class TestParseHTML:
         "test_html_file_index, expected_event_details",
         [
             (0, {}),
+            (2, {}),
         ],
     )
     def test_get_writ_of_possession_requested(
@@ -323,6 +346,7 @@ class TestParseHTML:
         "test_html_file_index, expected_event_details",
         [
             (0, {}),
+            (2, {}),
         ],
     )
     def test_get_writ_of_possession_sent_to_constable(
@@ -336,6 +360,7 @@ class TestParseHTML:
         "test_html_file_index, expected_event_details",
         [
             (0, {}),
+            (2, {}),
         ],
     )
     def test_get_writ_returned_to_court(
@@ -349,6 +374,7 @@ class TestParseHTML:
         "test_html_file_index, expected_attorneys",
         [
             (0, {}),
+            (2, {}),
         ],
     )
     def test_get_attorneys_for_defendants(
@@ -362,6 +388,7 @@ class TestParseHTML:
         "test_html_file_index, expected_attorneys",
         [
             (0, {}),
+            (2, {}),
         ],
     )
     def test_get_attorneys_for_plaintiffs(
@@ -374,8 +401,9 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, plaintiff, disposition_date",
         [
-            (0, "Twaddle, Josh", "01/21/2021"),
-           (1, "Nelson, Charlie A", "02/02/2021"),
+            (0, "Name, Realistic Fake", "01/21/2021"),
+            (1, "Fox, Michael A", "02/02/2021"),
+            (2, "Fake Name, Unlikely", "01/21/2021"),
         ],
     )
     def test_make_parsed_case(self, test_html_file_index, plaintiff, disposition_date):
