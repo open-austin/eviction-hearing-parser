@@ -115,7 +115,7 @@ class TestParseHTML:
         assert expected == hearing_date
 
     @pytest.mark.parametrize(
-        "index, expected", [(0, 1),],
+        "index, expected", [(0, 1.1),],
     )
     def test_get_precinct_number(self, index, expected):
         soup = load_pages.get_test_soup(index, county)
@@ -139,7 +139,7 @@ class TestParseHTML:
     def test_defendant_served(self, index, defendant, expected):
         soup = load_pages.get_test_soup(index, county)
         served = Hays.was_defendant_served(soup)
-        assert served.get(defendant) == expected
+        assert expected==served
 
     @pytest.mark.parametrize(
         "index, expected", [(0, []),],
@@ -272,11 +272,60 @@ class TestParseHTML:
         assert attorneys == expected_attorneys
 
     @pytest.mark.parametrize(
-        "test_html_file_index, plaintiff, disposition_date",
-        [(0, "Name1 Name2, Fake1 Fake2", "02/12/2021"),],
+        "test_html_file_index, plaintiff, disposition_date, address,race,gender",
+        [(0, 
+         "CastleRock at San Marcos", 
+         "02/12/2021",
+         "1234 Fake St. San Marcos, TX 78666",
+         "White",
+         "Male"),
+        ],
     )
-    def test_make_parsed_case(self, test_html_file_index, plaintiff, disposition_date):
+    def test_make_parsed_case(self, test_html_file_index, plaintiff, disposition_date,address,race,gender):
         soup = load_pages.get_test_soup(test_html_file_index, county)
         parsed_case = Hays.make_parsed_case(soup=soup)
+        
         assert parsed_case["plaintiff"] == plaintiff
         assert parsed_case["disposition_date"] == disposition_date
+        assert parsed_case["address"] == address
+        assert parsed_case["race"] == race
+        assert parsed_case["gender"] == gender
+
+    @pytest.mark.parametrize(
+        "test_html_file_index, expected_address", 
+        [(0, "1234 Fake St. San Marcos, TX 78666"),],
+    )
+    def test_get_defendant_address(
+        self, test_html_file_index, expected_address
+    ):
+        soup = load_pages.get_test_soup(test_html_file_index, county)
+        address = Hays.get_defendant_address(soup)
+        assert address == expected_address
+    
+    @pytest.mark.parametrize(
+        "test_html_file_index, expected_race", 
+        [(0, "White"),],
+    )
+    def test_get_defendant_race(
+        self, test_html_file_index, expected_race
+    ):
+        soup = load_pages.get_test_soup(
+            test_html_file_index, county
+        )
+        race = Hays.get_defendant_race(soup)
+        assert race == expected_race
+
+    @pytest.mark.parametrize(
+        "test_html_file_index, expected_gender", 
+        [(0, "Male"),],
+    )
+    def test_get_defendant_gender(
+        self, test_html_file_index, expected_gender
+    ):
+        soup = load_pages.get_test_soup(
+            test_html_file_index, county
+        )
+        gender = Hays.get_defendant_gender(soup)
+        assert gender == expected_gender
+
+
