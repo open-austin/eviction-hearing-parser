@@ -1,8 +1,6 @@
 from decimal import Decimal
 
-import numpy
 import pytest
-from textwrap import wrap
 
 from hearing import BaseParser
 import load_pages

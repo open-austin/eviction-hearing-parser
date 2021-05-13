@@ -791,7 +791,7 @@ class HaysParser(BaseParser):
         """Helper function to get defendant info tags"""
         def_info_tags = soup.find_all(
             "td",
-            headers=re.compile("\s*PIr01\s*PIr11")
+            headers=re.compile(r"\s*PIr01\s*PIr11")
         )
         return def_info_tags
 
