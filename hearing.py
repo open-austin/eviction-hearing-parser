@@ -10,8 +10,6 @@ import logging
 from statuses import statuses_map
 from fuzzywuzzy import fuzz
 from emailing import log_and_email
-import config
-import re 
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -31,7 +29,7 @@ class BaseParser:
         Gets the plaintiff HTML elements from a CaseDetail.
         These are currently used as an anchor for most of the Party Info parsing.
         """
-        return soup.find_all("th", text="Plaintiff")
+        return soup.find_all("th", text=re.compile(r"Plaintiff"))
 
     def get_defendant_elements(self, soup):
         """
@@ -57,9 +55,7 @@ class BaseParser:
 
         return element.get("id")
 
-    def get_attorneys_for_party(
-        self, soup: BeautifulSoup, party_elements
-    ) -> Dict[str, List[str]]:
+    def get_attorneys_for_party(self, soup: BeautifulSoup, party_elements) -> Dict[str, List[str]]:
         """Get the attorney(s) for a party."""
         attorneys: Dict[str, List[str]] = dict()
         attorneys_header_id = self.get_attorneys_header_id(soup)
@@ -193,9 +189,7 @@ class BaseParser:
         hearing_or_event_ths = root.find_all(
             "th", id=lambda id_str: id_str is not None and id_str.startswith("RCD")
         )
-        hearing_or_event_trs = [
-            hearing_th.parent for hearing_th in hearing_or_event_ths
-        ]
+        hearing_or_event_trs = [hearing_th.parent for hearing_th in hearing_or_event_ths]
 
         return hearing_or_event_trs or []
 
@@ -303,9 +297,7 @@ class BaseParser:
         else:
             return None
 
-    def get_case_event_date_basic(
-        self, soup: BeautifulSoup, event_name: str
-    ) -> Optional[str]:
+    def get_case_event_date_basic(self, soup: BeautifulSoup, event_name: str) -> Optional[str]:
         """Get date for case event entries that only include event name."""
         case_event_date: Optional[str] = None
 
@@ -314,9 +306,7 @@ class BaseParser:
         if event_label:
             try:
                 case_event_tr = event_label.parent.parent
-                case_event_date = case_event_tr.find(
-                    "th", class_="ssTableHeaderLabel"
-                ).text
+                case_event_date = case_event_tr.find("th", class_="ssTableHeaderLabel").text
             except AttributeError:
                 pass
 
@@ -334,9 +324,7 @@ class BaseParser:
         event_tr = event_label.parent.parent.parent.parent.parent.parent
 
         try:
-            event_details["case_event_date"] = event_tr.find(
-                "th", class_="ssTableHeaderLabel"
-            ).text
+            event_details["case_event_date"] = event_tr.find("th", class_="ssTableHeaderLabel").text
         except AttributeError:
             pass
 
@@ -350,18 +338,14 @@ class BaseParser:
             try:
                 event_details[
                     "served_subject"
-                ] = served_td.parent.parent.parent.parent.find_previous_sibling(
-                    "td"
-                ).text
+                ] = served_td.parent.parent.parent.parent.find_previous_sibling("td").text
             except AttributeError:
                 pass
 
         returned_td = event_tr.find("td", text="Returned")
         if returned_td:
             try:
-                event_details["returned_date"] = returned_td.find_next_sibling(
-                    "td"
-                ).text
+                event_details["returned_date"] = returned_td.find_next_sibling("td").text
             except AttributeError:
                 pass
 
@@ -381,17 +365,13 @@ class BaseParser:
         """Get details for the "Writ of Possession Requested" case event."""
         event_details: Dict[str, str] = {}
 
-        event_date = self.get_case_event_date_basic(
-            soup, "Writ of Possession Requested"
-        )
+        event_date = self.get_case_event_date_basic(soup, "Writ of Possession Requested")
         if event_date:
             event_details["case_event_date"] = event_date
 
         return event_details
 
-    def get_writ_of_possession_sent_to_constable(
-        self, soup: BeautifulSoup
-    ) -> Dict[str, str]:
+    def get_writ_of_possession_sent_to_constable(self, soup: BeautifulSoup) -> Dict[str, str]:
         """Get details for the "Writ of Possession Sent to Constable's Office" case event."""
         event_details: Dict[str, str] = {}
 
@@ -430,10 +410,8 @@ class BaseParser:
         served_tags = soup.find_all(text="Served")
         for service_tag in served_tags:
             date_tag = service_tag.parent.find_next_sibling("td")
-            defendant_tag = (
-                service_tag.parent.parent.parent.parent.parent.find_previous_sibling(
-                    "td"
-                )
+            defendant_tag = service_tag.parent.parent.parent.parent.parent.find_previous_sibling(
+                "td"
             )
             dates_of_service[defendant_tag.text] = date_tag.text
 
@@ -533,9 +511,7 @@ class BaseParser:
         ):  # awarded_to and awarded_against will always be not None together
             #  dj = fuzz.partial_ratio(awarded_to.upper(),defendant.upper())
             #  pj = fuzz.partial_ratio(awarded_to.upper(),plaintiff.upper())
-            pj, dj = self.match_wordwise(
-                awarded_to.upper(), plaintiff.upper(), defendant.upper()
-            )
+            pj, dj = self.match_wordwise(awarded_to.upper(), plaintiff.upper(), defendant.upper())
             if pj > dj:
                 return (pj, "Plaintiff")
             elif dj > pj:
@@ -574,8 +550,7 @@ class BaseParser:
         return (
             "Y"
             if (
-                (disposition_date >= march_14)
-                and (statuses_map[substatus]["status"] == "Judgment")
+                (disposition_date >= march_14) and (statuses_map[substatus]["status"] == "Judgment")
             )
             else "N"
         )
@@ -630,9 +605,7 @@ class BaseParser:
             "style": style,
             "plaintiff": plaintiff,
             "active_or_inactive": self.active_or_inactive(status),
-            "judgment_after_moratorium": self.judgment_after_moratorium(
-                disposition_date, status
-            ),
+            "judgment_after_moratorium": self.judgment_after_moratorium(disposition_date, status),
             "defendants": self.get_defendants(soup),
             "attorneys_for_plaintiffs": ", ".join(
                 [a for a in self.get_attorneys_for_plaintiffs(soup)]
@@ -644,8 +617,7 @@ class BaseParser:
             "defendant_zip": defendant_zip,
             "plaintiff_zip": plaintiff_zip,
             "hearings": [
-                self.make_parsed_hearing(hearing)
-                for hearing in self.get_hearing_tags(soup)
+                self.make_parsed_hearing(hearing) for hearing in self.get_hearing_tags(soup)
             ],
             "status": status,
             "type": type,
@@ -660,14 +632,10 @@ class BaseParser:
             "disposition_awarded_to": self.get_disposition_awarded_to(disposition_tr)
             if self.get_disposition_awarded_to(disposition_tr) is not None
             else "",
-            "disposition_awarded_against": self.get_disposition_awarded_against(
-                disposition_tr
-            )
+            "disposition_awarded_against": self.get_disposition_awarded_against(disposition_tr)
             if self.get_disposition_awarded_against(disposition_tr) is not None
             else "",
-            "comments": self.get_comments(soup)
-            if self.get_comments(soup) is not None
-            else "",
+            "comments": self.get_comments(soup) if self.get_comments(soup) is not None else "",
             "writ": self.get_writ(soup),
             "writ_of_possession_service": self.get_writ_of_possession_service(soup),
             "writ_of_possession_requested": self.get_writ_of_possession_requested(soup),
@@ -680,103 +648,67 @@ class BaseParser:
             "date_filed": self.get_date_filed(soup),
         }
 
+
 class HaysParser(BaseParser):
-    def get_plaintiff_elements(self, soup):
-        """
-        Gets the plaintiff HTML elements from a CaseDetail.
-        These are currently used as an anchor for 
-        most of the Party Info parsing.
-        """
-        return soup.find_all("th", 
-                            text=re.compile(r"Plaintiff")
-                            )
-
-
     def get_defendant_elements(self, soup):
         """
         Gets the defendant HTML elements from a CaseDetail.
         These are currently used as an anchor for most of the Party Info parsing.
         Sometimes the text of the element does not always say "Defendant", but may say something like "Defendant 2".
         """
-        return soup.find_all("th", 
-                            text=re.compile(r"Defendant")
-                            )
-    
-    #why are we storing this in a dictionary?  
+        return soup.find_all("th", text=re.compile(r"Defendant"))
+
+    # why are we storing this in a dictionary?
     def was_defendant_served(self, soup) -> Dict[str, str]:
         dates_of_service = {}
         served_tags = soup.find_all(text="Served")
         if served_tags is not None:
-            #first one is gonna be the served one?
+            # first one is gonna be the served one?
             service_tag = served_tags[0]
-            date_tag = (
-                service_tag
-                .parent.find_next_sibling("td")
-            )
+            date_tag = service_tag.parent.find_next_sibling("td")
             return date_tag.text
         else:
             return served_tags
 
-
-#not sure if every defendant is a link create other test pages
+    # not sure if every defendant is a link create other test pages
     def get_defendants(self, soup):
         """Defendants will sometimes be link text"""
         defendants = []
         for tag in self.get_defendant_elements(soup):
-            name_elem = (tag
-                         .find_next_sibling("th")
-                         .findChild("a",recursive=False)
-                        )
+            name_elem = tag.find_next_sibling("th").findChild("a", recursive=False)
             defendants.append(name_elem.string)
         together = "; ".join(defendants)
         return together
-
 
     def get_style(self, soup):
         tables = soup.find_all("table")
         elem = tables[4].tr.td.b
         return elem.text
-    
 
     def get_precinct_number(self, soup) -> int:
-        location_heading = soup.find(
-            text=re.compile("Location:")
-        ).parent
-        precinct_name = (location_heading
-                         .find_next_sibling("td")
-                         .text
-                        )
-        precinct_name = float(precinct_name[2:]) #get rid of JP
+        location_heading = soup.find(text=re.compile("Location:")).parent
+        precinct_name = location_heading.find_next_sibling("td").text
+        precinct_name = float(precinct_name[2:])  # get rid of JP
         return precinct_name
-        
+
     def get_disposition_amt_node(self, soup) -> BeautifulSoup:
         try:
             return soup.find("th", id="")
         except:
             return None
 
-    def get_disposition_amount(
-        self, soup
-    ) -> Optional[Decimal]:
+    def get_disposition_amount(self, soup) -> Optional[Decimal]:
         """get the disposition amount for hays county"""
         amt_tags = soup.find_all("i")
         for tag in amt_tags:
             if tag.text.startswith("amt"):
-                amount = int(float(
-                    tag
-                    .text
-                    .replace("amt ","") 
-                    .replace("$","")
-                    .replace(",","")
-                ))
+                amount = int(float(tag.text.replace("amt ", "").replace("$", "").replace(",", "")))
                 return amount
-        return None 
-                    
-    def get_attorneys_header_id(
-        self, soup: BeautifulSoup
-    ) -> Optional[str]:
+        return None
+
+    def get_attorneys_header_id(self, soup: BeautifulSoup) -> Optional[str]:
         """
-        Get the HTML ID attribute for the 
+        Get the HTML ID attribute for the
         "Lead Attorneys" column header.
         """
         element = soup.find("th", text="Lead Attorneys")
@@ -785,63 +717,33 @@ class HaysParser(BaseParser):
 
         return element.get("id")
 
-    def get_defendant_info_tags(
-        self, soup: BeautifulSoup
-    ):
+    def get_defendant_info_tags(self, soup: BeautifulSoup):
         """Helper function to get defendant info tags"""
-        def_info_tags = soup.find_all(
-            "td",
-            headers=re.compile(r"\s*PIr01\s*PIr11")
-        )
+        def_info_tags = soup.find_all("td", headers=re.compile(r"\s*PIr01\s*PIr11"))
         return def_info_tags
 
-    def get_defendant_address(
-        self, soup: BeautifulSoup
-    ) -> Optional[str]:
+    def get_defendant_address(self, soup: BeautifulSoup) -> Optional[str]:
         """Get address for defendant"""
         def_info_tag = self.get_defendant_info_tags(soup)[2]
-        address = (
-            def_info_tag
-            .text
-            .split("\xa0\xa0")
-        )
+        address = def_info_tag.text.split("\xa0\xa0")
         # only take 1st element will it always have a leading " " (actually a \xa0)?
-        address = (
-            " ".join(address[1:])
-            .split(" SID")[0]#no SID info if its in there
-        )
+        address = " ".join(address[1:]).split(" SID")[0]  # no SID info if its in there
         return address
 
-    
-    def get_defendant_race_gender(
-        self, soup: BeautifulSoup
-    ):
+    def get_defendant_race_gender(self, soup: BeautifulSoup):
         """Get race and gender info for defendant"""
         def_info_tag = self.get_defendant_info_tags(soup)[0]
-        race_gender = (
-            def_info_tag
-            .text
-            .split("\n")[0]
-        )
-        
-        return race_gender.split(" ") 
+        race_gender = def_info_tag.text.split("\n")[0]
 
-    
-    def get_defendant_race(
-        self, soup: BeautifulSoup
-    ) -> Optional[str]:
-        race = " ".join(
-            self.get_defendant_race_gender(soup)[1:]
-        )
+        return race_gender.split(" ")
+
+    def get_defendant_race(self, soup: BeautifulSoup) -> Optional[str]:
+        race = " ".join(self.get_defendant_race_gender(soup)[1:])
         return race
-   
- 
-    def get_defendant_gender(
-        self, soup: BeautifulSoup
-    ) -> Optional[str]:
+
+    def get_defendant_gender(self, soup: BeautifulSoup) -> Optional[str]:
         gender = self.get_defendant_race_gender(soup)[0]
         return gender
-
 
     def make_parsed_case(
         self, soup, status: str = "", type: str = "", register_url: str = ""
@@ -887,17 +789,17 @@ class HaysParser(BaseParser):
             print(e)
             score, winner = None, None
 
-        disposition_date = self.get_disposition_date(disposition_tr)  
+        disposition_date = self.get_disposition_date(disposition_tr)
         try:
             address = self.get_defendant_address(soup)
         except:
             adress = None
-        
+
         try:
             race = self.get_defendant_race(soup)
         except:
             race = None
-        
+
         try:
             gender = self.get_defendant_gender(soup)
         except:
@@ -908,9 +810,7 @@ class HaysParser(BaseParser):
             "style": style,
             "plaintiff": plaintiff,
             "active_or_inactive": self.active_or_inactive(status),
-            "judgment_after_moratorium": self.judgment_after_moratorium(
-                disposition_date, status
-            ),
+            "judgment_after_moratorium": self.judgment_after_moratorium(disposition_date, status),
             "defendants": self.get_defendants(soup),
             "attorneys_for_plaintiffs": ", ".join(
                 [a for a in self.get_attorneys_for_plaintiffs(soup)]
@@ -922,8 +822,7 @@ class HaysParser(BaseParser):
             "defendant_zip": defendant_zip,
             "plaintiff_zip": plaintiff_zip,
             "hearings": [
-                self.make_parsed_hearing(hearing)
-                for hearing in self.get_hearing_tags(soup)
+                self.make_parsed_hearing(hearing) for hearing in self.get_hearing_tags(soup)
             ],
             "status": status,
             "type": type,
@@ -938,14 +837,10 @@ class HaysParser(BaseParser):
             "disposition_awarded_to": self.get_disposition_awarded_to(disposition_tr)
             if self.get_disposition_awarded_to(disposition_tr) is not None
             else "",
-            "disposition_awarded_against": self.get_disposition_awarded_against(
-                disposition_tr
-            )
+            "disposition_awarded_against": self.get_disposition_awarded_against(disposition_tr)
             if self.get_disposition_awarded_against(disposition_tr) is not None
             else "",
-            "comments": self.get_comments(soup)
-            if self.get_comments(soup) is not None
-            else "",
+            "comments": self.get_comments(soup) if self.get_comments(soup) is not None else "",
             "writ": self.get_writ(soup),
             "writ_of_possession_service": self.get_writ_of_possession_service(soup),
             "writ_of_possession_requested": self.get_writ_of_possession_requested(soup),
@@ -957,9 +852,10 @@ class HaysParser(BaseParser):
             "match_score": score if score is not None else "",
             "date_filed": self.get_date_filed(soup),
             "address": address,
-            "race":race,
-            "gender":gender
+            "race": race,
+            "gender": gender,
         }
+
 
 class WilliamsonParser(BaseParser):
     def get_all_text_from_hearing_tag(self, hearing_tag) -> str:
@@ -1027,13 +923,6 @@ class WilliamsonParser(BaseParser):
 
         return hearing_tds or []
 
-    def get_plaintiff_elements(self, soup):
-        """
-        Gets the plaintiff HTML elements from a CaseDetail.
-        These are currently used as an anchor for most of the Party Info parsing.
-        """
-        return soup.find_all("th", text=re.compile("Plaintiff"))
-
     def get_precinct_number(self, soup) -> int:
         location_heading = soup.find(text="Location:").parent
         precinct_name = location_heading.find_next_sibling("td").text
@@ -1056,9 +945,7 @@ class WilliamsonParser(BaseParser):
         served_tags = soup.find_all(text="Served")
         for service_tag in served_tags:
             date_tag = service_tag.parent.find_next_sibling("td")
-            defendant_tag = self.get_defendant_tag_for_service_tag(
-                service_tag=service_tag
-            )
+            defendant_tag = self.get_defendant_tag_for_service_tag(service_tag=service_tag)
             defendant_name = self.remove_whitespace(defendant_tag.text)
             dates_of_service[defendant_name] = self.remove_whitespace(date_tag.text)
         return dates_of_service
