@@ -680,6 +680,286 @@ class BaseParser:
             "date_filed": self.get_date_filed(soup),
         }
 
+class HaysParser(BaseParser):
+    def get_plaintiff_elements(self, soup):
+        """
+        Gets the plaintiff HTML elements from a CaseDetail.
+        These are currently used as an anchor for 
+        most of the Party Info parsing.
+        """
+        return soup.find_all("th", 
+                            text=re.compile(r"Plaintiff")
+                            )
+
+
+    def get_defendant_elements(self, soup):
+        """
+        Gets the defendant HTML elements from a CaseDetail.
+        These are currently used as an anchor for most of the Party Info parsing.
+        Sometimes the text of the element does not always say "Defendant", but may say something like "Defendant 2".
+        """
+        return soup.find_all("th", 
+                            text=re.compile(r"Defendant")
+                            )
+    
+    #why are we storing this in a dictionary?  
+    def was_defendant_served(self, soup) -> Dict[str, str]:
+        dates_of_service = {}
+        served_tags = soup.find_all(text="Served")
+        if served_tags is not None:
+            #first one is gonna be the served one?
+            service_tag = served_tags[0]
+            date_tag = (
+                service_tag
+                .parent.find_next_sibling("td")
+            )
+            return date_tag.text
+        else:
+            return served_tags
+
+
+#not sure if every defendant is a link create other test pages
+    def get_defendants(self, soup):
+        """Defendants will sometimes be link text"""
+        defendants = []
+        for tag in self.get_defendant_elements(soup):
+            name_elem = (tag
+                         .find_next_sibling("th")
+                         .findChild("a",recursive=False)
+                        )
+            defendants.append(name_elem.string)
+        together = "; ".join(defendants)
+        return together
+
+
+    def get_style(self, soup):
+        tables = soup.find_all("table")
+        elem = tables[4].tr.td.b
+        return elem.text
+    
+
+    def get_precinct_number(self, soup) -> int:
+        location_heading = soup.find(
+            text=re.compile("Location:")
+        ).parent
+        precinct_name = (location_heading
+                         .find_next_sibling("td")
+                         .text
+                        )
+        precinct_name = float(precinct_name[2:]) #get rid of JP
+        return precinct_name
+        
+    def get_disposition_amt_node(self, soup) -> BeautifulSoup:
+        try:
+            return soup.find("th", id="")
+        except:
+            return None
+
+    def get_disposition_amount(
+        self, soup
+    ) -> Optional[Decimal]:
+        """get the disposition amount for hays county"""
+        amt_tags = soup.find_all("i")
+        for tag in amt_tags:
+            if tag.text.startswith("amt"):
+                amount = int(float(
+                    tag
+                    .text
+                    .replace("amt ","") 
+                    .replace("$","")
+                    .replace(",","")
+                ))
+                return amount
+        return None 
+                    
+    def get_attorneys_header_id(
+        self, soup: BeautifulSoup
+    ) -> Optional[str]:
+        """
+        Get the HTML ID attribute for the 
+        "Lead Attorneys" column header.
+        """
+        element = soup.find("th", text="Lead Attorneys")
+        if not element:
+            return None
+
+        return element.get("id")
+
+    def get_defendant_info_tags(
+        self, soup: BeautifulSoup
+    ):
+        """Helper function to get defendant info tags"""
+        def_info_tags = soup.find_all(
+            "td",
+            headers=re.compile("\s*PIr01\s*PIr11")
+        )
+        return def_info_tags
+
+    def get_defendant_address(
+        self, soup: BeautifulSoup
+    ) -> Optional[str]:
+        """Get address for defendant"""
+        def_info_tag = self.get_defendant_info_tags(soup)[2]
+        address = (
+            def_info_tag
+            .text
+            .split("\xa0\xa0")
+        )
+        # only take 1st element will it always have a leading " " (actually a \xa0)?
+        address = (
+            " ".join(address[1:])
+            .split(" SID")[0]#no SID info if its in there
+        )
+        return address
+
+    
+    def get_defendant_race_gender(
+        self, soup: BeautifulSoup
+    ):
+        """Get race and gender info for defendant"""
+        def_info_tag = self.get_defendant_info_tags(soup)[0]
+        race_gender = (
+            def_info_tag
+            .text
+            .split("\n")[0]
+        )
+        
+        return race_gender.split(" ") 
+
+    
+    def get_defendant_race(
+        self, soup: BeautifulSoup
+    ) -> Optional[str]:
+        race = " ".join(
+            self.get_defendant_race_gender(soup)[1:]
+        )
+        return race
+   
+ 
+    def get_defendant_gender(
+        self, soup: BeautifulSoup
+    ) -> Optional[str]:
+        gender = self.get_defendant_race_gender(soup)[0]
+        return gender
+
+
+    def make_parsed_case(
+        self, soup, status: str = "", type: str = "", register_url: str = ""
+    ) -> Dict[str, str]:
+        # TODO handle multiple defendants/plaintiffs with different zips
+        disposition_tr = self.get_disposition_tr_element(soup)
+
+        try:
+            defendant_zip = self.get_zip(self.get_defendant_elements(soup)[0])
+        except:
+            defendant_zip = None
+
+        try:
+            style = self.get_style(soup)
+        except:
+            style = None
+
+        try:
+            plaintiff = self.get_plaintiff(soup)
+        except:
+            plaintiff = None
+
+        try:
+            plaintiff_zip = self.get_zip(self.get_plaintiff_elements(soup)[0])
+        except:
+            plaintiff_zip = None
+
+        try:
+            disp_type = self.get_disposition_type(disposition_tr)
+        except:
+            disp_type = None
+
+        try:
+            score, winner = self.match_disposition(
+                self.get_disposition_awarded_against(disposition_tr),
+                self.get_disposition_awarded_to(disposition_tr),
+                plaintiff,
+                self.get_defendants(soup),
+                disp_type,
+                status,
+            )
+        except Exception as e:
+            print(e)
+            score, winner = None, None
+
+        disposition_date = self.get_disposition_date(disposition_tr)  
+        try:
+            address = self.get_defendant_address(soup)
+        except:
+            adress = None
+        
+        try:
+            race = self.get_defendant_race(soup)
+        except:
+            race = None
+        
+        try:
+            gender = self.get_defendant_gender(soup)
+        except:
+            gender = None
+
+        return {
+            "precinct_number": self.get_precinct_number(soup),
+            "style": style,
+            "plaintiff": plaintiff,
+            "active_or_inactive": self.active_or_inactive(status),
+            "judgment_after_moratorium": self.judgment_after_moratorium(
+                disposition_date, status
+            ),
+            "defendants": self.get_defendants(soup),
+            "attorneys_for_plaintiffs": ", ".join(
+                [a for a in self.get_attorneys_for_plaintiffs(soup)]
+            ),
+            "attorneys_for_defendants": ", ".join(
+                [a for a in self.get_attorneys_for_defendants(soup)]
+            ),
+            "case_number": self.get_case_number(soup),
+            "defendant_zip": defendant_zip,
+            "plaintiff_zip": plaintiff_zip,
+            "hearings": [
+                self.make_parsed_hearing(hearing)
+                for hearing in self.get_hearing_tags(soup)
+            ],
+            "status": status,
+            "type": type,
+            "register_url": register_url,
+            "disposition_type": self.get_disposition_type(disposition_tr)
+            if disp_type is not None
+            else "",
+            "disposition_amount": self.get_disposition_amount(disposition_tr)
+            if disposition_tr is not None
+            else "",
+            "disposition_date": disposition_date if disposition_tr is not None else "",
+            "disposition_awarded_to": self.get_disposition_awarded_to(disposition_tr)
+            if self.get_disposition_awarded_to(disposition_tr) is not None
+            else "",
+            "disposition_awarded_against": self.get_disposition_awarded_against(
+                disposition_tr
+            )
+            if self.get_disposition_awarded_against(disposition_tr) is not None
+            else "",
+            "comments": self.get_comments(soup)
+            if self.get_comments(soup) is not None
+            else "",
+            "writ": self.get_writ(soup),
+            "writ_of_possession_service": self.get_writ_of_possession_service(soup),
+            "writ_of_possession_requested": self.get_writ_of_possession_requested(soup),
+            "writ_of_possession_sent_to_constable_office": self.get_writ_of_possession_sent_to_constable(
+                soup
+            ),
+            "writ_returned_to_court": self.get_writ_returned_to_court(soup),
+            "judgement_for": winner if winner is not None else "",
+            "match_score": score if score is not None else "",
+            "date_filed": self.get_date_filed(soup),
+            "address": address,
+            "race":race,
+            "gender":gender
+        }
 
 class WilliamsonParser(BaseParser):
     def get_all_text_from_hearing_tag(self, hearing_tag) -> str:
