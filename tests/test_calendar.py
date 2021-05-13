@@ -4,7 +4,7 @@ import pytest
 
 import calendars
 import load_pages
-from scrapers import TestScraper
+from scrapers import FakeScraper
 
 
 class TestParseCalendar:
@@ -14,12 +14,12 @@ class TestParseCalendar:
         assert settings[0]["setting_style"].startswith("ALIASED")
 
     def test_fetch_settings(self):
-        scraper = TestScraper()
+        scraper = FakeScraper()
         settings = scraper.make_setting_list(days_to_pull=[date(2015, 10, 21)])
         assert any(case["case_number"] == "J1-CV-20-002326" for case in settings)
 
     def test_make_calendar_queries(self):
-        scraper = TestScraper()
+        scraper = FakeScraper()
         queries = list(
             scraper.calendar_queries(
                 afterdate=date(2019, 12, 1), beforedate=date(2020, 1, 10)

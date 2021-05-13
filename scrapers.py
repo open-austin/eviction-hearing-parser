@@ -34,7 +34,7 @@ class CalendarQuery(NamedTuple):
     prefix: str
 
 
-class TestScraper:
+class FakeScraper:
     def __init__(self, headless: bool = True) -> None:
         self.homepage = "will not access web"
 
@@ -148,7 +148,7 @@ class TestScraper:
     def query_case_id(self, case_id: str) -> Tuple[BeautifulSoup, BeautifulSoup]:
         if case_id != "J1-CV-20-001590":
             raise ValueError(
-                "The testing-only TestScraper can only take the Case ID J1-CV-20-001590. "
+                "The testing-only FakeScraper can only take the Case ID J1-CV-20-001590. "
                 "To avoid this error use a scraper class named after a county, e.g. 'TravisScraper'"
             )
         search_page = load_pages.get_test_search_page(0)
@@ -159,7 +159,7 @@ class TestScraper:
         """Return fake setting list for testing."""
         if afterdate != datetime.date(2015, 10, 21):
             raise ValueError(
-                "To prevent confusion between real and fake data, TestScraper "
+                "To prevent confusion between real and fake data, FakeScraper "
                 "only works with date ranges "
                 "that begin on 2015-10-21. To make real queries, use a scraper named "
                 "for the county you want, such as 'TravisScraper'."
@@ -172,7 +172,7 @@ class TestScraper:
         return ["J1-CV-20-001590"]
 
 
-class TravisScraper(TestScraper):
+class TravisScraper(FakeScraper):
     def __init__(self, headless: bool = True) -> None:
         super().__init__()
         self.homepage = (
@@ -507,10 +507,8 @@ class WilliamsonScraper(TravisScraper):
         )
 
 
-
-
 SCRAPER_NAMES = {
-    "test": TestScraper,
+    "test": FakeScraper,
     "travis": TravisScraper,
     "williamson": WilliamsonScraper,
     "wilco": WilliamsonScraper,

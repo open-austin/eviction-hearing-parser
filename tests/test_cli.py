@@ -1,10 +1,10 @@
 from datetime import date
 
-from scrapers import TestScraper
+from scrapers import FakeScraper
 import parse_hearings
 import get_all_filings_settings_between_dates as filings_settings
 
-FAKE_SCRAPER = TestScraper()
+FAKE_SCRAPER = FakeScraper()
 
 
 class TestCLI:

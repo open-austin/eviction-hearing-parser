@@ -24,7 +24,7 @@ def parse_filings_on_cloud(
     beforedate: datetime.date,
     get_old_active=True,
     showbrowser=False,
-    scraper: Optional[scrapers.TestScraper] = None,
+    scraper: Optional[scrapers.FakeScraper] = None,
 ):
     """Parses filings without command line interface and outfile options."""
 
