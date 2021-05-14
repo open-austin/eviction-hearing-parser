@@ -55,7 +55,9 @@ class BaseParser:
 
         return element.get("id")
 
-    def get_attorneys_for_party(self, soup: BeautifulSoup, party_elements) -> Dict[str, List[str]]:
+    def get_attorneys_for_party(
+        self, soup: BeautifulSoup, party_elements
+    ) -> Dict[str, List[str]]:
         """Get the attorney(s) for a party."""
         attorneys: Dict[str, List[str]] = dict()
         attorneys_header_id = self.get_attorneys_header_id(soup)
@@ -189,7 +191,9 @@ class BaseParser:
         hearing_or_event_ths = root.find_all(
             "th", id=lambda id_str: id_str is not None and id_str.startswith("RCD")
         )
-        hearing_or_event_trs = [hearing_th.parent for hearing_th in hearing_or_event_ths]
+        hearing_or_event_trs = [
+            hearing_th.parent for hearing_th in hearing_or_event_ths
+        ]
 
         return hearing_or_event_trs or []
 
@@ -297,7 +301,9 @@ class BaseParser:
         else:
             return None
 
-    def get_case_event_date_basic(self, soup: BeautifulSoup, event_name: str) -> Optional[str]:
+    def get_case_event_date_basic(
+        self, soup: BeautifulSoup, event_name: str
+    ) -> Optional[str]:
         """Get date for case event entries that only include event name."""
         case_event_date: Optional[str] = None
 
@@ -306,7 +312,9 @@ class BaseParser:
         if event_label:
             try:
                 case_event_tr = event_label.parent.parent
-                case_event_date = case_event_tr.find("th", class_="ssTableHeaderLabel").text
+                case_event_date = case_event_tr.find(
+                    "th", class_="ssTableHeaderLabel"
+                ).text
             except AttributeError:
                 pass
 
@@ -324,7 +332,9 @@ class BaseParser:
         event_tr = event_label.parent.parent.parent.parent.parent.parent
 
         try:
-            event_details["case_event_date"] = event_tr.find("th", class_="ssTableHeaderLabel").text
+            event_details["case_event_date"] = event_tr.find(
+                "th", class_="ssTableHeaderLabel"
+            ).text
         except AttributeError:
             pass
 
@@ -338,14 +348,18 @@ class BaseParser:
             try:
                 event_details[
                     "served_subject"
-                ] = served_td.parent.parent.parent.parent.find_previous_sibling("td").text
+                ] = served_td.parent.parent.parent.parent.find_previous_sibling(
+                    "td"
+                ).text
             except AttributeError:
                 pass
 
         returned_td = event_tr.find("td", text="Returned")
         if returned_td:
             try:
-                event_details["returned_date"] = returned_td.find_next_sibling("td").text
+                event_details["returned_date"] = returned_td.find_next_sibling(
+                    "td"
+                ).text
             except AttributeError:
                 pass
 
@@ -365,13 +379,17 @@ class BaseParser:
         """Get details for the "Writ of Possession Requested" case event."""
         event_details: Dict[str, str] = {}
 
-        event_date = self.get_case_event_date_basic(soup, "Writ of Possession Requested")
+        event_date = self.get_case_event_date_basic(
+            soup, "Writ of Possession Requested"
+        )
         if event_date:
             event_details["case_event_date"] = event_date
 
         return event_details
 
-    def get_writ_of_possession_sent_to_constable(self, soup: BeautifulSoup) -> Dict[str, str]:
+    def get_writ_of_possession_sent_to_constable(
+        self, soup: BeautifulSoup
+    ) -> Dict[str, str]:
         """Get details for the "Writ of Possession Sent to Constable's Office" case event."""
         event_details: Dict[str, str] = {}
 
@@ -388,6 +406,8 @@ class BaseParser:
         event_details: Dict[str, str] = {}
 
         event_date = self.get_case_event_date_basic(soup, "Writ Returned to Court")
+        if not event_date:
+            event_date = self.get_case_event_date_basic(soup, "Writ Returned")
         if event_date:
             event_details["case_event_date"] = event_date
 
@@ -410,8 +430,10 @@ class BaseParser:
         served_tags = soup.find_all(text="Served")
         for service_tag in served_tags:
             date_tag = service_tag.parent.find_next_sibling("td")
-            defendant_tag = service_tag.parent.parent.parent.parent.parent.find_previous_sibling(
-                "td"
+            defendant_tag = (
+                service_tag.parent.parent.parent.parent.parent.find_previous_sibling(
+                    "td"
+                )
             )
             if defendant_tag.text not in dates_of_service:
                 dates_of_service[defendant_tag.text] = date_tag.text
@@ -512,7 +534,9 @@ class BaseParser:
         ):  # awarded_to and awarded_against will always be not None together
             #  dj = fuzz.partial_ratio(awarded_to.upper(),defendant.upper())
             #  pj = fuzz.partial_ratio(awarded_to.upper(),plaintiff.upper())
-            pj, dj = self.match_wordwise(awarded_to.upper(), plaintiff.upper(), defendant.upper())
+            pj, dj = self.match_wordwise(
+                awarded_to.upper(), plaintiff.upper(), defendant.upper()
+            )
             if pj > dj:
                 return (pj, "Plaintiff")
             elif dj > pj:
@@ -551,7 +575,8 @@ class BaseParser:
         return (
             "Y"
             if (
-                (disposition_date >= march_14) and (statuses_map[substatus]["status"] == "Judgment")
+                (disposition_date >= march_14)
+                and (statuses_map[substatus]["status"] == "Judgment")
             )
             else "N"
         )
@@ -606,7 +631,9 @@ class BaseParser:
             "style": style,
             "plaintiff": plaintiff,
             "active_or_inactive": self.active_or_inactive(status),
-            "judgment_after_moratorium": self.judgment_after_moratorium(disposition_date, status),
+            "judgment_after_moratorium": self.judgment_after_moratorium(
+                disposition_date, status
+            ),
             "defendants": self.get_defendants(soup),
             "attorneys_for_plaintiffs": ", ".join(
                 [a for a in self.get_attorneys_for_plaintiffs(soup)]
@@ -618,7 +645,8 @@ class BaseParser:
             "defendant_zip": defendant_zip,
             "plaintiff_zip": plaintiff_zip,
             "hearings": [
-                self.make_parsed_hearing(hearing) for hearing in self.get_hearing_tags(soup)
+                self.make_parsed_hearing(hearing)
+                for hearing in self.get_hearing_tags(soup)
             ],
             "status": status,
             "type": type,
@@ -633,10 +661,14 @@ class BaseParser:
             "disposition_awarded_to": self.get_disposition_awarded_to(disposition_tr)
             if self.get_disposition_awarded_to(disposition_tr) is not None
             else "",
-            "disposition_awarded_against": self.get_disposition_awarded_against(disposition_tr)
+            "disposition_awarded_against": self.get_disposition_awarded_against(
+                disposition_tr
+            )
             if self.get_disposition_awarded_against(disposition_tr) is not None
             else "",
-            "comments": self.get_comments(soup) if self.get_comments(soup) is not None else "",
+            "comments": self.get_comments(soup)
+            if self.get_comments(soup) is not None
+            else "",
             "writ": self.get_writ(soup),
             "writ_of_possession_service": self.get_writ_of_possession_service(soup),
             "writ_of_possession_requested": self.get_writ_of_possession_requested(soup),
@@ -669,11 +701,6 @@ class HaysParser(BaseParser):
         together = "; ".join(defendants)
         return together
 
-    def get_style(self, soup):
-        tables = soup.find_all("table")
-        elem = tables[4].tr.td.b
-        return elem.text
-
     def get_precinct_number(self, soup) -> int:
         location_heading = soup.find(text=re.compile("Location:")).parent
         precinct_name = location_heading.find_next_sibling("td").text
@@ -691,7 +718,11 @@ class HaysParser(BaseParser):
         amt_tags = soup.find_all("i")
         for tag in amt_tags:
             if tag.text.startswith("amt"):
-                amount = int(float(tag.text.replace("amt ", "").replace("$", "").replace(",", "")))
+                amount = int(
+                    float(
+                        tag.text.replace("amt ", "").replace("$", "").replace(",", "")
+                    )
+                )
                 return amount
         return None
 
@@ -799,7 +830,9 @@ class HaysParser(BaseParser):
             "style": style,
             "plaintiff": plaintiff,
             "active_or_inactive": self.active_or_inactive(status),
-            "judgment_after_moratorium": self.judgment_after_moratorium(disposition_date, status),
+            "judgment_after_moratorium": self.judgment_after_moratorium(
+                disposition_date, status
+            ),
             "defendants": self.get_defendants(soup),
             "attorneys_for_plaintiffs": ", ".join(
                 [a for a in self.get_attorneys_for_plaintiffs(soup)]
@@ -811,7 +844,8 @@ class HaysParser(BaseParser):
             "defendant_zip": defendant_zip,
             "plaintiff_zip": plaintiff_zip,
             "hearings": [
-                self.make_parsed_hearing(hearing) for hearing in self.get_hearing_tags(soup)
+                self.make_parsed_hearing(hearing)
+                for hearing in self.get_hearing_tags(soup)
             ],
             "status": status,
             "type": type,
@@ -826,10 +860,14 @@ class HaysParser(BaseParser):
             "disposition_awarded_to": self.get_disposition_awarded_to(disposition_tr)
             if self.get_disposition_awarded_to(disposition_tr) is not None
             else "",
-            "disposition_awarded_against": self.get_disposition_awarded_against(disposition_tr)
+            "disposition_awarded_against": self.get_disposition_awarded_against(
+                disposition_tr
+            )
             if self.get_disposition_awarded_against(disposition_tr) is not None
             else "",
-            "comments": self.get_comments(soup) if self.get_comments(soup) is not None else "",
+            "comments": self.get_comments(soup)
+            if self.get_comments(soup) is not None
+            else "",
             "writ": self.get_writ(soup),
             "writ_of_possession_service": self.get_writ_of_possession_service(soup),
             "writ_of_possession_requested": self.get_writ_of_possession_requested(soup),
@@ -934,7 +972,9 @@ class WilliamsonParser(BaseParser):
         served_tags = soup.find_all(text="Served")
         for service_tag in served_tags:
             date_tag = service_tag.parent.find_next_sibling("td")
-            defendant_tag = self.get_defendant_tag_for_service_tag(service_tag=service_tag)
+            defendant_tag = self.get_defendant_tag_for_service_tag(
+                service_tag=service_tag
+            )
             defendant_name = self.remove_whitespace(defendant_tag.text)
             dates_of_service[defendant_name] = self.remove_whitespace(date_tag.text)
         return dates_of_service
