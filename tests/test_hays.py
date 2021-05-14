@@ -217,7 +217,7 @@ class TestParseHTML:
     # Does Hays record awarded info?
     @pytest.mark.parametrize(
         "index, expected",
-        [(0, "CastleRock at San Marcos"), (1, "1640 Blackacre LLC")],
+        [(0, ""), (1, "")],
     )
     def test_disposition_awarded_to(self, index, expected):
         soup = load_pages.get_test_soup(index, county)
@@ -228,8 +228,8 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
-            (0, "Name1 Name2, Fake1 Fake2"),
-            (1, "Realistic, Person"),
+            (0, ""),
+            (1, ""),
         ],
     )
     def test_disposition_awarded_against(self, index, expected):

@@ -250,6 +250,13 @@ class BaseParser:
             return self.remove_whitespace(disposition_date_node.text)
         return None
 
+    def read_disposition_amount_text(self, text: str) -> Optional[Decimal]:
+        if "$" not in text:
+            return None
+        amount_as_string = text.strip(". ")
+        amount = Decimal(re.sub(r"[^\d.]", "", amount_as_string))
+        return amount
+
     def get_disposition_amount(self, soup) -> Optional[Decimal]:
         disposition_date_node = self.get_disposition_date_node(soup)
         if disposition_date_node is None:
@@ -260,11 +267,7 @@ class BaseParser:
         disposition_amount_node = disposition_label.find("nobr")
         if disposition_amount_node is None:
             return None
-        if "$" not in disposition_amount_node.text:
-            return None
-        amount_as_string = disposition_amount_node.text.strip(". ")
-        amount = Decimal(re.sub(r"[^\d.]", "", amount_as_string))
-        return amount
+        return self.read_disposition_amount_text(disposition_amount_node.text)
 
     def get_precinct_number(self, soup) -> int:
         word_to_number = {"One": 1, "Two": 2, "Three": 3, "Four": 4, "Five": 5}
@@ -622,6 +625,8 @@ class BaseParser:
             print(e)
             score, winner = None, None
 
+        defendants = self.get_defendants(soup)
+
         disposition_date = self.get_disposition_date(disposition_tr)
         return {
             "precinct_number": self.get_precinct_number(soup),
@@ -631,7 +636,7 @@ class BaseParser:
             "judgment_after_moratorium": self.judgment_after_moratorium(
                 disposition_date, status
             ),
-            "defendants": self.get_defendants(soup),
+            "defendants": defendants,
             "attorneys_for_plaintiffs": ", ".join(
                 [a for a in self.get_attorneys_for_plaintiffs(soup)]
             ),
@@ -655,9 +660,7 @@ class BaseParser:
             if disposition_tr is not None
             else "",
             "disposition_date": disposition_date if disposition_tr is not None else "",
-            "disposition_awarded_to": self.get_disposition_awarded_to(disposition_tr)
-            if self.get_disposition_awarded_to(disposition_tr) is not None
-            else "",
+            "disposition_awarded_to": self.get_disposition_awarded_to(disposition_tr),
             "disposition_awarded_against": self.get_disposition_awarded_against(
                 disposition_tr
             )
@@ -704,13 +707,10 @@ class HaysParser(BaseParser):
         """get the disposition amount for hays county"""
         amt_tags = soup.find_all("i")
         for tag in amt_tags:
-            if tag.text.startswith("amt"):
-                amount = int(
-                    float(
-                        tag.text.replace("amt ", "").replace("$", "").replace(",", "")
-                    )
-                )
-                return amount
+            if tag.text.lower().startswith(
+                "amt",
+            ):
+                return self.read_disposition_amount_text(tag.text)
         return None
 
     def get_attorneys_header_id(self, soup: BeautifulSoup) -> Optional[str]:
@@ -854,9 +854,7 @@ class HaysParser(BaseParser):
             if disposition_tr is not None
             else "",
             "disposition_date": disposition_date if disposition_tr is not None else "",
-            "disposition_awarded_to": self.get_disposition_awarded_to(disposition_tr)
-            if self.get_disposition_awarded_to(disposition_tr) is not None
-            else "",
+            "disposition_awarded_to": self.get_disposition_awarded_to(disposition_tr),
             "disposition_awarded_against": self.get_disposition_awarded_against(
                 disposition_tr
             )
