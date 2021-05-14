@@ -322,6 +322,12 @@ class BaseParser:
 
         return case_event_date
 
+    def get_writ_issued_date(self, event_tr) -> str:
+        elem = event_tr.find("th", class_="ssTableHeaderLabel")
+        if elem:
+            return elem.text
+        return None
+
     def get_writ(self, soup: BeautifulSoup) -> Dict[str, str]:
         """Get details for the "Writ" case event."""
         event_details: Dict[str, str] = {}
@@ -333,12 +339,9 @@ class BaseParser:
 
         event_tr = event_label.parent.parent.parent.parent.parent.parent
 
-        try:
-            event_details["case_event_date"] = event_tr.find(
-                "th", class_="ssTableHeaderLabel"
-            ).text
-        except AttributeError:
-            pass
+        writ_date = self.get_writ_issued_date(event_tr=event_tr)
+        if writ_date:
+            event_details["case_event_date"] = writ_date
 
         served_td = event_tr.find("td", text="Served")
         if served_td:
@@ -776,10 +779,17 @@ class HaysParser(BaseParser):
             return event_details
 
         request_date_element = soup.find(id="RCDER12")
-        if request_date_element.text:
+        if request_date_element and request_date_element.text:
             event_details["case_event_date"] = request_date_element.text.strip()
 
         return event_details
+
+    def get_writ_issued_date(self, event_tr) -> Optional[str]:
+        issued_date_element = event_tr.find(id=["RCDER13", "RCDSE13", "RCDER14"])
+        if issued_date_element and issued_date_element.text.strip():
+            return issued_date_element.text.strip()
+
+        return None
 
     def get_writ_of_possession_service(self, soup: BeautifulSoup) -> Dict[str, str]:
         """

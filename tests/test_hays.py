@@ -270,7 +270,14 @@ class TestParseHTML:
         "test_html_file_index, expected_event_details",
         [
             (0, {}),
-            (1, {"case_event_date": "03/30/2021"}),
+            (
+                1,
+                {
+                    "case_event_date": "03/30/2021",
+                    "served_date": "03/08/2021",
+                    "served_subject": "Realistic, Person",
+                },
+            ),
         ],
     )
     def test_get_writ(self, test_html_file_index, expected_event_details):
