@@ -691,16 +691,6 @@ class HaysParser(BaseParser):
         """
         return soup.find_all("th", text=re.compile(r"Defendant"))
 
-    # not sure if every defendant is a link create other test pages
-    def get_defendants(self, soup):
-        """Defendants will sometimes be link text"""
-        defendants = []
-        for tag in self.get_defendant_elements(soup):
-            name_elem = tag.find_next_sibling("th").findChild("a", recursive=False)
-            defendants.append(name_elem.string)
-        together = "; ".join(defendants)
-        return together
-
     def get_precinct_number(self, soup) -> int:
         location_heading = soup.find(text=re.compile("Location:")).parent
         precinct_name = location_heading.find_next_sibling("td").text
