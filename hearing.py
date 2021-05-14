@@ -100,7 +100,7 @@ class BaseParser:
 
     def get_style(self, soup):
         elem = soup.find_all("table")[4].tbody.tr.td
-        return elem.text
+        return elem.text.strip()
 
     def get_date_filed(self, soup: BeautifulSoup) -> str:
         """Get date filed for the case filing. """
