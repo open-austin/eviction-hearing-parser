@@ -241,11 +241,8 @@ class BaseParser:
         name = officer_groups[1] if len(officer_groups) > 1 else ""
         return self.remove_whitespace(name)
 
-    def get_disposition_date_node(self, soup) -> BeautifulSoup:
-        try:
-            return soup.find("th", id="RDISPDATE1")
-        except:
-            return None
+    def get_disposition_date_node(self, soup) -> Optional[BeautifulSoup]:
+        return soup.find("th", id=re.compile(r"RDISPDATE1"))
 
     def get_disposition_date(self, soup) -> Optional[str]:
         disposition_date_node = self.get_disposition_date_node(soup)
@@ -754,6 +751,16 @@ class HaysParser(BaseParser):
     def get_defendant_gender(self, soup: BeautifulSoup) -> Optional[str]:
         gender = self.get_defendant_race_gender(soup)[0]
         return gender
+
+    def was_defendant_alternative_served(self, soup) -> List[str]:
+        """Just allows a different label for "Order Granting Alternative Service"."""
+        dates_of_service = super().was_defendant_alternative_served(soup)
+        served_tags = soup.find_all(text="Order For Substituted Service")
+        for service_tag in served_tags:
+            date_tag = service_tag.parent.parent.find_previous_sibling("th")
+            dates_of_service.append(date_tag.text)
+
+        return dates_of_service
 
     def make_parsed_case(
         self, soup, status: str = "", type: str = "", register_url: str = ""
