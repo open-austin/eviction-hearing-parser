@@ -413,7 +413,8 @@ class BaseParser:
             defendant_tag = service_tag.parent.parent.parent.parent.parent.find_previous_sibling(
                 "td"
             )
-            dates_of_service[defendant_tag.text] = date_tag.text
+            if defendant_tag.text not in dates_of_service:
+                dates_of_service[defendant_tag.text] = date_tag.text
 
         return dates_of_service
 
@@ -657,18 +658,6 @@ class HaysParser(BaseParser):
         Sometimes the text of the element does not always say "Defendant", but may say something like "Defendant 2".
         """
         return soup.find_all("th", text=re.compile(r"Defendant"))
-
-    # why are we storing this in a dictionary?
-    def was_defendant_served(self, soup) -> Dict[str, str]:
-        dates_of_service = {}
-        served_tags = soup.find_all(text="Served")
-        if served_tags is not None:
-            # first one is gonna be the served one?
-            service_tag = served_tags[0]
-            date_tag = service_tag.parent.find_next_sibling("td")
-            return date_tag.text
-        else:
-            return served_tags
 
     # not sure if every defendant is a link create other test pages
     def get_defendants(self, soup):
