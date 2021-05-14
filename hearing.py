@@ -244,7 +244,9 @@ class BaseParser:
     def get_disposition_date_node(self, soup) -> Optional[BeautifulSoup]:
         return soup.find("th", id=re.compile(r"RDISPDATE1"))
 
-    def get_disposition_date(self, soup) -> Optional[str]:
+    def get_disposition_date(self, soup: Optional[BeautifulSoup]) -> Optional[str]:
+        if soup is None:
+            return None
         disposition_date_node = self.get_disposition_date_node(soup)
         if disposition_date_node:
             return self.remove_whitespace(disposition_date_node.text)
@@ -774,6 +776,23 @@ class HaysParser(BaseParser):
             return event_details
 
         request_date_element = soup.find(id="RCDER12")
+        if request_date_element.text:
+            event_details["case_event_date"] = request_date_element.text.strip()
+
+        return event_details
+
+    def get_writ_of_possession_service(self, soup: BeautifulSoup) -> Dict[str, str]:
+        """
+        Get details for the "Writ of Possession Requested" case event.
+
+        Assumes that an element with id "RCDER12" must contain the date
+        of this request.
+        """
+        event_details = super().get_writ_of_possession_requested(soup=soup)
+        if event_details:
+            return event_details
+
+        request_date_element = soup.find(id=["RCDSE14", "RCDSE15"])
         if request_date_element.text:
             event_details["case_event_date"] = request_date_element.text.strip()
 

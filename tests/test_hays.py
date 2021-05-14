@@ -242,7 +242,7 @@ class TestParseHTML:
         "index, expected",
         [
             (0, "Default Judgment"),
-            (0, "Judgment for Plaintiff"),
+            (1, "Judgment for Plaintiff"),
         ],
     )
     def test_disposition_type(self, index, expected):
@@ -281,8 +281,8 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
         [
-            (0, {"case_event_date": "03/18/2021"}),
-            (1, {"case_event_date": "04/07/2021"}),
+            (0, {"case_event_date": "03/11/2021"}),
+            (1, {"case_event_date": "04/01/2021"}),
         ],
     )
     def test_get_writ_of_possession_service(
