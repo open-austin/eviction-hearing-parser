@@ -109,7 +109,7 @@ class BaseParser:
 
     def get_zip(self, party_info_th_soup) -> str:
         """Returns a ZIP code from the Table Heading Party Info of a CaseDetail"""
-        zip_regex = re.compile(r", tx \d{5}(-\d{4})?")
+        zip_regex = re.compile(r", \w{2} \d{5}(-\d{4})?")
 
         def has_zip(string: str) -> bool:
             return bool(zip_regex.search(string.lower()))
