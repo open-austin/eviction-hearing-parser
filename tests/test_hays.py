@@ -81,7 +81,8 @@ class TestParseHTML:
     )
     def test_get_plaintiff_zip(self, index, expected):
         soup = load_pages.get_test_soup(index, county)
-        number = Hays.get_zip(Hays.get_plaintiff_elements(soup).pop())
+        plaintiff_element = Hays.get_plaintiff_elements(soup).pop()
+        number = Hays.get_zip(plaintiff_element)
         assert number == expected
 
     @pytest.mark.parametrize(

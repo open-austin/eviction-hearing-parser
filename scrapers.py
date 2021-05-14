@@ -474,6 +474,12 @@ class TravisScraper(FakeScraper):
         return filings_case_nums_list
 
 
+class HaysScraper(TravisScraper):
+    def __init__(self, headless: bool = True) -> None:
+        super().__init__(headless=headless)
+        self.homepage = "http://public.co.hays.tx.us/default.aspx"
+
+
 class WilliamsonScraper(TravisScraper):
     def __init__(self, headless: bool = True) -> None:
         super().__init__(headless=headless)

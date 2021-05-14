@@ -143,7 +143,7 @@ class TestParseHTML:
             (1, "78759"),
             (2, ""),
             (3, "78705"),
-            (4, ""),
+            (4, "23541"),
             (5, "77056"),
             (6, "78736"),
             (7, "78752"),
@@ -601,7 +601,9 @@ class TestParseHTML:
             (13, {}),
         ],
     )
-    def test_get_writ_of_possession_service(self, test_html_file_index, expected_event_details):
+    def test_get_writ_of_possession_service(
+        self, test_html_file_index, expected_event_details
+    ):
         soup = load_pages.get_test_soup(test_html_file_index)
         event_details = TravisParser.get_writ_of_possession_service(soup)
         assert event_details == expected_event_details
@@ -625,7 +627,9 @@ class TestParseHTML:
             (13, {}),
         ],
     )
-    def test_get_writ_of_possession_requested(self, test_html_file_index, expected_event_details):
+    def test_get_writ_of_possession_requested(
+        self, test_html_file_index, expected_event_details
+    ):
         soup = load_pages.get_test_soup(test_html_file_index)
         event_details = TravisParser.get_writ_of_possession_requested(soup)
         assert event_details == expected_event_details
@@ -675,7 +679,9 @@ class TestParseHTML:
             (13, {}),
         ],
     )
-    def test_get_writ_returned_to_court(self, test_html_file_index, expected_event_details):
+    def test_get_writ_returned_to_court(
+        self, test_html_file_index, expected_event_details
+    ):
         soup = load_pages.get_test_soup(test_html_file_index)
         event_details = TravisParser.get_writ_returned_to_court(soup)
         assert event_details == expected_event_details
@@ -699,7 +705,9 @@ class TestParseHTML:
             (13, {"MARISSA M LATTA": ["Ter, Wren B"]}),
         ],
     )
-    def test_get_attorneys_for_defendants(self, test_html_file_index, expected_attorneys):
+    def test_get_attorneys_for_defendants(
+        self, test_html_file_index, expected_attorneys
+    ):
         soup = load_pages.get_test_soup(test_html_file_index)
         attorneys = TravisParser.get_attorneys_for_defendants(soup)
         assert attorneys == expected_attorneys
@@ -723,7 +731,9 @@ class TestParseHTML:
             (13, {"JAMES N. FLOYD": ["Proper Tea LLC"]}),
         ],
     )
-    def test_get_attorneys_for_plaintiffs(self, test_html_file_index, expected_attorneys):
+    def test_get_attorneys_for_plaintiffs(
+        self, test_html_file_index, expected_attorneys
+    ):
         soup = load_pages.get_test_soup(test_html_file_index)
         attorneys = TravisParser.get_attorneys_for_plaintiffs(soup)
         assert attorneys == expected_attorneys
