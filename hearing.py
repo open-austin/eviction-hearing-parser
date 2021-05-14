@@ -762,6 +762,23 @@ class HaysParser(BaseParser):
 
         return dates_of_service
 
+    def get_writ_of_possession_requested(self, soup: BeautifulSoup) -> Dict[str, str]:
+        """
+        Get details for the "Writ of Possession Requested" case event.
+
+        Assumes that an element with id "RCDER12" must contain the date
+        of this request.
+        """
+        event_details = super().get_writ_of_possession_requested(soup=soup)
+        if event_details:
+            return event_details
+
+        request_date_element = soup.find(id="RCDER12")
+        if request_date_element.text:
+            event_details["case_event_date"] = request_date_element.text.strip()
+
+        return event_details
+
     def make_parsed_case(
         self, soup, status: str = "", type: str = "", register_url: str = ""
     ) -> Dict[str, str]:
