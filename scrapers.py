@@ -314,14 +314,14 @@ class TravisScraper(FakeScraper):
         self,
         afterdate: datetime.date,
         beforedate: datetime.date,
-        calendar_link_name: str,
+        calendar_link: str,
     ) -> BeautifulSoup:
         """Search for case settings between beforedate and afterdate for, returns content of resulting page"""
 
         for tries in range(5):
             # select Date Range radiobutton for search
             try:
-                court_calendar = self.load_court_calendar(calendar_link_name)
+                court_calendar = self.load_court_calendar(calendar_link)
                 date_range_radio_button = WebDriverWait(court_calendar, 10).until(
                     EC.presence_of_element_located((By.ID, self.date_range_button_id))
                 )
@@ -505,8 +505,7 @@ class WilliamsonScraper(TravisScraper):
     def __init__(self, headless: bool = True) -> None:
         super().__init__(headless=headless)
         self.homepage = "https://judicialrecords.wilco.org/PublicAccess/default.aspx"
-        self.calendar_link_name = "Civil, Family & Probate Case Records"
-        self.date_range_button_id = "DateFiled"
+        self.calendar_link_names = ["Jp1 Court Calendar", "Jp3 Court Calendar"]
 
     def fetch_parsed_case(self, case_id: str) -> Tuple[str, str]:
         query_result = self.query_case_id(case_id)
