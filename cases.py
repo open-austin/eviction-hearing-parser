@@ -1,7 +1,6 @@
-from datetime import date
-from typing import Dict, List, Optional
+from typing import Any, List, Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl
 
 
 class EvictionHearing(BaseModel):
@@ -11,9 +10,48 @@ class EvictionHearing(BaseModel):
     May be a future or past hearing.
     """
 
-    hearing_date: str = ""
-    hearing_time: str = ""
+    hearing_date: str = ""  # could become datetime.date
+    hearing_time: str = ""  # could become datetime.time
     hearing_officer: str = ""
     appeared: Optional[bool] = None
     hearing_type: str = ""
     all_text: str = ""
+
+
+class Writ(BaseModel):
+    case_event_date: str
+    served_date: str
+    served_subject: str
+    returned: str
+
+
+class EvictionCase(BaseModel):
+    precinct_number: int
+    style: str
+    plaintiff: str
+    active_or_inactive: str  # could become optional bool
+    judgment_after_moratorium: str  # could become optional bool
+    defendants: str
+    attorneys_for_plaintiffs: str
+    attorneys_for_defendants: str
+    case_number: str
+    defendant_zip: str
+    plaintiff_zip: str
+    hearings: List[EvictionHearing]
+    status: str
+    type: str
+    register_url: Optional[HttpUrl]
+    disposition_type: str
+    disposition_amount: str
+    disposition_date: str
+    disposition_awarded_to: str
+    disposition_awarded_against: str
+    comments: str
+    writ: Optional[Writ]
+    writ_of_possession_service: Any
+    writ_of_possession_requested: Any
+    writ_of_possession_sent_to_constable_office: Any
+    writ_returned_to_court: Any
+    judgement_for: str
+    match_score: str
+    date_filed: str

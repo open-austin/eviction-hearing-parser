@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 import logging
 
-from cases import EvictionHearing
+from cases import EvictionHearing, Writ, EvictionCase
 from statuses import statuses_map
 from fuzzywuzzy import fuzz
 from emailing import log_and_email
@@ -41,7 +41,7 @@ class BaseParser:
         """
         return soup.find_all("th", text=re.compile(r"^Defendant"))
 
-    def get_defendants(self, soup):
+    def get_defendants(self, soup) -> str:
         defendants = []
         for tag in self.get_defendant_elements(soup):
             name_elem = tag.find_next_sibling("th")
@@ -96,11 +96,11 @@ class BaseParser:
         plaintiff_elements = self.get_plaintiff_elements(soup)
         return self.get_attorneys_for_party(soup, plaintiff_elements)
 
-    def get_case_number(self, soup):
+    def get_case_number(self, soup) -> str:
         elem = soup.find(class_="ssCaseDetailCaseNbr").span
         return elem.text
 
-    def get_style(self, soup):
+    def get_style(self, soup) -> str:
         elem = soup.find_all("table")[4].tbody.tr.td
         return elem.text.strip()
 
@@ -329,49 +329,49 @@ class BaseParser:
         elem = event_tr.find("th", class_="ssTableHeaderLabel")
         if elem:
             return elem.text
-        return None
+        return ""
 
-    def get_writ(self, soup: BeautifulSoup) -> Dict[str, str]:
+    def get_writ_served_date(self, served_td) -> str:
+        try:
+            return served_td.find_next_sibling("td").text
+        except AttributeError:
+            return ""
+
+    def get_writ_served_subject(self, served_td) -> str:
+        try:
+            elem = served_td.parent.parent.parent.parent
+            return elem.find_previous_sibling("td").text
+        except AttributeError:
+            return ""
+
+    def get_writ_returned(self, returned_td) -> str:
+        try:
+            return returned_td.find_next_sibling("td").text
+        except AttributeError:
+            return ""
+
+    def get_writ(self, soup: BeautifulSoup) -> Optional[Writ]:
         """Get details for the "Writ" case event."""
         event_details: Dict[str, str] = {}
 
         case_events = self.get_events_tbody_element(soup)
         event_label = case_events.find("b", text="Writ")
         if not event_label:
-            return event_details
+            return None
 
         event_tr = event_label.parent.parent.parent.parent.parent.parent
 
         writ_date = self.get_writ_issued_date(event_tr=event_tr)
         if writ_date:
             event_details["case_event_date"] = writ_date
-
         served_td = event_tr.find("td", text="Served")
-        if served_td:
-            try:
-                event_details["served_date"] = served_td.find_next_sibling("td").text
-            except AttributeError:
-                pass
-
-            try:
-                event_details[
-                    "served_subject"
-                ] = served_td.parent.parent.parent.parent.find_previous_sibling(
-                    "td"
-                ).text
-            except AttributeError:
-                pass
-
         returned_td = event_tr.find("td", text="Returned")
-        if returned_td:
-            try:
-                event_details["returned_date"] = returned_td.find_next_sibling(
-                    "td"
-                ).text
-            except AttributeError:
-                pass
-
-        return event_details
+        return Writ(
+            case_event_date=self.get_writ_issued_date(event_tr=event_tr),
+            served_date=self.get_writ_served_date(served_td),
+            served_subject=self.get_writ_served_subject(served_td),
+            returned=self.get_writ_returned(returned_td),
+        )
 
     def get_writ_of_possession_service(self, soup: BeautifulSoup) -> Dict[str, str]:
         """Get details for the "Writ of Possession Service" case event."""
@@ -559,18 +559,18 @@ class BaseParser:
                     return (dj, "Defendant")
         return (None, None)
 
-    def active_or_inactive(self, status):
+    def active_or_inactive(self, status) -> str:
         status = status.lower()
         if status in statuses_map:
             return "Active" if statuses_map[status]["is_active"] else "Inactive"
-        else:
-            log_and_email(
-                f"Can't figure out whether case with substatus '{status}' is active or inactive "
-                f"because '{status}' is not in our statuses map dictionary.",
-                "Encountered Unknown Substatus",
-                error=True,
-            )
-            return ""
+
+        log_and_email(
+            f"Can't figure out whether case with substatus '{status}' is active or inactive "
+            f"because '{status}' is not in our statuses map dictionary.",
+            "Encountered Unknown Substatus",
+            error=True,
+        )
+        return ""
 
     def judgment_after_moratorium(self, disposition_date, substatus):
         substatus = substatus.lower()
@@ -598,27 +598,27 @@ class BaseParser:
         try:
             defendant_zip = self.get_zip(self.get_defendant_elements(soup)[0])
         except:
-            defendant_zip = None
+            defendant_zip = ""
 
         try:
             style = self.get_style(soup)
         except:
-            style = None
+            style = ""
 
         try:
             plaintiff = self.get_plaintiff(soup)
         except:
-            plaintiff = None
+            plaintiff = ""
 
         try:
             plaintiff_zip = self.get_zip(self.get_plaintiff_elements(soup)[0])
         except:
-            plaintiff_zip = None
+            plaintiff_zip = ""
 
         try:
             disp_type = self.get_disposition_type(disposition_tr)
         except:
-            disp_type = None
+            disp_type = ""
 
         try:
             score, winner = self.match_disposition(
@@ -660,7 +660,7 @@ class BaseParser:
             ],
             "status": status,
             "type": type,
-            "register_url": register_url,
+            "register_url": register_url or None,
             "disposition_type": self.get_disposition_type(disposition_tr)
             if disp_type is not None
             else "",

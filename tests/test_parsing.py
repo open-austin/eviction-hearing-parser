@@ -546,7 +546,7 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
         [
-            (0, {}),
+            (0, "None"),
             (1, {}),
             (2, {}),
             (3, {}),
@@ -570,17 +570,17 @@ class TestParseHTML:
                     "served_subject": "ANT AND ALL OTHER OCCUPANTS, TEN",
                 },
             ),
-            (9, {}),
-            (10, {}),
-            (11, {}),
-            (12, {}),
-            (13, {}),
+            (9, None),
+            (10, None),
+            (11, None),
+            (12, None),
+            (13, None),
         ],
     )
     def test_get_writ(self, test_html_file_index, expected_event_details):
         soup = load_pages.get_test_soup(test_html_file_index)
         event_details = TravisParser.get_writ(soup)
-        assert event_details == expected_event_details
+        assert str(event_details) == expected_event_details
 
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",

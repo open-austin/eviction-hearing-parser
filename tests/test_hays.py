@@ -269,21 +269,14 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
         [
-            (0, {}),
-            (
-                1,
-                {
-                    "case_event_date": "03/30/2021",
-                    "served_date": "03/08/2021",
-                    "served_subject": "Realistic, Person",
-                },
-            ),
+            (0, "None"),
+            (1, "Writ(case_event_date='03/30/2021'"),
         ],
     )
     def test_get_writ(self, test_html_file_index, expected_event_details):
         soup = load_pages.get_test_soup(test_html_file_index, county)
         event_details = Hays.get_writ(soup)
-        assert event_details == expected_event_details
+        assert str(event_details).startswith(expected_event_details)
 
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
