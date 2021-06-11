@@ -12,7 +12,7 @@ class TestCLI:
         ids_to_parse = ["J1-CV-20-001590"]
         cases = FAKE_SCRAPER.make_case_list(ids_to_parse)
         assert cases[0]["register_url"].endswith("CaseID=2286743")
-        assert cases[0]["hearings"][0]["hearing_type"] == "Eviction Hearing"
+        assert cases[0]["hearings"][0].hearing_type == "Eviction Hearing"
 
     def test_parse_cases_from_cli(self):
         ids_to_parse = ["J1-CV-20-001590"]
@@ -22,7 +22,7 @@ class TestCLI:
             scraper=FAKE_SCRAPER,
         )
         assert cases[0]["register_url"].endswith("CaseID=2286743")
-        assert cases[0]["hearings"][0]["hearing_type"] == "Eviction Hearing"
+        assert cases[0]["hearings"][0].hearing_type == "Eviction Hearing"
 
     def test_split_into_weeks(self):
         weeks = filings_settings.split_into_weeks(

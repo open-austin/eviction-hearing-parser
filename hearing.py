@@ -7,6 +7,8 @@ from typing import Dict, List, Optional
 from bs4 import BeautifulSoup
 from datetime import datetime
 import logging
+
+from cases import EvictionHearing
 from statuses import statuses_map
 from fuzzywuzzy import fuzz
 from emailing import log_and_email
@@ -103,7 +105,7 @@ class BaseParser:
         return elem.text.strip()
 
     def get_date_filed(self, soup: BeautifulSoup) -> str:
-        """Get date filed for the case filing. """
+        """Get date filed for the case filing."""
         elem = soup.find_all("table")[4].find("th", text="Date Filed:").find_next("b")
         return elem.text
 
@@ -204,12 +206,13 @@ class BaseParser:
         if hearing_tag is None:
             return ""
         date_tag = hearing_tag.find("th")
-        return date_tag.text
+        return date_tag.text if date_tag else ""
 
     def get_hearing_type_from_hearing_tag(self, hearing_tag) -> str:
-        """Function to get all events and case type from case page section: Other Events and Hearings"""
-        hearing_type = hearing_tag.find_all("b")[0].text
-        return hearing_type
+        hearings = hearing_tag.find_all("b")
+        if any(hearings):
+            return hearings[0].text
+        return ""
 
     def get_all_text_from_hearing_tag(self, hearing_tag) -> str:
         all_tds = hearing_tag.find_all("td")
@@ -419,7 +422,7 @@ class BaseParser:
         return event_details
 
     def did_defendant_appear(self, hearing_tag) -> bool:
-        """If and only if "appeared" appears, infer defendant apparently appeared."""
+        """If "appeared" appears, infer defendant appeared."""
 
         if hearing_tag is None:
             return False
@@ -457,14 +460,14 @@ class BaseParser:
     def make_parsed_hearing(self, soup):
 
         try:
-            time = self._time(soup)
+            time = self.get_hearing_time(soup)
         except:
-            time = None
+            time = ""
 
         try:
             officer = self.get_hearing_officer(soup)
         except:
-            officer = None
+            officer = ""
 
         try:
             appeared = self.did_defendant_appear(soup)
@@ -475,14 +478,14 @@ class BaseParser:
 
         all_text = self.get_all_text_from_hearing_tag(soup)
 
-        return {
-            "hearing_date": self.get_hearing_date(soup),
-            "hearing_time": time,
-            "hearing_officer": officer,
-            "appeared": appeared,
-            "hearing_type": hearing_type,
-            "all_text": all_text,
-        }
+        return EvictionHearing(
+            hearing_date=self.get_hearing_date(soup),
+            hearing_time=time,
+            hearing_officer=officer,
+            appeared=appeared,
+            hearing_type=hearing_type,
+            all_text=all_text,
+        )
 
     THRESH = 75
 
