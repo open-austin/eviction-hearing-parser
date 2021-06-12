@@ -247,7 +247,7 @@ class BaseParser:
         return self.remove_whitespace(name)
 
     def get_disposition_date_node(self, soup) -> Optional[BeautifulSoup]:
-        return soup.find("th", id=re.compile(r"RDISPDATE1"))
+        return soup.find("th", id=re.compile(r"RDISPDATE1")) if soup else None
 
     def get_disposition_date(self, soup: Optional[BeautifulSoup]) -> Optional[str]:
         if soup is None:

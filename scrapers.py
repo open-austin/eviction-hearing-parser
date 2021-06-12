@@ -61,7 +61,6 @@ class FakeScraper:
                     f"Case {case_id} has status '{status}', which is not in our list of known statuses."
                 )
 
-        # TODO: choose parser based on county
         parser = hearing.BaseParser()
         return parser.make_parsed_case(
             soup=register_soup, status=status, type=type, register_url=register_url

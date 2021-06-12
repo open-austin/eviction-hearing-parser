@@ -78,7 +78,7 @@ class TestDataFromScrapedPage:
 
         parsed = scraper.fetch_parsed_case("J1-CV-20-001590")
         assert (
-            parsed["register_url"]
+            parsed.register_url
             == "https://odysseypa.traviscountytx.gov/JPPublicAccess/CaseDetail.aspx?CaseID=2286743"
         )
-        assert parsed["status"] == "Final Status"
+        assert parsed.status == "Final Status"
