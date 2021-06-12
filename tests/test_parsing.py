@@ -557,11 +557,21 @@ class TestParseHTML:
             (6, None),
             (
                 7,
-                CaseEvent(case_event_date=datetime.date(2020, 2, 3)),
+                CaseEvent(
+                    case_event_date=datetime.date(2020, 1, 29),
+                    served_date="02/01/2020",
+                    served_subject="Ant, Ten",
+                    returned="02/13/2020",
+                ),
             ),
             (
                 8,
-                CaseEvent(case_event_date=datetime.date(2020, 2, 3)),
+                CaseEvent(
+                    case_event_date=datetime.date(2020, 2, 19),
+                    served_date="02/12/2020",
+                    served_subject="ANT AND ALL OTHER OCCUPANTS, TEN",
+                    returned="",
+                ),
             ),
             (9, None),
             (10, None),
@@ -585,8 +595,24 @@ class TestParseHTML:
             (4, None),
             (5, None),
             (6, None),
-            (7, CaseEvent(case_event_date=datetime.date(2020, 1, 29))),
-            (8, CaseEvent(case_event_date=datetime.date(2020, 2, 3))),
+            (
+                7,
+                CaseEvent(
+                    case_event_date=datetime.date(2020, 1, 29),
+                    served_date="",
+                    served_subject="",
+                    returned="",
+                ),
+            ),
+            (
+                8,
+                CaseEvent(
+                    case_event_date=datetime.date(2020, 2, 3),
+                    served_date="",
+                    served_subject="",
+                    returned="",
+                ),
+            ),
             (9, None),
             (10, None),
             (11, None),

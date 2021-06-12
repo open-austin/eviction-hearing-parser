@@ -348,7 +348,7 @@ class BaseParser:
         if event_tr:
             try:
                 text = event_tr.find("th", class_="ssTableHeaderLabel").text
-                return datetime.strpime(text.strip(), format="%m/%d/%Y")
+                return datetime.datetime.strptime(text.strip(), "%m/%d/%Y").date()
             except AttributeError:
                 return text
         return None
