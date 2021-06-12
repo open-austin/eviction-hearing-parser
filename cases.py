@@ -28,6 +28,8 @@ class CaseEvent(BaseModel):
 
 
 class EvictionCase(BaseModel):
+    """A docketed eviction case."""
+
     precinct_number: int
     style: str
     plaintiff: str
