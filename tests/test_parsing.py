@@ -557,17 +557,11 @@ class TestParseHTML:
             (6, None),
             (
                 7,
-                (
-                    "Writ(case_event_date='01/29/2020', served_date='02/01/2020', "
-                    "served_subject='Ant, Ten', returned='02/13/2020')"
-                ),
+                CaseEvent(case_event_date=datetime.date(2020, 2, 3)),
             ),
             (
                 8,
-                (
-                    "Writ(case_event_date='02/19/2020', served_date='02/12/2020', "
-                    "served_subject='ANT AND ALL OTHER OCCUPANTS, TEN', returned='')"
-                ),
+                CaseEvent(case_event_date=datetime.date(2020, 2, 3)),
             ),
             (9, None),
             (10, None),

@@ -308,11 +308,19 @@ class BaseParser:
         else:
             return None
 
-    def make_case_event_from_date_string(self, case_event_date: str) -> datetime.date:
+    def make_case_event_date_from_date_string(
+        self, case_event_date: str
+    ) -> datetime.date:
         try:
             return datetime.datetime.strptime(case_event_date, "%m/%d/%Y").date()
         except TypeError:
             return case_event_date
+
+    def make_case_event_from_date_string(
+        self, case_event_date: str
+    ) -> Optional[datetime.date]:
+        date_obj = self.make_case_event_date_from_date_string(case_event_date)
+        return CaseEvent(case_event_date=date_obj) if date_obj else None
 
     def get_case_event_date_basic(
         self, soup: BeautifulSoup, event_name: str
@@ -331,7 +339,9 @@ class BaseParser:
             except AttributeError:
                 return None
 
-        return self.make_case_event_from_date_string(case_event_date=case_event_date)
+        return self.make_case_event_date_from_date_string(
+            case_event_date=case_event_date
+        )
 
     def get_writ_issued_date(self, event_tr) -> Optional[datetime.date]:
 
@@ -760,7 +770,9 @@ class HaysParser(BaseParser):
 
         return dates_of_service
 
-    def get_writ_of_possession_requested(self, soup: BeautifulSoup) -> Dict[str, str]:
+    def get_writ_of_possession_requested(
+        self, soup: BeautifulSoup
+    ) -> Optional[CaseEvent]:
         """
         Get details for the "Writ of Possession Requested" case event.
 
@@ -773,9 +785,11 @@ class HaysParser(BaseParser):
 
         request_date_element = soup.find(id="RCDER12")
         if request_date_element and request_date_element.text:
-            event_details["case_event_date"] = request_date_element.text.strip()
-
-        return event_details
+            event_date = self.make_case_event_date_from_date_string(
+                request_date_element.text.strip()
+            )
+            return CaseEvent(case_event_date=event_date) if event_date else None
+        return None
 
     def get_writ_issued_date(self, event_tr) -> Optional[str]:
         issued_date_element = event_tr.find(id=["RCDER13", "RCDSE13", "RCDER14"])
@@ -799,6 +813,7 @@ class HaysParser(BaseParser):
             return event_details
 
         request_date_element = soup.find(id=["RCDSE14", "RCDSE15"])
+
         if request_date_element.text:
             return self.make_case_event_from_date_string(
                 request_date_element.text.strip()
