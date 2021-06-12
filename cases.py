@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Any, List, Optional
 
 from pydantic import BaseModel, HttpUrl
@@ -42,7 +43,7 @@ class EvictionCase(BaseModel):
     type: str
     register_url: Optional[HttpUrl]
     disposition_type: str
-    disposition_amount: str
+    disposition_amount: Optional[Decimal]
     disposition_date: str
     disposition_awarded_to: str
     disposition_awarded_against: str
@@ -55,3 +56,6 @@ class EvictionCase(BaseModel):
     judgement_for: str
     match_score: str
     date_filed: str
+    defendant_address: str = ""
+    defendant_race: str = ""
+    defendant_gender: str = ""

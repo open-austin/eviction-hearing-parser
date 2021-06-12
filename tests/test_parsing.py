@@ -547,40 +547,37 @@ class TestParseHTML:
         "test_html_file_index, expected_event_details",
         [
             (0, "None"),
-            (1, {}),
-            (2, {}),
-            (3, {}),
-            (4, {}),
-            (5, {}),
-            (6, {}),
+            (1, "None"),
+            (2, "None"),
+            (3, "None"),
+            (4, "None"),
+            (5, "None"),
+            (6, "None"),
             (
                 7,
-                {
-                    "case_event_date": "01/29/2020",
-                    "served_date": "02/01/2020",
-                    "served_subject": "Ant, Ten",
-                    "returned_date": "02/13/2020",
-                },
+                (
+                    "Writ(case_event_date='01/29/2020', served_date='02/01/2020', "
+                    "served_subject='Ant, Ten', returned='02/13/2020')"
+                ),
             ),
             (
                 8,
-                {
-                    "case_event_date": "02/19/2020",
-                    "served_date": "02/12/2020",
-                    "served_subject": "ANT AND ALL OTHER OCCUPANTS, TEN",
-                },
+                (
+                    "Writ(case_event_date='02/19/2020', served_date='02/12/2020', "
+                    "served_subject='ANT AND ALL OTHER OCCUPANTS, TEN', returned='')"
+                ),
             ),
-            (9, None),
-            (10, None),
-            (11, None),
-            (12, None),
-            (13, None),
+            (9, "None"),
+            (10, "None"),
+            (11, "None"),
+            (12, "None"),
+            (13, "None"),
         ],
     )
     def test_get_writ(self, test_html_file_index, expected_event_details):
         soup = load_pages.get_test_soup(test_html_file_index)
         event_details = TravisParser.get_writ(soup)
-        assert str(event_details) == expected_event_details
+        assert repr(event_details) == expected_event_details
 
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
@@ -749,5 +746,5 @@ class TestParseHTML:
     def test_make_parsed_case(self, test_html_file_index, plaintiff, disposition_date):
         soup = load_pages.get_test_soup(test_html_file_index)
         parsed_case = TravisParser.make_parsed_case(soup=soup)
-        assert parsed_case["plaintiff"] == plaintiff
-        assert parsed_case["disposition_date"] == disposition_date
+        assert parsed_case.plaintiff == plaintiff
+        assert parsed_case.disposition_date == disposition_date

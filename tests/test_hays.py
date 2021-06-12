@@ -276,7 +276,7 @@ class TestParseHTML:
     def test_get_writ(self, test_html_file_index, expected_event_details):
         soup = load_pages.get_test_soup(test_html_file_index, county)
         event_details = Hays.get_writ(soup)
-        assert str(event_details).startswith(expected_event_details)
+        assert repr(event_details).startswith(expected_event_details)
 
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
@@ -389,11 +389,11 @@ class TestParseHTML:
         soup = load_pages.get_test_soup(test_html_file_index, county)
         parsed_case = Hays.make_parsed_case(soup=soup)
 
-        assert parsed_case["plaintiff"] == plaintiff
-        assert parsed_case["disposition_date"] == disposition_date
-        assert parsed_case["address"] == address
-        assert parsed_case["race"] == race
-        assert parsed_case["gender"] == gender
+        assert parsed_case.plaintiff == plaintiff
+        assert parsed_case.disposition_date == disposition_date
+        assert parsed_case.defendant_address == address
+        assert parsed_case.defendant_race == race
+        assert parsed_case.defendant_gender == gender
 
     @pytest.mark.parametrize(
         "test_html_file_index, expected_address",

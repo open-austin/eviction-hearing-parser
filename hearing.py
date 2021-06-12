@@ -129,7 +129,9 @@ class BaseParser:
         return disp_date_th.parent if disp_date_th is not None else None
 
     def get_disposition_type(self, disposition_tr) -> str:
-        return disposition_tr.find("b").text
+        if disposition_tr:
+            return disposition_tr.find("b").text
+        return ""
 
     def get_disposition_awarded_to(self, disposition_tr) -> str:
         """
@@ -591,7 +593,7 @@ class BaseParser:
 
     def make_parsed_case(
         self, soup, status: str = "", type: str = "", register_url: str = ""
-    ) -> Dict[str, str]:
+    ) -> EvictionCase:
         # TODO handle multiple defendants/plaintiffs with different zips
         disposition_tr = self.get_disposition_tr_element(soup)
 
@@ -617,7 +619,7 @@ class BaseParser:
 
         try:
             disp_type = self.get_disposition_type(disposition_tr)
-        except:
+        except AttributeError:
             disp_type = ""
 
         try:
@@ -636,58 +638,56 @@ class BaseParser:
         defendants = self.get_defendants(soup)
 
         disposition_date = self.get_disposition_date(disposition_tr)
-        return {
-            "precinct_number": self.get_precinct_number(soup),
-            "style": style,
-            "plaintiff": plaintiff,
-            "active_or_inactive": self.active_or_inactive(status),
-            "judgment_after_moratorium": self.judgment_after_moratorium(
+        return EvictionCase(
+            precinct_number=self.get_precinct_number(soup),
+            style=style,
+            plaintiff=plaintiff,
+            active_or_inactive=self.active_or_inactive(status),
+            judgment_after_moratorium=self.judgment_after_moratorium(
                 disposition_date, status
             ),
-            "defendants": defendants,
-            "attorneys_for_plaintiffs": ", ".join(
+            defendants=defendants,
+            attorneys_for_plaintiffs=", ".join(
                 [a for a in self.get_attorneys_for_plaintiffs(soup)]
             ),
-            "attorneys_for_defendants": ", ".join(
+            attorneys_for_defendants=", ".join(
                 [a for a in self.get_attorneys_for_defendants(soup)]
             ),
-            "case_number": self.get_case_number(soup),
-            "defendant_zip": defendant_zip,
-            "plaintiff_zip": plaintiff_zip,
-            "hearings": [
+            case_number=self.get_case_number(soup),
+            defendant_zip=defendant_zip,
+            plaintiff_zip=plaintiff_zip,
+            hearings=[
                 self.make_parsed_hearing(hearing)
                 for hearing in self.get_hearing_tags(soup)
             ],
-            "status": status,
-            "type": type,
-            "register_url": register_url or None,
-            "disposition_type": self.get_disposition_type(disposition_tr)
+            status=status,
+            type=type,
+            register_url=register_url or None,
+            disposition_type=self.get_disposition_type(disposition_tr)
             if disp_type is not None
             else "",
-            "disposition_amount": self.get_disposition_amount(disposition_tr)
-            if disposition_tr is not None
-            else "",
-            "disposition_date": disposition_date if disposition_tr is not None else "",
-            "disposition_awarded_to": self.get_disposition_awarded_to(disposition_tr),
-            "disposition_awarded_against": self.get_disposition_awarded_against(
+            disposition_amount=self.get_disposition_amount(disposition_tr),
+            disposition_date=disposition_date if disposition_tr is not None else "",
+            disposition_awarded_to=self.get_disposition_awarded_to(disposition_tr),
+            disposition_awarded_against=self.get_disposition_awarded_against(
                 disposition_tr
             )
             if self.get_disposition_awarded_against(disposition_tr) is not None
             else "",
-            "comments": self.get_comments(soup)
+            comments=self.get_comments(soup)
             if self.get_comments(soup) is not None
             else "",
-            "writ": self.get_writ(soup),
-            "writ_of_possession_service": self.get_writ_of_possession_service(soup),
-            "writ_of_possession_requested": self.get_writ_of_possession_requested(soup),
-            "writ_of_possession_sent_to_constable_office": self.get_writ_of_possession_sent_to_constable(
+            writ=self.get_writ(soup),
+            writ_of_possession_service=self.get_writ_of_possession_service(soup),
+            writ_of_possession_requested=self.get_writ_of_possession_requested(soup),
+            writ_of_possession_sent_to_constable_office=self.get_writ_of_possession_sent_to_constable(
                 soup
             ),
-            "writ_returned_to_court": self.get_writ_returned_to_court(soup),
-            "judgement_for": winner if winner is not None else "",
-            "match_score": score if score is not None else "",
-            "date_filed": self.get_date_filed(soup),
-        }
+            writ_returned_to_court=self.get_writ_returned_to_court(soup),
+            judgement_for=winner if winner is not None else "",
+            match_score=score if score is not None else "",
+            date_filed=self.get_date_filed(soup),
+        )
 
 
 class HaysParser(BaseParser):
@@ -737,7 +737,7 @@ class HaysParser(BaseParser):
         def_info_tags = soup.find_all("td", headers=re.compile(r"\s*PIr01\s*PIr11"))
         return def_info_tags
 
-    def get_defendant_address(self, soup: BeautifulSoup) -> Optional[str]:
+    def get_defendant_address(self, soup: BeautifulSoup) -> str:
         """Get address for defendant"""
         def_info_tag = self.get_defendant_info_tags(soup)[2]
         address = def_info_tag.text.split("\xa0\xa0")
@@ -752,13 +752,13 @@ class HaysParser(BaseParser):
 
         return race_gender.split(" ")
 
-    def get_defendant_race(self, soup: BeautifulSoup) -> Optional[str]:
+    def get_defendant_race(self, soup: BeautifulSoup) -> str:
         race = " ".join(self.get_defendant_race_gender(soup)[1:])
         return race
 
-    def get_defendant_gender(self, soup: BeautifulSoup) -> Optional[str]:
-        gender = self.get_defendant_race_gender(soup)[0]
-        return gender
+    def get_defendant_gender(self, soup: BeautifulSoup) -> str:
+        categories = self.get_defendant_race_gender(soup)
+        return categories[0] if categories else ""
 
     def was_defendant_alternative_served(self, soup) -> List[str]:
         """Just allows a different label for "Order Granting Alternative Service"."""
@@ -813,29 +813,19 @@ class HaysParser(BaseParser):
 
     def make_parsed_case(
         self, soup, status: str = "", type: str = "", register_url: str = ""
-    ) -> Dict[str, str]:
+    ) -> EvictionCase:
 
         try:
             address = self.get_defendant_address(soup)
-        except:
-            address = None
-
-        try:
-            race = self.get_defendant_race(soup)
-        except:
-            race = None
-
-        try:
-            gender = self.get_defendant_gender(soup)
-        except:
-            gender = None
+        except AttributeError:
+            address = ""
 
         parsed_case = super().make_parsed_case(
             soup=soup, status=status, type=type, register_url=register_url
         )
-        parsed_case["address"] = address
-        parsed_case["race"] = race
-        parsed_case["gender"] = gender
+        parsed_case.defendant_address = address
+        parsed_case.defendant_race = self.get_defendant_race(soup)
+        parsed_case.defendant_gender = self.get_defendant_gender(soup)
 
         return parsed_case
 

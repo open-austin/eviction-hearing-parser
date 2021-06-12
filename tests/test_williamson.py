@@ -422,5 +422,5 @@ class TestParseHTML:
     def test_make_parsed_case(self, test_html_file_index, plaintiff, disposition_date):
         soup = load_pages.get_test_soup(test_html_file_index, county)
         parsed_case = Wilco.make_parsed_case(soup=soup)
-        assert parsed_case["plaintiff"] == plaintiff
-        assert parsed_case["disposition_date"] == disposition_date
+        assert parsed_case.plaintiff == plaintiff
+        assert parsed_case.disposition_date == disposition_date
