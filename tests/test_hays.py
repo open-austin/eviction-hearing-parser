@@ -1,7 +1,9 @@
+import datetime
 from decimal import Decimal
 
 import pytest
 
+from cases import CaseEvent
 import hearing
 import load_pages
 
@@ -269,20 +271,27 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
         [
-            (0, "None"),
-            (1, "Writ(case_event_date='03/30/2021'"),
+            (0, None),
+            (
+                1,
+                CaseEvent(
+                    case_event_date=datetime.date(2021, 3, 30),
+                    served_date="03/08/2021",
+                    served_subject="Realistic, Person",
+                ),
+            ),
         ],
     )
     def test_get_writ(self, test_html_file_index, expected_event_details):
         soup = load_pages.get_test_soup(test_html_file_index, county)
         event_details = Hays.get_writ(soup)
-        assert repr(event_details).startswith(expected_event_details)
+        assert event_details == expected_event_details
 
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
         [
-            (0, {"case_event_date": "03/11/2021"}),
-            (1, {"case_event_date": "04/01/2021"}),
+            (0, CaseEvent(case_event_date=datetime.date(2021, 3, 11))),
+            (1, CaseEvent(case_event_date=datetime.date(2021, 4, 1))),
         ],
     )
     def test_get_writ_of_possession_service(
@@ -295,8 +304,8 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
         [
-            (0, {"case_event_date": "03/10/2021"}),
-            (1, {"case_event_date": "03/30/2021"}),
+            (0, CaseEvent(case_event_date=datetime.date(2021, 3, 10))),
+            (1, CaseEvent(case_event_date=datetime.date(2021, 3, 30))),
         ],
     )
     def test_get_writ_of_possession_requested(
@@ -309,8 +318,8 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
         [
-            (0, {}),
-            (1, {}),
+            (0, None),
+            (1, None),
         ],
     )
     def test_get_writ_of_possession_sent_to_constable(
@@ -323,8 +332,8 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
         [
-            (0, {}),
-            (1, {"case_event_date": "04/08/2021"}),
+            (0, None),
+            (1, CaseEvent(case_event_date=datetime.date(2021, 4, 8))),
         ],
     )
     def test_get_writ_returned_to_court(

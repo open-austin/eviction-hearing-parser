@@ -324,9 +324,9 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
         [
-            (0, {}),
-            (1, {}),
-            (2, {}),
+            (0, None),
+            (1, None),
+            (2, None),
         ],
     )
     def test_get_writ_of_possession_service(
@@ -339,9 +339,9 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
         [
-            (0, {}),
-            (1, {}),
-            (2, {}),
+            (0, None),
+            (1, None),
+            (2, None),
         ],
     )
     def test_get_writ_of_possession_requested(
@@ -354,9 +354,9 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
         [
-            (0, {}),
-            (1, {}),
-            (2, {}),
+            (0, None),
+            (1, None),
+            (2, None),
         ],
     )
     def test_get_writ_of_possession_sent_to_constable(
@@ -369,9 +369,9 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
         [
-            (0, {}),
-            (1, {}),
-            (2, {}),
+            (0, None),
+            (1, None),
+            (2, None),
         ],
     )
     def test_get_writ_returned_to_court(

@@ -5,10 +5,10 @@ import sys
 import itertools
 from typing import Dict, List, Optional
 from bs4 import BeautifulSoup
-from datetime import datetime
+import datetime
 import logging
 
-from cases import EvictionHearing, Writ, EvictionCase
+from cases import EvictionHearing, CaseEvent, EvictionCase
 from statuses import statuses_map
 from fuzzywuzzy import fuzz
 from emailing import log_and_email
@@ -308,9 +308,15 @@ class BaseParser:
         else:
             return None
 
+    def make_case_event_from_date_string(self, case_event_date: str) -> datetime.date:
+        try:
+            return datetime.datetime.strptime(case_event_date, "%m/%d/%Y").date()
+        except TypeError:
+            return case_event_date
+
     def get_case_event_date_basic(
         self, soup: BeautifulSoup, event_name: str
-    ) -> Optional[str]:
+    ) -> Optional[datetime.date]:
         """Get date for case event entries that only include event name."""
         case_event_date: Optional[str] = None
 
@@ -323,15 +329,19 @@ class BaseParser:
                     "th", class_="ssTableHeaderLabel"
                 ).text
             except AttributeError:
-                pass
+                return None
 
-        return case_event_date
+        return self.make_case_event_from_date_string(case_event_date=case_event_date)
 
-    def get_writ_issued_date(self, event_tr) -> str:
-        elem = event_tr.find("th", class_="ssTableHeaderLabel")
-        if elem:
-            return elem.text
-        return ""
+    def get_writ_issued_date(self, event_tr) -> Optional[datetime.date]:
+
+        if event_tr:
+            try:
+                text = event_tr.find("th", class_="ssTableHeaderLabel").text
+                return datetime.strpime(text.strip(), format="%m/%d/%Y")
+            except AttributeError:
+                return text
+        return None
 
     def get_writ_served_date(self, served_td) -> str:
         try:
@@ -352,9 +362,8 @@ class BaseParser:
         except AttributeError:
             return ""
 
-    def get_writ(self, soup: BeautifulSoup) -> Optional[Writ]:
+    def get_writ(self, soup: BeautifulSoup) -> Optional[CaseEvent]:
         """Get details for the "Writ" case event."""
-        event_details: Dict[str, str] = {}
 
         case_events = self.get_events_tbody_element(soup)
         event_label = case_events.find("b", text="Writ")
@@ -362,66 +371,47 @@ class BaseParser:
             return None
 
         event_tr = event_label.parent.parent.parent.parent.parent.parent
-
-        writ_date = self.get_writ_issued_date(event_tr=event_tr)
-        if writ_date:
-            event_details["case_event_date"] = writ_date
         served_td = event_tr.find("td", text="Served")
         returned_td = event_tr.find("td", text="Returned")
-        return Writ(
+        return CaseEvent(
             case_event_date=self.get_writ_issued_date(event_tr=event_tr),
             served_date=self.get_writ_served_date(served_td),
             served_subject=self.get_writ_served_subject(served_td),
             returned=self.get_writ_returned(returned_td),
         )
 
-    def get_writ_of_possession_service(self, soup: BeautifulSoup) -> Dict[str, str]:
+    def get_writ_of_possession_service(
+        self, soup: BeautifulSoup
+    ) -> Optional[CaseEvent]:
         """Get details for the "Writ of Possession Service" case event."""
-        event_details: Dict[str, str] = {}
 
         event_date = self.get_case_event_date_basic(soup, "Writ of Possession Service")
-        if event_date:
-            event_details["case_event_date"] = event_date
+        return CaseEvent(case_event_date=event_date) if event_date else None
 
-        return event_details
-
-    def get_writ_of_possession_requested(self, soup: BeautifulSoup) -> Dict[str, str]:
+    def get_writ_of_possession_requested(
+        self, soup: BeautifulSoup
+    ) -> Optional[CaseEvent]:
         """Get details for the "Writ of Possession Requested" case event."""
-        event_details: Dict[str, str] = {}
-
         event_date = self.get_case_event_date_basic(
             soup, "Writ of Possession Requested"
         )
-        if event_date:
-            event_details["case_event_date"] = event_date
-
-        return event_details
+        return CaseEvent(case_event_date=event_date) if event_date else None
 
     def get_writ_of_possession_sent_to_constable(
         self, soup: BeautifulSoup
-    ) -> Dict[str, str]:
+    ) -> Optional[CaseEvent]:
         """Get details for the "Writ of Possession Sent to Constable's Office" case event."""
-        event_details: Dict[str, str] = {}
-
         event_date = self.get_case_event_date_basic(
             soup, "Writ of Possession Sent to Constable's Office"
         )
-        if event_date:
-            event_details["case_event_date"] = event_date
+        return CaseEvent(case_event_date=event_date) if event_date else None
 
-        return event_details
-
-    def get_writ_returned_to_court(self, soup: BeautifulSoup) -> Dict[str, str]:
+    def get_writ_returned_to_court(self, soup: BeautifulSoup) -> Optional[CaseEvent]:
         """Get details for the "Writ Returned to Court" case event."""
-        event_details: Dict[str, str] = {}
-
         event_date = self.get_case_event_date_basic(soup, "Writ Returned to Court")
         if not event_date:
             event_date = self.get_case_event_date_basic(soup, "Writ Returned")
-        if event_date:
-            event_details["case_event_date"] = event_date
-
-        return event_details
+        return CaseEvent(case_event_date=event_date) if event_date else None
 
     def did_defendant_appear(self, hearing_tag) -> bool:
         """If "appeared" appears, infer defendant appeared."""
@@ -580,7 +570,7 @@ class BaseParser:
             return ""
 
         disposition_date = datetime.strptime(disposition_date, "%m/%d/%Y")
-        march_14 = datetime(2020, 3, 14)
+        march_14 = datetime.date(2020, 3, 14)
 
         return (
             "Y"
@@ -790,11 +780,14 @@ class HaysParser(BaseParser):
     def get_writ_issued_date(self, event_tr) -> Optional[str]:
         issued_date_element = event_tr.find(id=["RCDER13", "RCDSE13", "RCDER14"])
         if issued_date_element and issued_date_element.text.strip():
-            return issued_date_element.text.strip()
+            text = issued_date_element.text.strip()
+            return datetime.datetime.strptime(text.strip(), "%m/%d/%Y")
 
         return None
 
-    def get_writ_of_possession_service(self, soup: BeautifulSoup) -> Dict[str, str]:
+    def get_writ_of_possession_service(
+        self, soup: BeautifulSoup
+    ) -> Optional[CaseEvent]:
         """
         Get details for the "Writ of Possession Requested" case event.
 
@@ -807,9 +800,10 @@ class HaysParser(BaseParser):
 
         request_date_element = soup.find(id=["RCDSE14", "RCDSE15"])
         if request_date_element.text:
-            event_details["case_event_date"] = request_date_element.text.strip()
-
-        return event_details
+            return self.make_case_event_from_date_string(
+                request_date_element.text.strip()
+            )
+        return None
 
     def make_parsed_case(
         self, soup, status: str = "", type: str = "", register_url: str = ""

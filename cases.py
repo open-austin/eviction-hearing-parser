@@ -1,3 +1,4 @@
+from datetime import date
 from decimal import Decimal
 from typing import Any, List, Optional
 
@@ -19,11 +20,11 @@ class EvictionHearing(BaseModel):
     all_text: str = ""
 
 
-class Writ(BaseModel):
-    case_event_date: str
-    served_date: str
-    served_subject: str
-    returned: str
+class CaseEvent(BaseModel):
+    case_event_date: Optional[date]
+    served_date: str = ""
+    served_subject: str = ""
+    returned: str = ""
 
 
 class EvictionCase(BaseModel):
@@ -48,11 +49,11 @@ class EvictionCase(BaseModel):
     disposition_awarded_to: str
     disposition_awarded_against: str
     comments: str
-    writ: Optional[Writ]
-    writ_of_possession_service: Any
-    writ_of_possession_requested: Any
-    writ_of_possession_sent_to_constable_office: Any
-    writ_returned_to_court: Any
+    writ: Optional[CaseEvent]
+    writ_of_possession_service: Optional[CaseEvent]
+    writ_of_possession_requested: Optional[CaseEvent]
+    writ_of_possession_sent_to_constable_office: Optional[CaseEvent]
+    writ_returned_to_court: Optional[CaseEvent]
     judgement_for: str
     match_score: str
     date_filed: str
