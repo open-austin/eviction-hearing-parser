@@ -1,0 +1,8 @@
+colorama
+fuzzywuzzy
+pydantic
+python-dotenv
+python-Levenshtein
+simplejson
+sphinx
+sphinx-press-theme
