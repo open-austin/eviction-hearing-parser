@@ -579,7 +579,9 @@ class BaseParser:
         if (not disposition_date) or (substatus not in statuses_map):
             return ""
 
-        disposition_date = datetime.strptime(disposition_date, "%m/%d/%Y")
+        disposition_date = datetime.datetime.strptime(
+            disposition_date, "%m/%d/%Y"
+        ).date()
         march_14 = datetime.date(2020, 3, 14)
 
         return (
