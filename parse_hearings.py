@@ -4,15 +4,13 @@ To perform a scraper run, use: python parse_hearings.py name_of_csv_with_case_nu
 """
 
 import csv
-import os
 import click
-import hearing
-import fetch_page
-import persist
 import logging
 import sys
-import simplejson as json
-from typing import Any, Dict, List
+import simplejson
+
+import scrapers
+from typing import Any, Dict, List, Optional
 from emailing import log_and_email
 
 logger = logging.getLogger()
@@ -30,44 +28,46 @@ def get_ids_to_parse(infile: click.File) -> List[str]:
     return ids_to_parse
 
 
-def make_case_list(ids_to_parse: List[str]) -> List[Dict[str, Any]]:
-    """Gets case details for each case number in `ids_to_parse`"""
-
-    parsed_cases, failed_ids = [], []
-    for id_to_parse in ids_to_parse:
-        new_case = fetch_page.fetch_parsed_case(id_to_parse)
-        if new_case:
-            parsed_cases.append(new_case)
-        else:
-            failed_ids.append(id_to_parse)
-
-    if failed_ids:
-        error_message = f"Failed to scrape data for {len(failed_ids)} case numbers. Here they are:\n{', '.join(failed_ids)}"
-        log_and_email(error_message, "Failed Case Numbers", error=True)
-
-    return parsed_cases
-
-
 def parse_all_from_parse_filings(
-    case_nums: List[str], showbrowser=False
+    case_nums: List[str],
+    scraper: Optional[scrapers.FakeScraper] = None,
+    db: bool = True,
+    county: str = "travis",
+    showbrowser: bool = False,
 ) -> List[Dict[str, Any]]:
     """
     Gets case details for each case number in `case_nums` and sends the data to PostgreSQL.
     Logs any case numbers for which getting data failed.
     """
+    if not scraper:
+        # Get the scraper corresponding to the lowercase command line entry for county. Default to TravisScraper.
+        county = county.lower()
+        scraper = (
+            scrapers.SCRAPER_NAMES[county]()
+            if county in scrapers.SCRAPER_NAMES
+            else scrapers.TravisScraper()
+        )
+    parsed_cases = []
+    for tries in range(1, 6):
+        try:
+            parsed_cases = scraper.make_case_list(ids_to_parse=case_nums)
+            return parsed_cases
+        except Exception as e:
+            logger.error(
+                f"Failed to parse hearings on attempt {tries}. Error message: {e}"
+            )
+    return parsed_cases
 
-    if showbrowser:
-        from selenium import webdriver
 
-        fetch_page.driver = webdriver.Chrome("./chromedriver")
+def persist_parsed_cases(cases: List[Dict[str, Any]]) -> None:
+    import persist
 
-    parsed_cases = make_case_list(case_nums)
     logger.info(
-        f"Finished making case list, now will send all {len(parsed_cases)} cases to SQL."
+        f"Finished making case list, now will send all {len(cases)} cases to SQL."
     )
 
     failed_cases = []
-    for parsed_case in parsed_cases:
+    for parsed_case in cases:
         try:
             persist.rest_case(parsed_case)
         except:
@@ -81,46 +81,52 @@ def parse_all_from_parse_filings(
     if failed_cases:
         error_message = f"Failed to send the following case numbers to SQL:\n{', '.join(failed_cases)}"
         log_and_email(
-            error_message, "Case Numbers for Which Sending to SQL Failed", error=True
+            error_message,
+            "Case Numbers for Which Sending to SQL Failed",
+            error=True,
         )
     logger.info("Finished sending cases to SQL.")
-
-    return parsed_cases
 
 
 @click.command()
 @click.argument(
-    "infile", type=click.File(mode="r"),
+    "infile",
+    type=click.File(mode="r"),
 )
 @click.argument("outfile", type=click.File(mode="w"), default="result.json")
+@click.argument("county", type=click.STRING, default="travis")
 @click.option(
     "--showbrowser / --headless",
     default=False,
     help="whether to operate in headless mode or not",
 )
-def parse_all(infile, outfile, showbrowser=False):
+@click.option(
+    "--db / --no-db",
+    default=True,
+    help="whether to persist the data to a db",
+)
+@click.option(
+    "--db / --no-db",
+    default=True,
+    help="whether to persist the data to a db",
+)
+def parse_all(
+    infile: Optional[click.File],
+    outfile: Optional[click.File],
+    county: Optional[click.STRING],
+    showbrowser=False,
+    db=True,
+):
     """Same as `parse_all_from_parse_filings()` but takes in a csv of case numbers instead of a list."""
 
-    # If showbrowser is True, use the default selenium driver
-    if showbrowser:
-        from selenium import webdriver
-
-        fetch_page.driver = webdriver.Chrome("./chromedriver")
-
     ids_to_parse = get_ids_to_parse(infile)
-
-    for tries in range(5):
-        try:
-            parsed_cases = make_case_list(ids_to_parse)
-            for parsed_case in parsed_cases:
-                persist.rest_case(parsed_case)
-            json.dump(parsed_cases, outfile)
-            logger.info(f"Successfully parsed hearings on attempt {tries + 1}")
-            break
-        except Exception as e:
-            logger.error(
-                f"Failed to parse hearings on attempt {tries + 1}. Error message: {e}"
-            )
+    parsed_cases = parse_all_from_parse_filings(
+        case_nums=ids_to_parse, showbrowser=showbrowser, db=db, county=county
+    )
+    if db:
+        persist_parsed_cases(parsed_cases)
+    if outfile:
+        simplejson.dump(parsed_cases, outfile)
 
 
 if __name__ == "__main__":

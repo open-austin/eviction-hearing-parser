@@ -1,11 +1,8 @@
--e .
-BeautifulSoup4
-click>=7.1.2
 colorama
 fuzzywuzzy
 pydantic
 python-dotenv
 python-Levenshtein
-selenium
 simplejson
-colorama
+sphinx
+sphinx-press-theme

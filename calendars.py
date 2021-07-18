@@ -13,7 +13,7 @@ def get_setting(soup) -> Optional[Dict[str, str]]:
 
     # get case number
     try:
-        setting_details["case_number"] = td_list[1].text
+        setting_details["case_number"] = td_list[1].text.strip()
     except:
         return None
 
@@ -124,7 +124,9 @@ def get_filing_case_nums(filing_soup) -> Tuple[List[str], bool]:
     return case_nums, query_needs_splitting
 
 
-def split_date_range(afterdate: str, beforedate: str) -> Tuple[str, str]:
+def split_date_range(
+    afterdate: datetime.date, beforedate: datetime.date
+) -> Tuple[datetime.date, datetime.date]:
     """
     Split date range in half.
 
@@ -132,29 +134,15 @@ def split_date_range(afterdate: str, beforedate: str) -> Tuple[str, str]:
     Returns 4 strings representing two new date ranges
     """
 
-    beforedate_date = datetime.strptime(afterdate, "%m-%d-%Y").date()
-    afterdate_date = datetime.strptime(beforedate, "%m-%d-%Y").date()
-
-    if beforedate_date == afterdate_date:
+    if beforedate == afterdate:
         raise ValueError(
             "split_date_range function was called with the same beforedate and afterdate."
         )
 
-    time_between_dates = beforedate_date - afterdate_date
+    time_between_dates = beforedate - afterdate
     days_to_add = (time_between_dates / 2).days
 
-    end_of_first_range_date = afterdate_date + timedelta(days=days_to_add)
+    end_of_first_range_date = afterdate + timedelta(days=days_to_add)
     start_of_second_range_date = end_of_first_range_date + timedelta(days=1)
 
-    # https://stackoverflow.com/a/2073189/15014986
-    # To remove leading zeroes, we use '-' on Linux and '#' on Windows. Just check for both.
-    try:
-        # For Linux
-        end_of_first_range = end_of_first_range_date.strftime("%-m-%-d-%Y")
-        start_of_second_range = start_of_second_range_date.strftime("%-m-%-d-%Y")
-    except ValueError:
-        # For Windows
-        end_of_first_range = end_of_first_range_date.strftime("%#m-%#d-%Y")
-        start_of_second_range = start_of_second_range_date.strftime("%#m-%#d-%Y")
-
-    return end_of_first_range, start_of_second_range
+    return end_of_first_range_date, start_of_second_range_date

@@ -1,7 +1,9 @@
+import datetime
 from decimal import Decimal
 
 import pytest
 
+from cases import CaseEvent
 from hearing import BaseParser
 import load_pages
 
@@ -143,7 +145,7 @@ class TestParseHTML:
             (1, "78759"),
             (2, ""),
             (3, "78705"),
-            (4, ""),
+            (4, "23541"),
             (5, "77056"),
             (6, "78736"),
             (7, "78752"),
@@ -435,20 +437,20 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
-            (0, None),
-            (1, None),
-            (2, None),
-            (3, None),
+            (0, ""),
+            (1, ""),
+            (2, ""),
+            (3, ""),
             (4, "We Sue You, Llc"),
             (5, "LESS SORE LLC"),
             (6, "Les See"),
             (7, "LAND LORDE, DBA LORDE"),
             (8, "THE HOUSING AUTHORITY OF THE CITY OF AUSTIN"),
-            (9, None),
+            (9, ""),
             (10, "Wren Ter"),
-            (11, None),
+            (11, ""),
             (12, "Wren A Ter, et al"),
-            (13, None),
+            (13, ""),
         ],
     )
     def test_disposition_awarded_to(self, index, expected):
@@ -460,20 +462,20 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "index, expected",
         [
-            (0, None),
-            (1, None),
-            (2, None),
-            (3, None),
+            (0, ""),
+            (1, ""),
+            (2, ""),
+            (3, ""),
             (4, "David Tenant"),
             (5, "LES SEE"),
             (6, "Land Lorde"),
             (7, "Ten Ant"),
             (8, "TEN ANT AND ALL OTHER OCCUPANTS"),
-            (9, None),
+            (9, ""),
             (10, "Proper Tea LLC"),
-            (11, None),
+            (11, ""),
             (12, "Proper Tea LLC"),
-            (13, None),
+            (13, ""),
         ],
     )
     def test_disposition_awarded_against(self, index, expected):
@@ -546,35 +548,36 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
         [
-            (0, {}),
-            (1, {}),
-            (2, {}),
-            (3, {}),
-            (4, {}),
-            (5, {}),
-            (6, {}),
+            (0, None),
+            (1, None),
+            (2, None),
+            (3, None),
+            (4, None),
+            (5, None),
+            (6, None),
             (
                 7,
-                {
-                    "case_event_date": "01/29/2020",
-                    "served_date": "02/01/2020",
-                    "served_subject": "Ant, Ten",
-                    "returned_date": "02/13/2020",
-                },
+                CaseEvent(
+                    case_event_date=datetime.date(2020, 1, 29),
+                    served_date="02/01/2020",
+                    served_subject="Ant, Ten",
+                    returned="02/13/2020",
+                ),
             ),
             (
                 8,
-                {
-                    "case_event_date": "02/19/2020",
-                    "served_date": "02/12/2020",
-                    "served_subject": "ANT AND ALL OTHER OCCUPANTS, TEN",
-                },
+                CaseEvent(
+                    case_event_date=datetime.date(2020, 2, 19),
+                    served_date="02/12/2020",
+                    served_subject="ANT AND ALL OTHER OCCUPANTS, TEN",
+                    returned="",
+                ),
             ),
-            (9, {}),
-            (10, {}),
-            (11, {}),
-            (12, {}),
-            (13, {}),
+            (9, None),
+            (10, None),
+            (11, None),
+            (12, None),
+            (13, None),
         ],
     )
     def test_get_writ(self, test_html_file_index, expected_event_details):
@@ -585,20 +588,36 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
         [
-            (0, {}),
-            (1, {}),
-            (2, {}),
-            (3, {}),
-            (4, {}),
-            (5, {}),
-            (6, {}),
-            (7, {"case_event_date": "01/29/2020"}),
-            (8, {"case_event_date": "02/03/2020"}),
-            (9, {}),
-            (10, {}),
-            (11, {}),
-            (12, {}),
-            (13, {}),
+            (0, None),
+            (1, None),
+            (2, None),
+            (3, None),
+            (4, None),
+            (5, None),
+            (6, None),
+            (
+                7,
+                CaseEvent(
+                    case_event_date=datetime.date(2020, 1, 29),
+                    served_date="",
+                    served_subject="",
+                    returned="",
+                ),
+            ),
+            (
+                8,
+                CaseEvent(
+                    case_event_date=datetime.date(2020, 2, 3),
+                    served_date="",
+                    served_subject="",
+                    returned="",
+                ),
+            ),
+            (9, None),
+            (10, None),
+            (11, None),
+            (12, None),
+            (13, None),
         ],
     )
     def test_get_writ_of_possession_service(
@@ -611,20 +630,20 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
         [
-            (0, {}),
-            (1, {}),
-            (2, {}),
-            (3, {}),
-            (4, {}),
-            (5, {}),
-            (6, {}),
-            (7, {}),
-            (8, {"case_event_date": "02/03/2020"}),
-            (9, {}),
-            (10, {}),
-            (11, {}),
-            (12, {}),
-            (13, {}),
+            (0, None),
+            (1, None),
+            (2, None),
+            (3, None),
+            (4, None),
+            (5, None),
+            (6, None),
+            (7, None),
+            (8, CaseEvent(case_event_date=datetime.date(2020, 2, 3))),
+            (9, None),
+            (10, None),
+            (11, None),
+            (12, None),
+            (13, None),
         ],
     )
     def test_get_writ_of_possession_requested(
@@ -637,20 +656,20 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
         [
-            (0, {}),
-            (1, {}),
-            (2, {}),
-            (3, {}),
-            (4, {}),
-            (5, {}),
-            (6, {}),
-            (7, {}),
-            (8, {"case_event_date": "02/04/2020"}),
-            (9, {}),
-            (10, {}),
-            (11, {}),
-            (12, {}),
-            (13, {}),
+            (0, None),
+            (1, None),
+            (2, None),
+            (3, None),
+            (4, None),
+            (5, None),
+            (6, None),
+            (7, None),
+            (8, CaseEvent(case_event_date=datetime.date(2020, 2, 4))),
+            (9, None),
+            (10, None),
+            (11, None),
+            (12, None),
+            (13, None),
         ],
     )
     def test_get_writ_of_possession_sent_to_constable(
@@ -663,20 +682,20 @@ class TestParseHTML:
     @pytest.mark.parametrize(
         "test_html_file_index, expected_event_details",
         [
-            (0, {}),
-            (1, {}),
-            (2, {}),
-            (3, {}),
-            (4, {}),
-            (5, {}),
-            (6, {}),
-            (7, {"case_event_date": "02/13/2020"}),
-            (8, {}),
-            (9, {}),
-            (10, {}),
-            (11, {}),
-            (12, {}),
-            (13, {}),
+            (0, None),
+            (1, None),
+            (2, None),
+            (3, None),
+            (4, None),
+            (5, None),
+            (6, None),
+            (7, CaseEvent(case_event_date=datetime.date(2020, 2, 13))),
+            (8, None),
+            (9, None),
+            (10, None),
+            (11, None),
+            (12, None),
+            (13, None),
         ],
     )
     def test_get_writ_returned_to_court(
@@ -749,5 +768,5 @@ class TestParseHTML:
     def test_make_parsed_case(self, test_html_file_index, plaintiff, disposition_date):
         soup = load_pages.get_test_soup(test_html_file_index)
         parsed_case = TravisParser.make_parsed_case(soup=soup)
-        assert parsed_case["plaintiff"] == plaintiff
-        assert parsed_case["disposition_date"] == disposition_date
+        assert parsed_case.plaintiff == plaintiff
+        assert parsed_case.disposition_date == disposition_date
