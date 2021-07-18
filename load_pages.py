@@ -35,13 +35,8 @@ def get_test_calendar() -> BeautifulSoup:
     return load_soup_from_filepath(filepath)
 
 
-def get_test_soup(index: int) -> BeautifulSoup:
-    filepath = get_test_html_path(index, page_type="test_pages")
-    return load_soup_from_filepath(filepath)
-
-
-def get_test_williamson(index: int) -> BeautifulSoup:
-    filepath = get_test_html_path(index, page_type="test_pages", county="williamson")
+def get_test_soup(index: int, county: str = "example") -> BeautifulSoup:
+    filepath = get_test_html_path(index, page_type="test_pages", county=county)
     return load_soup_from_filepath(filepath)
 
 

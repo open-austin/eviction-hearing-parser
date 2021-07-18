@@ -1,0 +1,177 @@
+definitions:
+  CaseEvent:
+    properties:
+      case_event_date:
+        format: date
+        title: Case Event Date
+        type: string
+      returned:
+        default: ""
+        title: Returned
+        type: string
+      served_date:
+        default: ""
+        title: Served Date
+        type: string
+      served_subject:
+        default: ""
+        title: Served Subject
+        type: string
+    title: CaseEvent
+    type: object
+  EvictionHearing:
+    description: "A hearing referenced in an eviction case docket.
+
+
+      May be a future or past hearing."
+    properties:
+      all_text:
+        default: ""
+        title: All Text
+        type: string
+      appeared:
+        title: Appeared
+        type: boolean
+      hearing_date:
+        default: ""
+        title: Hearing Date
+        type: string
+      hearing_officer:
+        default: ""
+        title: Hearing Officer
+        type: string
+      hearing_time:
+        default: ""
+        title: Hearing Time
+        type: string
+      hearing_type:
+        default: ""
+        title: Hearing Type
+        type: string
+    title: EvictionHearing
+    type: object
+properties:
+  active_or_inactive:
+    title: Active Or Inactive
+    type: string
+  attorneys_for_defendants:
+    title: Attorneys For Defendants
+    type: string
+  attorneys_for_plaintiffs:
+    title: Attorneys For Plaintiffs
+    type: string
+  case_number:
+    title: Case Number
+    type: string
+  comments:
+    title: Comments
+    type: string
+  date_filed:
+    title: Date Filed
+    type: string
+  defendant_address:
+    default: ""
+    title: Defendant Address
+    type: string
+  defendant_gender:
+    default: ""
+    title: Defendant Gender
+    type: string
+  defendant_race:
+    default: ""
+    title: Defendant Race
+    type: string
+  defendant_zip:
+    title: Defendant Zip
+    type: string
+  defendants:
+    title: Defendants
+    type: string
+  disposition_amount:
+    title: Disposition Amount
+    type: number
+  disposition_awarded_against:
+    title: Disposition Awarded Against
+    type: string
+  disposition_awarded_to:
+    title: Disposition Awarded To
+    type: string
+  disposition_date:
+    title: Disposition Date
+    type: string
+  disposition_type:
+    title: Disposition Type
+    type: string
+  hearings:
+    items:
+      $ref: "#/definitions/EvictionHearing"
+    title: Hearings
+    type: array
+  judgement_for:
+    title: Judgement For
+    type: string
+  judgment_after_moratorium:
+    title: Judgment After Moratorium
+    type: string
+  match_score:
+    title: Match Score
+    type: string
+  plaintiff:
+    title: Plaintiff
+    type: string
+  plaintiff_zip:
+    title: Plaintiff Zip
+    type: string
+  precinct_number:
+    title: Precinct Number
+    type: integer
+  register_url:
+    format: uri
+    maxLength: 2083
+    minLength: 1
+    title: Register Url
+    type: string
+  status:
+    title: Status
+    type: string
+  style:
+    title: Style
+    type: string
+  type:
+    title: Type
+    type: string
+  writ:
+    $ref: "#/definitions/CaseEvent"
+  writ_of_possession_requested:
+    $ref: "#/definitions/CaseEvent"
+  writ_of_possession_sent_to_constable_office:
+    $ref: "#/definitions/CaseEvent"
+  writ_of_possession_service:
+    $ref: "#/definitions/CaseEvent"
+  writ_returned_to_court:
+    $ref: "#/definitions/CaseEvent"
+required:
+  - precinct_number
+  - style
+  - plaintiff
+  - active_or_inactive
+  - judgment_after_moratorium
+  - defendants
+  - attorneys_for_plaintiffs
+  - attorneys_for_defendants
+  - case_number
+  - defendant_zip
+  - plaintiff_zip
+  - hearings
+  - status
+  - type
+  - disposition_type
+  - disposition_date
+  - disposition_awarded_to
+  - disposition_awarded_against
+  - comments
+  - judgement_for
+  - match_score
+  - date_filed
+title: EvictionCase
+type: object

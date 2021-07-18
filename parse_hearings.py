@@ -30,7 +30,7 @@ def get_ids_to_parse(infile: click.File) -> List[str]:
 
 def parse_all_from_parse_filings(
     case_nums: List[str],
-    scraper: Optional[scrapers.TestScraper] = None,
+    scraper: Optional[scrapers.FakeScraper] = None,
     db: bool = True,
     county: str = "travis",
     showbrowser: bool = False,

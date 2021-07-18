@@ -1,13 +1,12 @@
-
 import setuptools
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="eviction-hearing-parser",
-    version="0.1.0",
-    description="parses registers of actions for Travis County eviction hearings",
+    name="Texas Eviction Hearing Parser",
+    version="0.2.0",
+    description="Scraper and parser for registers of actions for Texas eviction hearings",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/open-austin/eviction-hearing-parse",
@@ -19,5 +18,5 @@ setuptools.setup(
         "click",
         "selenium",
     ],
-    python_requires=">=3.7",
+    python_requires=">=3.8",
 )

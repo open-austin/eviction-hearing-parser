@@ -31,7 +31,7 @@ def parse_settings_on_cloud(
     afterdate: str,
     beforedate: str,
     write_to_sheets=True,
-    scraper: Optional[scrapers.TestScraper] = None,
+    scraper: Optional[scrapers.FakeScraper] = None,
 ):
     """
     Same as `parse_settings()` (see below) but without command line interface and showbrowser option.

@@ -34,9 +34,10 @@ class CalendarQuery(NamedTuple):
     prefix: str
 
 
-class TestScraper:
+class FakeScraper:
     def __init__(self, headless: bool = True) -> None:
         self.homepage = "will not access web"
+        self.calendar_link_names = ["Court Calendar"]
 
     def fetch_parsed_case(self, case_id: str) -> Tuple[str, str]:
         query_result = self.query_case_id(case_id)
@@ -60,7 +61,6 @@ class TestScraper:
                     f"Case {case_id} has status '{status}', which is not in our list of known statuses."
                 )
 
-        # TODO: choose parser based on county
         parser = hearing.BaseParser()
         return parser.make_parsed_case(
             soup=register_soup, status=status, type=type, register_url=register_url
@@ -102,11 +102,25 @@ class TestScraper:
     def fetch_settings(
         self, afterdate: datetime.date, beforedate: datetime.date
     ) -> List[Optional[Dict[str, str]]]:
+        result = []
+        for calendar_link in self.calendar_link_names:
+            result += self.fetch_settings_from_calendar(
+                afterdate=afterdate,
+                beforedate=beforedate,
+                calendar_link=calendar_link,
+            )
+        return result
+
+    def fetch_settings_from_calendar(
+        self, afterdate: datetime.date, beforedate: datetime.date, calendar_link: str
+    ) -> List[Optional[Dict[str, str]]]:
 
         for tries in range(1, 11):
             try:
                 "fetch all settings as a list of dicts"
-                calendar_soup = self.query_settings(afterdate, beforedate)
+                calendar_soup = self.query_settings(
+                    afterdate, beforedate, calendar_link=calendar_link
+                )
                 return calendars.get_setting_list(calendar_soup)
             except:
                 if tries == 10:
@@ -148,18 +162,20 @@ class TestScraper:
     def query_case_id(self, case_id: str) -> Tuple[BeautifulSoup, BeautifulSoup]:
         if case_id != "J1-CV-20-001590":
             raise ValueError(
-                "The testing-only TestScraper can only take the Case ID J1-CV-20-001590. "
+                "The testing-only FakeScraper can only take the Case ID J1-CV-20-001590. "
                 "To avoid this error use a scraper class named after a county, e.g. 'TravisScraper'"
             )
         search_page = load_pages.get_test_search_page(0)
         register_page = load_pages.get_test_soup(0)
         return search_page, register_page
 
-    def query_settings(self, afterdate: datetime.date, beforedate: datetime.date):
+    def query_settings(
+        self, afterdate: datetime.date, beforedate: datetime.date, calendar_link: str
+    ):
         """Return fake setting list for testing."""
         if afterdate != datetime.date(2015, 10, 21):
             raise ValueError(
-                "To prevent confusion between real and fake data, TestScraper "
+                "To prevent confusion between real and fake data, FakeScraper "
                 "only works with date ranges "
                 "that begin on 2015-10-21. To make real queries, use a scraper named "
                 "for the county you want, such as 'TravisScraper'."
@@ -172,12 +188,13 @@ class TestScraper:
         return ["J1-CV-20-001590"]
 
 
-class TravisScraper(TestScraper):
+class TravisScraper(FakeScraper):
     def __init__(self, headless: bool = True) -> None:
         super().__init__()
         self.homepage = (
             "https://odysseypa.traviscountytx.gov/JPPublicAccess/default.aspx"
         )
+        self.date_range_button_id = "DateRange"
 
         options = Options()
         options.add_argument("--no-sandbox")
@@ -279,13 +296,13 @@ class TravisScraper(TestScraper):
             register_soup = BeautifulSoup(register_page_content, "html.parser")
             return search_soup, register_soup
 
-    def load_court_calendar(self):
+    def load_court_calendar(self, calendar_link_name: str):
         """Opens the court calendar to scrape settings"""
 
         start_page = self.load_start_page()
         try:
             element = WebDriverWait(start_page, 10).until(
-                EC.presence_of_element_located((By.LINK_TEXT, "Court Calendar"))
+                EC.presence_of_element_located((By.LINK_TEXT, calendar_link_name))
             )
         finally:
             element.click()
@@ -293,16 +310,19 @@ class TravisScraper(TestScraper):
         return None
 
     def query_settings(
-        self, afterdate: datetime.date, beforedate: datetime.date
+        self,
+        afterdate: datetime.date,
+        beforedate: datetime.date,
+        calendar_link: str,
     ) -> BeautifulSoup:
-        """Executes search for case settings between beforedate and afterdate for, returns content of resulting page"""
+        """Search for case settings between beforedate and afterdate for, returns content of resulting page"""
 
         for tries in range(5):
             # select Date Range radiobutton for search
             try:
-                court_calendar = self.load_court_calendar()
+                court_calendar = self.load_court_calendar(calendar_link)
                 date_range_radio_button = WebDriverWait(court_calendar, 10).until(
-                    EC.presence_of_element_located((By.ID, "DateRange"))
+                    EC.presence_of_element_located((By.ID, self.date_range_button_id))
                 )
                 date_range_radio_button.click()
                 break
@@ -475,10 +495,17 @@ class TravisScraper(TestScraper):
         return filings_case_nums_list
 
 
+class HaysScraper(TravisScraper):
+    def __init__(self, headless: bool = True) -> None:
+        super().__init__(headless=headless)
+        self.homepage = "http://public.co.hays.tx.us/default.aspx"
+
+
 class WilliamsonScraper(TravisScraper):
     def __init__(self, headless: bool = True) -> None:
         super().__init__(headless=headless)
         self.homepage = "https://judicialrecords.wilco.org/PublicAccess/default.aspx"
+        self.calendar_link_names = ["Jp1 Court Calendar", "Jp3 Court Calendar"]
 
     def fetch_parsed_case(self, case_id: str) -> Tuple[str, str]:
         query_result = self.query_case_id(case_id)
@@ -613,7 +640,7 @@ class WilliamsonScraper(TravisScraper):
         return settings_list
 
 SCRAPER_NAMES = {
-    "test": TestScraper,
+    "test": FakeScraper,
     "travis": TravisScraper,
     "williamson": WilliamsonScraper,
     "wilco": WilliamsonScraper,

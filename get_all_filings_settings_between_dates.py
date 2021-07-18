@@ -38,7 +38,7 @@ def split_into_weeks(start: date, end: date) -> List[Tuple[date, date]]:
 
 
 def try_to_parse(
-    start: str, end: str, tries: int, scraper: scrapers.TestScraper
+    start: str, end: str, tries: int, scraper: scrapers.FakeScraper
 ) -> str:
     """
     Parses filings and settings between start and end dates.

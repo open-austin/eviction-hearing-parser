@@ -9,6 +9,7 @@ numpy
 oauth2client
 pandas
 psycopg2-binary
+pydantic
 python-dotenv
 python-Levenshtein
 selenium==3.14
