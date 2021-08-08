@@ -629,7 +629,10 @@ class WilliamsonScraper(TravisScraper):
                 try:
                     "fetch all settings as a list of dicts"
                     calendar_soup = self.query_settings(afterdate, beforedate, calendar_name)
-                    settings_list.append(calendars.get_setting_list(calendar_soup))
+                    calendar_settings = calendars.get_setting_list(calendar_soup)
+                    #only extend if there is data in the list
+                    if calendar_settings:
+                        settings_list.extend(calendar_settings)
                     break
                 except:
                     if tries == 10:

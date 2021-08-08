@@ -86,7 +86,6 @@ def _parse_and_persist_settings(
     )
     if db:
         import persist
-
         for setting in pulled_settings:
             persist.rest_setting(setting)
     # write to google sheets if credentials exist
