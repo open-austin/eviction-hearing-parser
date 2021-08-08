@@ -46,17 +46,17 @@ To use this command line utility, feed in a "CSV" file containing a series of ca
 
 2. In the project directory and with your virtual environment activated, execute the command line utility with a command in this format:
 
-`python parse_hearings.py [your input CSV file] [name of new output file]`
+`python parse_hearings.py --infile [your input CSV file] --outfile [name of new output file] --county [name of county]`
 
 For instance, if you use the following command to scrape the three case IDs included in `test_input.csv`:
 
-`python parse_hearings.py test_input.csv result.json`
+`python parse_hearings.py --infile test_input.csv--outfile result.json --travis`
 
 A new file called `result.json` will appear in your project directory with scraped data from those three cases and the data for these cases will be added to your database tables (specifically the case_detail, disposition, and event tables).
 
 If you want to see your Chrome browser in action, add the `--showbrowser` command. For example:
 
-`python parse_hearings.py test_input.csv result.json --showbrowser`
+`python parse_hearings.py --infile test_input.csv --outfile result.json --county travis --showbrowser`
 
 #### 2) Parse Settings
 
@@ -64,15 +64,15 @@ This command line utility scrapes court calendar data from a specified date rang
 
 For example, the command
 
-`python parse_settings.py afterdate beforedate result.json`
+`python parse_settings.py afterdate beforedate --outfile result.json --county travis`
 
 will scrape all settings on or after `afterdate` and on or before `beforedate` (dates should be formatted like: mm-dd-yyy), output results to `result.json`, and add the appropriate rows to the setting table in your database. For example:
 
-`python parse_settings.py 9-1-2020 9-7-2020 result.json`
+`python parse_settings.py 9-1-2020 9-7-2020 --outfile result.json --county travis`
 
 Add `--showbrowser` to the end of the command to see the browser as it is scraping:
 
-`python parse_settings.py 9-1-2020 9-7-2020 result.json --showbrowser`
+`python parse_settings.py 9-1-2020 9-7-2020 --outfile result.json --county travis --showbrowser`
 
 #### 3) Parse Filings
 
