@@ -43,5 +43,6 @@ statuses_map = {
                 "pending settlement": {"is_active": True, "status": "In Progress"},
                 "pending pretrial": {"is_active": True, "status": "In Progress"},
                 "stayed": {"is_active": True, "status": "In Progress"},
-                "pending jury trial": {"is_active": True, "status": "In Progress"}
+                "pending jury trial": {"is_active": True, "status": "In Progress"},
+                "disposed": {"is_active": False, "status": "Judgment"},
                 }

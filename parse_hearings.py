@@ -72,7 +72,7 @@ def persist_parsed_cases(cases: List[Dict[str, Any]]) -> None:
             persist.rest_case(parsed_case)
         except:
             try:
-                failed_cases.append(parsed_case["case_number"])
+                failed_cases.append(parsed_case.case_number)
             except:
                 logger.error(
                     "A case failed to be parsed but it doesn't have a case number."
@@ -126,7 +126,7 @@ def parse_all(
     if db:
         persist_parsed_cases(parsed_cases)
     if outfile:
-        simplejson.dump(parsed_cases, outfile)
+        simplejson.dump(parsed_cases, outfile, default=dict)
 
 
 if __name__ == "__main__":

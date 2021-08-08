@@ -95,7 +95,7 @@ def _parse_and_persist_settings(
         gsheet.write_pulled_settings(pulled_settings)
 
     if outfile:
-        json.dump(pulled_settings, outfile)
+        json.dump(pulled_settings, outfile, default=dict)
     return pulled_settings
 
 
