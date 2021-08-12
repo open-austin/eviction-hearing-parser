@@ -351,6 +351,7 @@ class TravisScraper(FakeScraper):
             after_box.send_keys(
                 afterdate.strftime(format="%m/%d/%Y").lstrip("0").replace("/0", "/")
             )
+
         except:
             logger.error(f"Could not type in after date {afterdate}")
 
@@ -533,6 +534,113 @@ class WilliamsonScraper(TravisScraper):
             soup=register_soup, status=status, type=type, register_url=register_url
         )
 
+    def load_court_calendar(self, calendar_name : str):
+        """Opens the court calendar to scrape settings"""
+
+        start_page = self.load_start_page()
+        try:
+            element = WebDriverWait(start_page, 10).until(
+                EC.presence_of_element_located((By.LINK_TEXT, calendar_name))
+            )
+        finally:
+            element.click()
+            return start_page
+        return None
+
+
+    def query_settings(
+        self, afterdate: datetime.date, beforedate: datetime.date, calendar_name : str
+    ) -> BeautifulSoup:
+        """Executes search for case settings between beforedate and afterdate for, returns content of resulting page"""
+
+        for tries in range(5):
+            # select Date Range radiobutton for search
+            try:
+                court_calendar = self.load_court_calendar(calendar_name)
+                date_range_radio_button = WebDriverWait(court_calendar, 10).until(
+                    EC.presence_of_element_located((By.ID, "DateRange"))
+                )
+                date_range_radio_button.click()
+                break
+            except:
+                logger.error(
+                    f"Could not click button to search settings by Date Range, try {tries}"
+                )
+
+        # deselect all Case Category checkboxes besides Civil
+        for check_id in ["chkDtRangeProbate", "chkDtRangeFamily", "chkDtRangeCriminal"]:
+            try:
+                category_checkbox = WebDriverWait(court_calendar, 10).until(
+                    EC.presence_of_element_located((By.ID, check_id))
+                )
+                if category_checkbox.is_selected():
+                    category_checkbox.click()
+            except:
+                logger.error(f"Could not uncheck {check_id}")
+
+        # enter before date
+        try:
+            after_box = WebDriverWait(court_calendar, 10).until(
+                EC.presence_of_element_located((By.ID, "DateSettingOnAfter"))
+            )
+            after_box.clear()
+            after_box.send_keys(
+                afterdate.strftime(format="%m/%d/%Y").lstrip("0").replace("/0", "/")
+            )
+
+        except:
+            logger.error(f"Could not type in after date {afterdate}")
+
+        # enter after date
+        try:
+            before_box = WebDriverWait(court_calendar, 10).until(
+                EC.presence_of_element_located((By.ID, "DateSettingOnBefore"))
+            )
+            before_box.clear()
+            before_box.send_keys(
+                beforedate.strftime(format="%m/%d/%Y").lstrip("0").replace("/0", "/")
+            )
+        except:
+            logger.error(f"Could not type in before date {beforedate}")
+
+        # click search button
+        try:
+            settings_link = WebDriverWait(court_calendar, 10).until(
+                EC.presence_of_element_located((By.ID, "SearchSubmit"))
+            )
+            settings_link.click()
+        except:
+            logger.error(
+                f"Could not click search result for dates {beforedate} {afterdate}"
+            )
+
+        finally:
+            calendar_page_content = court_calendar.page_source
+            return BeautifulSoup(calendar_page_content, "html.parser")
+
+    def fetch_settings(
+        self, afterdate: datetime.date, beforedate: datetime.date
+    ) -> List[Optional[Dict[str, str]]]:
+        settings_list = []
+
+        # Run once for each court calendar in Williamson County
+        for calendar_name in ["Jp1 Court Calendar", "Jp3 Court Calendar"]:
+            for tries in range(1, 11):
+                try:
+                    "fetch all settings as a list of dicts"
+                    calendar_soup = self.query_settings(afterdate, beforedate, calendar_name)
+                    calendar_settings = calendars.get_setting_list(calendar_soup)
+                    #only extend if there is data in the list
+                    if calendar_settings:
+                        settings_list.extend(calendar_settings)
+                    break
+                except:
+                    if tries == 10:
+                        logger.error(
+                            f"Failed to get setting list between {afterdate} and {beforedate} on all 10 attempts."
+                        )
+
+        return settings_list
 
 SCRAPER_NAMES = {
     "test": FakeScraper,

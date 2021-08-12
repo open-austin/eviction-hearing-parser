@@ -4,6 +4,7 @@ import os
 from typing import Dict, List
 import config
 from connect_to_database import get_database_connection
+from cases import EvictionCase
 
 
 
@@ -18,9 +19,9 @@ def get_case(case_id: str) -> Dict:
     return dict(case)
 
 
-def rest_case(case: Dict):
+def rest_case(case: EvictionCase):
     """
-    Takes a dictionary representation of a case and maps it into the CASE_DETAIL, DISPOSITION,
+    Takes a EvictionCase class representation of a case and maps it into the CASE_DETAIL, DISPOSITION,
     and EVENT table of the PostgreSQL database
     """
 
@@ -37,19 +38,19 @@ def rest_case(case: Dict):
     (%(status)s, %(reg_url)s, %(prec_num)s, %(style)s, %(plaint)s, %(defend)s, %(plaint_zip)s, %(defend_zip)s, %(type)s, %(date_filed)s, %(active_or_inactive)s, %(after_moraorium)s)
     """,
         {
-            "case_num": case["case_number"],
-            "status": case["status"],
-            "reg_url": case["register_url"],
-            "prec_num": case["precinct_number"],
-            "style": case["style"],
-            "plaint": case["plaintiff"],
-            "defend": case["defendants"],
-            "plaint_zip": case["plaintiff_zip"],
-            "defend_zip": case["defendant_zip"],
-            "type": case["type"],
-            "date_filed": case["date_filed"],
-            "active_or_inactive": case["active_or_inactive"],
-            "after_moraorium": case["judgment_after_moratorium"],
+            "case_num": case.case_number,
+            "status": case.status,
+            "reg_url": case.register_url,
+            "prec_num": case.precinct_number,
+            "style": case.style,
+            "plaint": case.plaintiff,
+            "defend": case.defendants,
+            "plaint_zip": case.plaintiff_zip,
+            "defend_zip": case.defendant_zip,
+            "type": case.type,
+            "date_filed": case.date_filed,
+            "active_or_inactive": case.active_or_inactive,
+            "after_moraorium": case.judgment_after_moratorium,
         },
     )
 
@@ -64,22 +65,22 @@ def rest_case(case: Dict):
     (%(disp_type)s, %(disp_date)s, %(disp_amt)s, %(disp_to)s, %(disp_against)s, %(judgement_for)s,%(match_score)s, %(attorneys_for_plaintiffs)s, %(attorneys_for_defendants)s,  %(comments)s)
     """,
         {
-            "case_num": case["case_number"],
-            "disp_type": case["disposition_type"],
-            "disp_date": case["disposition_date"],
-            "disp_amt": str(case["disposition_amount"]),
-            "disp_to": case["disposition_awarded_to"],
-            "disp_against": case["disposition_awarded_against"],
-            "judgement_for": case["judgement_for"],
-            "match_score": case["match_score"],
-            "attorneys_for_plaintiffs": case["attorneys_for_plaintiffs"],
-            "attorneys_for_defendants": case["attorneys_for_defendants"],
-            "comments": case["comments"],
+            "case_num": case.case_number,
+            "disp_type": case.disposition_type,
+            "disp_date": case.disposition_date,
+            "disp_amt": str(case.disposition_amount),
+            "disp_to": case.disposition_awarded_to,
+            "disp_against": case.disposition_awarded_against,
+            "judgement_for": case.judgement_for,
+            "match_score": case.match_score,
+            "attorneys_for_plaintiffs": case.attorneys_for_plaintiffs,
+            "attorneys_for_defendants": case.attorneys_for_defendants,
+            "comments": case.comments,
         },
     )
     # TODO scrape all event types in a similar way (writs should be consolidated in)
     # Types should mirror the values from the HTML table headers, HR/ER/SE/etc.
-    for hearing_number, hearing in enumerate(case["hearings"]):
+    for hearing_number, hearing in enumerate(case.hearings):
         curs.execute(
             """
             INSERT INTO EVENT
@@ -91,14 +92,14 @@ def rest_case(case: Dict):
             (%(hearing_num)s, %(hearing_date)s, %(hearing_time)s, %(hearing_officer)s, %(hearing_appeared)s, %(hearing_type)s, %(all_text)s)
             """,
             {
-                "case_num": case["case_number"],
+                "case_num": case.case_number,
                 "hearing_num": hearing_number,
-                "hearing_date": hearing["hearing_date"],
-                "hearing_time": hearing["hearing_time"],
-                "hearing_officer": hearing["hearing_officer"],
-                "hearing_appeared": hearing["appeared"],
-                "hearing_type": hearing["hearing_type"],
-                "all_text": hearing["all_text"],
+                "hearing_date": hearing.hearing_date,
+                "hearing_time": hearing.hearing_time,
+                "hearing_officer": hearing.hearing_officer,
+                "hearing_appeared": hearing.appeared,
+                "hearing_type": hearing.hearing_type,
+                "all_text": hearing.all_text,
             },
         )
     conn.commit()

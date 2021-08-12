@@ -13,5 +13,5 @@ class TestFetchSettingsWilco:
             gs=False,
             county="williamson",
         )
-        assert settings[0]["case_number"] == "3FED-20-0248"
-        assert settings[0]["setting_time"] == "11:30 AM"
+        assert settings[0]['case_number'] == "3FED-20-0248"
+        assert settings[0]['setting_time'] == "11:30 AM"

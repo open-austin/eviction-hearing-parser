@@ -72,7 +72,7 @@ def persist_parsed_cases(cases: List[Dict[str, Any]]) -> None:
             persist.rest_case(parsed_case)
         except:
             try:
-                failed_cases.append(parsed_case["case_number"])
+                failed_cases.append(parsed_case.case_number)
             except:
                 logger.error(
                     "A case failed to be parsed but it doesn't have a case number."
@@ -89,12 +89,14 @@ def persist_parsed_cases(cases: List[Dict[str, Any]]) -> None:
 
 
 @click.command()
-@click.argument(
-    "infile",
-    type=click.File(mode="r"),
+@click.option("--infile", type=click.File(mode="r"), required=False)
+
+@click.option("--outfile", type=click.File(mode="w"), required=False)
+@click.option(
+    "--county",
+    type=click.Choice(scrapers.SCRAPER_NAMES, case_sensitive=False),
+    default="travis",
 )
-@click.argument("outfile", type=click.File(mode="w"), default="result.json")
-@click.argument("county", type=click.STRING, default="travis")
 @click.option(
     "--showbrowser / --headless",
     default=False,
@@ -126,7 +128,7 @@ def parse_all(
     if db:
         persist_parsed_cases(parsed_cases)
     if outfile:
-        simplejson.dump(parsed_cases, outfile)
+        simplejson.dump(parsed_cases, outfile, default=dict)
 
 
 if __name__ == "__main__":

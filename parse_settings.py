@@ -7,7 +7,7 @@ import datetime as dt
 import logging
 import sys
 from typing import Any, Dict, List, Optional
-
+import os
 import click
 import simplejson as json
 
@@ -86,16 +86,19 @@ def _parse_and_persist_settings(
     )
     if db:
         import persist
-
         for setting in pulled_settings:
             persist.rest_setting(setting)
+    # write to google sheets if credentials exist
+    if os.getenv("GOOGLE_SHEETS_CREDS_JSON") is None:
+        gs = False
     if gs:
+        print(gs)
         import gsheet
 
         gsheet.write_pulled_settings(pulled_settings)
 
     if outfile:
-        json.dump(pulled_settings, outfile)
+        json.dump(pulled_settings, outfile, default=dict)
     return pulled_settings
 
 
